@@ -1,0 +1,117 @@
+{
+  "id": "book-01-clock-edge",
+  "title": "01 · The first clock edge",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Power rail comes up. The reset line releases. The core fetches its first instruction from the reset vector. Some tens of millions of instructions later, firmware, bootloader, kernel, init, display server, a process called Unity gets a PID and a main thread."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "Everything in this book happens inside that one process. Let's zoom until it hurts."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "A frame is a scheduling quantum, not a unit of time"
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Here is the first thing that trips up people from embedded: a frame is not a timer interrupt. Nothing fires it. It is a while (true) loop that runs as fast as the machine and the presentation engine allow."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "The only thing that makes it periodic is present blocking on the display. That is your clock, and it is a lousy one: it jitters, it drops, it changes when the user drags the window to a 60 hertz monitor from a 144 hertz one."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Hardware analogy, the frame loop is a free-running superloop, not an ISR. Everything that needs real periodicity has to build its own timebase on top. That is exactly what Net Code's tick system does, and why Part III spends a whole chapter on it."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Unity's Player Loop is a tree of function pointers grouped into phases: Initialization, Early Update, Fixed Update, Pre Update, Update, Pre Late Update, Post Late Update. You can read it, modify it, and write it back at runtime."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "DOTS uses this. When a World is created, Entities inserts callbacks into that table so its three root system groups get ticked:"
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Hardware analogy, the Player Loop is a vector table you can patch. DOTS installs three entries. Everything DOTS ever does is downstream of those three function pointers being called once per frame per world."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "That is the whole bootstrap secret. There is no daemon, no scheduler, no magic. Three function pointers."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Our project has, at peak, six live worlds in one process (Part I chapter 3 explains why). Each one registers into that same table. So a single frame looks like:"
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Single-threaded at this level. The worlds do not run concurrently with each other. They run in sequence, in one frame, which is why \"the client and the server are in the same process\" is a statement about determinism and not about parallelism."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Trap, because it is one process, a stall in the server world is a stall in the client world. When you see Net Code's \"Server Tick Batching has occurred\" warning in the editor, it usually means the editor itself hitched, not that your server logic is slow."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Inside a system, System API.Time.Delta Time gives you the world's delta. Which delta depends on where the system is standing:"
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "In Simulation System Group at the top level then frame delta (variable, jittery). Inside Fixed Step Simulation System Group then fixed delta, catch-up loop. Inside Predicted Simulation System Group then the network tick delta, and the group may run the same system many times in one frame during a rollback."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "That last one is why Player Move System in our project reads System API.Time.Delta Time without further thought and is still correct. It is standing in the prediction group, so the delta it gets is one network tick, every time, including during replay."
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Probe, in play mode, dump the live loop: ``csharp Unity Engine.Low Level.Player Loop.Get Current Player Loop() `` You will see the DOTS entries sitting in the table next to Unity's built-ins."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Next: why any of this needs a new memory model at all."
+    }
+  ],
+  "nodes": {}
+}

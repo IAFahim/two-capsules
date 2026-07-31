@@ -1,0 +1,105 @@
+{
+  "id": "book-15-the-tick",
+  "title": "15 · The tick",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Chapter 01 said the frame loop is a lousy clock. Net Code builds a good one on top of it. This chapter is that clock."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Simulation Tick Rate is authored in Client Server Tick Rate. Everything on the wire is stamped with a Network Tick, a wrapping uint, so never compare with <. Use tick.Is Newer Than(other), which handles wraparound the way a sequence-number comparison must."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Hardware analogy, Network Tick is a wrapping counter with a comparator that understands modular distance. Exactly like TCP sequence numbers. Comparing raw values works for hours and then breaks once, catastrophically."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Three different \"nows\" on one screen simultaneously. Your capsule is drawn at the predicted tick; the other player's capsule is drawn at the interpolated tick. That is not a bug, that is the entire trade, made explicit."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "A command for tick T must be in the server's hands before the server simulates T. So the client must generate it early, at least one-way latency plus jitter margin. Net Code measures round trip time continuously and adjusts the lead automatically. When the network worsens, the client silently runs further ahead."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Trap, a command that arrives late is dropped, and the server extrapolates from the last input it has. That reads to the player as \"my input was eaten\". If you see this, look at the command age stats in Play Mode Tools before you look at your input code."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Render at 144 hertz with a 60 hertz simulation and most frames have no new tick. Rendering at the last full tick would visibly stutter. So Net Code runs a partial tick: the prediction group simulates a fraction of a tick purely for presentation, then throws it away and re-runs the full tick when it truly arrives."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Trap, spawn a particle, play a sound, or increment a counter in the prediction group without checking Is First Time Fully Predicting Tick and it happens several times per tick. Every \"my gun fires 3 bullets per trigger pull\" bug is this."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Continuous integration (moving a transform) is safe in partial ticks. One-shot side effects are not."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "The prediction group runs N times per frame"
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "This is why Predicted Simulation System Group is special and why chapter 17 exists."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "System API.Time.Delta Time inside prediction"
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Inside the prediction group, the delta is the tick delta, not the frame delta. That is why our movement code is correct without doing anything clever:"
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "If it used frame delta, a rollback replaying 10 ticks in one frame would move the capsule 10 frames' worth of distance. Determinism dies, and it dies only under packet loss, which is the worst kind of bug to reproduce."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Higher tick rate = lower input latency, more CPU on the server, more bandwidth, and more rollback work per correction. It multiplies through everything."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Probe, read the live clock: ``csharp var t = System API.Get Singleton<Network Time>(); Debug.Log($\"server={t.Server Tick} partial={t.Is Partial Tick} first Full={t.Is First Time Fully Predicting Tick}\"); ``"
+    }
+  ],
+  "nodes": {}
+}

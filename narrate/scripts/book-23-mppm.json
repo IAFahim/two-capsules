@@ -1,0 +1,87 @@
+{
+  "id": "book-23-mppm",
+  "title": "23 · Two players on one machine",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Multiplayer Play Mode (multiplayer play mode) runs extra editor instances, virtual players, that share your project folder and attach to the same play session. It is how you test two clients without building."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "A virtual player is a real second editor process with its own World.All, its own sockets, and its own domain. It shares your Editor Prefs, and Client Server Bootstrap.Requested Play Type is stored there."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "The console error is a port-bind exception followed by a cascade, Mod Loading Scene found 2 instances, entity assertion failures. The cascade is louder than the cause, which is why it misleads."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "The obvious fix, \"change Play Mode Type to Client in Play Mode Tools\", does not work, because Play Mode Tools is a window in the main editor and a virtual player does not have one. The pref you would change is the shared one you must not change."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Installing com.unity.dedicated-server defines UNITY_USE_MULTIPLAYER_ROLES as a version Define. That flips Multiplayer Play Mode Preferences from the shared-Editor Prefs path to the per-player-role path, and each virtual player gets its own dropdown."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "A visible confirmation that the switch took effect: Play Mode Type in Play Mode Tools goes grey. Roles now override it, so the old control is disabled. If it is still editable, the define is not active."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Hardware analogy, you were trying to configure two boards by editing one shared EEPROM. Roles give each board its own strapping pins."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "4 ghosts = 2 players × (controller + capsule). Chapter 22 explains why two per player, and why 3 would be an ownership bug."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Other multiplayer play mode facts worth having"
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "That last row is why we drove verification through the editor CLI instead of the GUI, eval into the running instance, dump World.All, read the counts. When the GUI cannot reach a process, script the process."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Thin Client Simulation worlds simulate no rendering and no presentation, they exist to generate load and fake input. Great for testing 50 connections. They also do not load client subscenes in this project (Required Client targets Client, not Thin Client), so a thin client has no Nerve State Machine and no client graph. If you add thin clients later, that is the first thing you will need to wire."
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Probe, from a script, confirm what a given instance actually built: ``csharp foreach (var w in World.All) Debug.Log($\"{w.Name} {w.Flags}\"); ` One Server World` total across all instances. If you see two, roles are not applied."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Part IV done. Now the internals, the knobs, and the design judgement."
+    }
+  ],
+  "nodes": {}
+}

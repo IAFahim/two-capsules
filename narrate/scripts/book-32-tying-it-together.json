@@ -1,0 +1,81 @@
+{
+  "id": "book-32-tying-it-together",
+  "title": "32 · Tying it together",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "One feature, designed end to end, touching every layer. Follow this and the stack stops being a list of packages and becomes one machine."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "The feature: a dash. Tap Shift, the capsule lunges forward, then a cooldown before you can dash again. It must feel instant, be cheat-proof, and be visible to the other player."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "IInput Component Data supports event-style fields that survive the tick they were pressed on:"
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Input Event exists precisely because a bool sampled per frame and consumed per tick loses presses. It carries a counter so the consumer can tell \"pressed once\" from \"still held\" even across a rollback."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Step 3 · Replicated state for the cooldown"
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "A tick, not a float timer. Ticks are the shared clock; a float seconds value would drift between the two simulations and desync under replay."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Every constraint from the book is visible here:"
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Without that gate the effect fires on every partial tick and on every replayed tick of every rollback. This is the single most common \"why does my gun fire three times\" bug."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "If dashing should be blocked in a menu, or should trigger a state change, add a Grove node. If it is just a rule, leave it as a system. Chapter 31, table H."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "For a dash: leave it a system. No states, no transitions, no designer-facing flow."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Step 6 is the important one. A check that cannot fail is not a check. Break the thing on purpose once, confirm your test catches it, then fix it. That is the difference between \"I believe it works\" and \"I know what would tell me it didn't\"."
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Six steps. Every multiplayer feature you will ever build fits them. Weapons, vehicles, abilities, inventory, doors, the answers change, the questions do not."
+    }
+  ],
+  "nodes": {}
+}

@@ -1,0 +1,105 @@
+{
+  "id": "book-21-client-graph",
+  "title": "21 · The client graph",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "A worked example of the whole stack: Grove + Canopy + Nerve + settings routing, doing one real job."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Something must add Network Stream In Game to the client's connection and send a Go In Game Request remote procedure call. Without it, zero snapshots flow (chapter 13)."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Nerve already ships the node that does this. It just never runs, because running it requires a client graph and the sample authors none."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "The chain state then Initialize then Startup Gate then Client Go In Game looks like ceremony. It is not, the types force it:"
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "So: a state can run a block; only Initialize can drive a context node; only Startup Gate provides Initialize State; only inside it can Client Go In Game exist."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Hardware analogy, this is type-level pin compatibility. You cannot plug a 3.3 V part into a 5 V header because the connector will not accept it. The graph editor enforces the same thing, at author time."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Every block AND-s into Is Completed. The gate jumps only when all report done. It is a barrier with a target, and it is reusable for any \"wait for N things, then advance\"."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Idempotent by identity, not by boolean. Keying on the connection identity means a reconnect with a new entity re-sends correctly, while a retry on the same connection does not spam. State lives in Grove State, not in a static. Works per entity, survives, costs nothing. The gate is the retry loop. No timers, no coroutines."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Nerve ships the nodes. It does not ship a context or a driver, those are per-project, exactly like the sample's Menu and Service ones."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Trap, Get Execution returns a copy of the context. Assign before it and your values are overwritten by Update(); assign after and they land. Get this backwards and the graph runs with a zeroed connection forever, silently."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "A single world carrying both flags. Our separate Client World + Server World in one process is not a host, Is Host() is false for both. That is correct here: it makes Go In Game add Network Stream In Game on the client side, which is exactly what a real client needs."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Assets/Editor/Client Graph Setup.cs, [Menu Item(\"Daggertooth/Rebuild Client Graph\")]. Same approach as Nerve's own Sample Project Setup. Advantages over clicking in the graph window:"
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "reviewable in a diff reproducible in CI validation failures throw instead of logging the helper prints every available option name when Try Set Value fails"
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Delete the old workaround system, run, and ask the graph where it is:"
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "in Game=1 proves the remote procedure call went out. state = gameplay proves the graph sent it, that state is reachable only through the gate, and the gate opens only when the node reports completed. No leftover code can produce that reading."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "That is what a falsifiable check looks like: a value that is impossible unless the mechanism you claim is working, worked."
+    }
+  ],
+  "nodes": {}
+}

@@ -1,0 +1,93 @@
+{
+  "id": "book-10-nerve",
+  "title": "10 · Nerve: the game framework",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Nerve is the layer that answers: who creates the worlds, what loads into them, who is allowed to connect, and what do they get to control?"
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Bovine Labs Bootstrap implements ICustom Bootstrap. It creates Service World at startup and exposes Create Client Server Worlds(), which the service graph's Create World node calls when you press Start Game."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Trap, Requested Play Type defaults to Client And Server. In a Multiplayer Play Mode virtual player that means it builds a second Server World, which tries to bind 127.0.0.1:7979, which is already taken. Chapter 23 is entirely about this."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "A Sub Scene Set says these scenes load into worlds matching these flags:"
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "This is the mechanism that puts our Client State Settings in the client world: it is on Client Settings.prefab, instantiated in Client.unity, which Required Client loads into anything flagged Client. Trace it backwards from a missing entity and you will land here."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Each world gets a Nerve Graph Settings subclass carrying a graph asset:"
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Three graph types, three importers, three [Menu Item]s, Client Nerve Graph shipped with Nerve all along. The sample just never authored a.cnerve."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "4 · Authentication, and the hole we found"
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "With approval off (the default) both systems call state.Enabled = false in On Create. Nothing ever adds Connection Approved. And Player Connection System only spawns for connections that have it. So on a default project, no player ever spawns, silently."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Turning approval on is not free either: our topology is a separate Client World + Server World, and World.Is Server() is true for that Server World, so it takes the real J W T branch and calls out to player-auth.services.api.unity.com."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Our Local Approve Connection System fills the gap, trivially approving with Account Identity = \"local-{network Id}\". It is labelled a hack in its own doc comment because it is one, and the comment says exactly when to delete it."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Two entities per player, not one. The controller is the persistent identity (survives respawn); the controlled is the current pawn. Command Target on the connection points at whatever entity should receive this player's input."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "That is why our two-player run shows 4 ghosts: 2 controllers + 2 capsules. If you ever see 3, two clients adopted the same controller, an identity collision."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Probe, count them per world: ``csharp em.Create Entity Query(Component Type.Read Only<Ghost Instance>()).Calculate Entity Count() ``"
+    }
+  ],
+  "nodes": {}
+}

@@ -1,0 +1,75 @@
+{
+  "id": "book-31-when-to-use-what",
+  "title": "31 · When to use what",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Decision tables. Keep this chapter open while designing a feature."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "A · How should this data reach the other side?"
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Rule, if you are about to send an remote procedure call every tick, you wanted a ghost field. If you are about to put a one-shot event in a ghost field, you wanted an remote procedure call."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Cost check: rollback cost is predicted entities × replayed ticks. Every entity you add to the predicted set multiplies every correction."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Pre-spawned is free and badly under-used. If it exists at level load and the server does not create it, bake it."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Raise sim rate for simulation fidelity. Raise send rate for visual freshness. They are different problems."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Our project uses both, correctly: Player Move System is a plain system (one rule, no states); the connection flow is a graph (states, gates, transitions, recovery)."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "I · Which world does this settings asset target?"
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "J · Quick sanity table for a new feature"
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Before writing a line, answer these six:"
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Question 6 is the one people skip. For our client graph the answer was state = gameplay, a value unreachable unless the mechanism worked."
+    }
+  ],
+  "nodes": {}
+}

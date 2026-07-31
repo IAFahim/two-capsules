@@ -1,0 +1,93 @@
+{
+  "id": "book-14-ghosts",
+  "title": "14 · Ghosts: replicating state",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "A ghost is an entity the server owns and mirrors to clients. Our capsule is one. So is the controller."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Ghost Authoring Component on the prefab produces a serialization schema: which components, which fields, at what precision, with what change-detection. Baking generates serializer code per ghost type, no reflection at runtime."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "That third row is the whole design in one dropdown. Chapter 17 unpacks it."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "For a player capsule, Owner Predicted is nearly always right: you need your own capsule to respond in zero frames; you do not need someone else's to be frame-exact, you need it smooth."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Snapshots: delta-compressed, importance-scheduled"
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Three consequences you must internalise:"
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "A snapshot is not the whole world. It is as much of it as fits in ~1200 bytes, prioritised. Low-importance ghosts update at a lower effective rate. This is a feature. Delta baselines are per connection. The server remembers what each client has ACKed. Loss is normal. The next snapshot re-bases automatically."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Hardware analogy, importance scheduling is a weighted round-robin arbiter on a fixed-width bus. You do not get more bandwidth; you get to choose who wastes it."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Fewer bits on the wire, and, crucially, quantized values compare equal more often, so delta compression finds more unchanged fields. Choose per field: position often 1000, rotation 1000, a health value maybe 1."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Trap, quantization is a real precision loss, applied before the client compares predicted vs received. Set it too coarse and prediction will disagree with the server constantly, causing continuous micro-rollbacks that look like jitter. Set it too fine and you burn bandwidth. This is a tuning knob, not a formality."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Ghost Relevancy lets the server decide a ghost simply does not exist for a given connection, interest management, fog of war, zoning. Nerve wraps this in a Relevancy Settings asset, which our project has registered on Server Settings.prefab."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "For two capsules on one map it does nothing. At 200 players it is the difference between shipping and not."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Our capsules are server-spawned: Player Connection System instantiates on the server, and the client materialises them when the snapshot arrives. That is why ghosts=2 appears in the client world without the client ever calling Instantiate."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Probe, see the schema Unity actually generated: `` Multiplayer then Ghost Snapshot Inspector (in play mode) `` It shows per-ghost byte cost. If a ghost is unexpectedly expensive, a field you did not mean to replicate is in the schema."
+    }
+  ],
+  "nodes": {}
+}

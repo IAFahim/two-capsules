@@ -1,0 +1,93 @@
+{
+  "id": "book-16-commands",
+  "title": "16 · Commands: input on the wire",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "The single most important sentence in this book:"
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Our component is four bytes and it is the whole protocol:"
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "If we sent Position instead, a modified client could write any position it liked and the server would obey. That is client authority, and it is the hole every cheat engine walks through. Unity's own prediction docs open by warning about it."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "What IInput Component Data generates for you"
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "You write one struct; the generator produces the buffer type, the serializer, and the send/receive systems. The buffer is a ring of the last ~64 ticks, not a single value, because the server needs history, and because rollback needs to replay it."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Hardware analogy, a circular D M A buffer with a timestamp per slot. The producer writes at the head; the consumer reads by timestamp, not by position."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Stages 2 and 5 are the ones nobody expects, and they are why the design works:"
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Stage 5 is the magic. During a rollback replaying ticks 100, 110, this group re-materialises the exact input from tick 100, then 101, and so on. Your movement system reads Player Move Input and never knows it is in a replay."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Three details that are all load-bearing:"
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "With All<Ghost Owner Is Local>(), without it you would write input into every player's capsule in your world. Net Code adds this tag to ghosts whose Ghost Owner.Network Id matches yours. No [Burst Compile], Keyboard.current is managed. Correct, not a compromise. Client Simulation only, the server must never invent input."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Our capsule uses Auto Command Target. Nerve also sets Command Target on the connection via Player Connection System, because Nerve supports controlling different pawns over time."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Trap, if input reaches the client's own capsule but the server never moves, suspect routing first. The client is happily predicting with input the server has no reason to associate with that entity."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Each command packet contains the last few ticks of input, not just one. Lose a packet and the next one still carries the missing tick. This is why unreliable transport is acceptable for input: the redundancy is in the payload, not the protocol."
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Probe, Play Mode Tools shows command age and how many commands the server is holding. A steadily growing age means the client's prediction lead is drifting."
+    }
+  ],
+  "nodes": {}
+}

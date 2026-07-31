@@ -1,0 +1,147 @@
+{
+  "id": "book-27-build-your-own",
+  "title": "27 · Build your own",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "The final exam. Not \"can you use this stack\", could you write it?"
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "Below is what each layer would cost you, what the hard part actually is, and the order to attempt it in. Build even two of these and you will never be confused by the real ones again."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "The hard part is not the layout. It is the structural change: adding a component means computing the new archetype, finding or creating a chunk, memcpy-ing every component, patching the entity lookup, and invalidating outstanding pointers. Get that right and the rest is bookkeeping."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Milestone: 100k entities, one component write each, faster than the array-of-structs version."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "You are writing a linker and an interpreter."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "The hard part is relative addressing. Every pointer inside the image must be an offset from its own location, so the whole thing is memcpy-able and shareable. That is Blob Ptr<T>, and it is the same discipline as writing position-independent code."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Milestone: author a 5-node graph, save it, load it into a fresh process, execute it with zero allocations."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Layer 3 · A hierarchical state machine, two days"
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "states form a tree; the active path is root then leaf Enter / Update / Exit signals propagate along the path transitions are named jumps, resolved by hash validate at author time: one root, one default child per composite, no id collisions"
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "The hard part is exit/enter ordering. Exit bottom-up, enter top-down, and never let a block observe a half-torn-down path. That is why every Canopy node opens with the Exit check."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Milestone: a graph where a leaf jump correctly exits three levels and enters two."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Layer 4 · Snapshot replication, two weeks"
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "The hard part is per-connection baselines. Every client has ACKed a different tick, so the server must remember what each one knows and delta against that. Get it wrong and clients decode garbage, intermittently, under loss only."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Milestone: 50 entities, 20 hertz, 5% simulated packet loss, no visible corruption."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Layer 5 · Prediction and rollback, the real boss"
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "The hard part is that your simulation must be replayable. Which means:"
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "no reads of frame-varying data (frame delta, Time.time, Random without a seeded state) no side effects that are not idempotent per tick all predicted state must be in the checkpoint, anything stored outside it silently survives the rollback and desyncs"
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "That last bullet is the one that bites. A cached value in a system field is invisible to the checkpoint and will corrupt every replay."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Milestone: 200 milliseconds artificial latency, capsule feels instant, no visible correction."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "If you can describe all five, you can read any networked engine, Unreal's replication, Photon Quantum, Overwatch's E C S talk, Rocket League's rollback. They are the same five layers with different names and different trade-offs."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "A chunk is a D M A buffer and an archetype is its type. A blob is position-independent code; Grove State is its RAM. Simulate is a clock-enable line. Send intent, never results. Nobody on screen is seeing \"now\", and your job is to make that invisible."
+    },
+    {
+      "id": "b29",
+      "title": "b29",
+      "focus": null,
+      "text": "Add physics to the predicted set. Determinism becomes a real constraint; that is where the next tier of difficulty lives. Add thin clients and wire them a graph (chapter 23's last section). Replace Local Approve Connection System with real approval, and discover what Unity Authentication actually costs on a cold connection. Predict a spawn (projectiles). It is the hardest common case: the client creates an entity the server has not confirmed, and they must be matched."
+    },
+    {
+      "id": "b30",
+      "title": "b30",
+      "focus": null,
+      "text": "You started at a clock edge. You now know every hop from there to two capsules on two screens, why each hop exists, and what it looks like when it breaks."
+    }
+  ],
+  "nodes": {}
+}

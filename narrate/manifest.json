@@ -332,6 +332,4027 @@
           "audioDeep": "audio/04/node-disconnected-deep.opus"
         }
       }
+    },
+    {
+      "id": "book-00-how-to-read",
+      "title": "00 \u00b7 How to read this",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "You already know how a machine works. You know that a cache line is 64 bytes, that a branch mispredict costs you ~15 cycles, that D M A exists so the CPU can stop babysitting the bus. That knowledge is not a handicap here. It is the whole advantage.",
+          "audio": "audio/book-00-how-to-read/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "Because Unity DOTS is not a game engine feature. It is a memory-layout argument that won, wearing a game engine as a coat.",
+          "audio": "audio/book-00-how-to-read/ch-b3.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "And Unity Net Code is not \"multiplayer\". It is a distributed system with a fixed clock, a command ring buffer, and speculative execution with rollback, which is to say, it is a CPU pipeline. You have debugged this shape before. You just called the parts different names.",
+          "audio": "audio/book-00-how-to-read/ch-b4.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "Trace one keystroke from the USB interrupt to two capsules moving on two screens, naming every system it passes through and every buffer it lands in. Open any package in this stack, find the system responsible for a symptom, and say why it is responsible before you read its body. Author a Grove graph in code, know what bytes it becomes, and know which function pointer executes them. Diagnose a bug class none of us have hit yet, because you understand the mechanism rather than the symptom.",
+          "audio": "audio/book-00-how-to-read/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "That last one is the actual goal. Symptoms are infinite. Mechanisms are about forty.",
+          "audio": "audio/book-00-how-to-read/ch-b8.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Chapters are short on purpose. Each one is a single idea you can hold in your head while walking to the kitchen. Read them in order the first time, Part III leans on Part I hard.",
+          "audio": "audio/book-00-how-to-read/ch-b10.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Every claim is checkable. Where a chapter says \"system X does Y\", there is a file path. Go look. If I got it wrong, the file wins. No hand-waving at the interesting part. When something is genuinely a hack, it is labelled a hack, with the reason it exists and the cost of removing it. Failure stories are first-class. Every trap in Part V is one we actually hit and actually fixed. The war stories are where the mechanism becomes memorable.",
+          "audio": "audio/book-00-how-to-read/ch-b12.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "This book documents a stack that includes commercial packages (Bovine Labs Core, Grove, Canopy, Nerve, Anchor). It describes behaviour, cites file paths, and quotes small API signatures, the way a book about an SDK should. It does not reproduce those packages. If you want to read the implementations, buy them; they are worth it, and this book is much better with the sources open beside it.",
+          "audio": "audio/book-00-how-to-read/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Prose and diagrams here: MIT. The packages remain their authors'.",
+          "audio": "audio/book-00-how-to-read/ch-b15.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "Hardware analogy, a bridge from something you already own.",
+          "audio": "audio/book-00-how-to-read/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Trap, something that fails silently. These are the expensive ones.",
+          "audio": "audio/book-00-how-to-read/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Probe, a command you can run right now to see the thing with your own eyes.",
+          "audio": "audio/book-00-how-to-read/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Let's start where everything starts: a clock edge.",
+          "audio": "audio/book-00-how-to-read/ch-b20.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-01-clock-edge",
+      "title": "01 \u00b7 The first clock edge",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Power rail comes up. The reset line releases. The core fetches its first instruction from the reset vector. Some tens of millions of instructions later, firmware, bootloader, kernel, init, display server, a process called Unity gets a PID and a main thread.",
+          "audio": "audio/book-01-clock-edge/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "Everything in this book happens inside that one process. Let's zoom until it hurts.",
+          "audio": "audio/book-01-clock-edge/ch-b3.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "A frame is a scheduling quantum, not a unit of time",
+          "audio": "audio/book-01-clock-edge/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Here is the first thing that trips up people from embedded: a frame is not a timer interrupt. Nothing fires it. It is a while (true) loop that runs as fast as the machine and the presentation engine allow.",
+          "audio": "audio/book-01-clock-edge/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "The only thing that makes it periodic is present blocking on the display. That is your clock, and it is a lousy one: it jitters, it drops, it changes when the user drags the window to a 60 hertz monitor from a 144 hertz one.",
+          "audio": "audio/book-01-clock-edge/ch-b6.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "Hardware analogy, the frame loop is a free-running superloop, not an ISR. Everything that needs real periodicity has to build its own timebase on top. That is exactly what Net Code's tick system does, and why Part III spends a whole chapter on it.",
+          "audio": "audio/book-01-clock-edge/ch-b7.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Unity's Player Loop is a tree of function pointers grouped into phases: Initialization, Early Update, Fixed Update, Pre Update, Update, Pre Late Update, Post Late Update. You can read it, modify it, and write it back at runtime.",
+          "audio": "audio/book-01-clock-edge/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "DOTS uses this. When a World is created, Entities inserts callbacks into that table so its three root system groups get ticked:",
+          "audio": "audio/book-01-clock-edge/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Hardware analogy, the Player Loop is a vector table you can patch. DOTS installs three entries. Everything DOTS ever does is downstream of those three function pointers being called once per frame per world.",
+          "audio": "audio/book-01-clock-edge/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "That is the whole bootstrap secret. There is no daemon, no scheduler, no magic. Three function pointers.",
+          "audio": "audio/book-01-clock-edge/ch-b12.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "Our project has, at peak, six live worlds in one process (Part I chapter 3 explains why). Each one registers into that same table. So a single frame looks like:",
+          "audio": "audio/book-01-clock-edge/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Single-threaded at this level. The worlds do not run concurrently with each other. They run in sequence, in one frame, which is why \"the client and the server are in the same process\" is a statement about determinism and not about parallelism.",
+          "audio": "audio/book-01-clock-edge/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Trap, because it is one process, a stall in the server world is a stall in the client world. When you see Net Code's \"Server Tick Batching has occurred\" warning in the editor, it usually means the editor itself hitched, not that your server logic is slow.",
+          "audio": "audio/book-01-clock-edge/ch-b16.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Inside a system, System API.Time.Delta Time gives you the world's delta. Which delta depends on where the system is standing:",
+          "audio": "audio/book-01-clock-edge/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "In Simulation System Group at the top level then frame delta (variable, jittery). Inside Fixed Step Simulation System Group then fixed delta, catch-up loop. Inside Predicted Simulation System Group then the network tick delta, and the group may run the same system many times in one frame during a rollback.",
+          "audio": "audio/book-01-clock-edge/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "That last one is why Player Move System in our project reads System API.Time.Delta Time without further thought and is still correct. It is standing in the prediction group, so the delta it gets is one network tick, every time, including during replay.",
+          "audio": "audio/book-01-clock-edge/ch-b20.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "Probe, in play mode, dump the live loop: ``csharp Unity Engine.Low Level.Player Loop.Get Current Player Loop() `` You will see the DOTS entries sitting in the table next to Unity's built-ins.",
+          "audio": "audio/book-01-clock-edge/ch-b21.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "Next: why any of this needs a new memory model at all.",
+          "audio": "audio/book-01-clock-edge/ch-b22.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-02-cache-lines",
+      "title": "02 \u00b7 Cache lines all the way down",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "You know this graph in your bones: DRAM latency has been roughly flat for twenty years while core throughput went up two orders of magnitude. A cache miss costs you a few hundred cycles. A modern core can retire a dozen instructions in that time, times however many lanes your simmed unit has.",
+          "audio": "audio/book-02-cache-lines/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "So the fastest code is not the code with the fewest instructions. It is the code that streams.",
+          "audio": "audio/book-02-cache-lines/ch-b3.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Classic Unity Game Objects do the opposite of streaming. Every Mono Behaviour is a managed heap object with a vtable and a pointer back to a native Transform, which lives in a different allocation, which points at a parent, which is somewhere else entirely. Iterating a thousand of them is a thousand pointer chases into cold memory. It is a linked list wearing an OOP costume.",
+          "audio": "audio/book-02-cache-lines/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "E C S is the fix, and the fix is just struct-of-arrays with a scheduler bolted on.",
+          "audio": "audio/book-02-cache-lines/ch-b5.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "The chunk is the whole idea. Inside one chunk, memory is laid out as parallel arrays:",
+          "audio": "audio/book-02-cache-lines/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Walking Local Transform for every entity in that chunk is a linear scan of contiguous memory. The prefetcher sees it coming from the second element onward. There is no indirection, no vtable, no null check.",
+          "audio": "audio/book-02-cache-lines/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Hardware analogy, a chunk is a D M A-friendly buffer. You picked 16 kibibytes for the same reason an embedded engineer picks a buffer size: it fits comfortably in L1/L2, and it amortises the per-block bookkeeping over hundreds of elements.",
+          "audio": "audio/book-02-cache-lines/ch-b9.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "An archetype is the set of component types. {Local Transform, Player Move Input, Ghost Owner, Simulate} is an archetype. Every chunk belongs to exactly one archetype, and every entity in a chunk has exactly that component set, no more, no less.",
+          "audio": "audio/book-02-cache-lines/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "This is what makes queries fast. System API.Query<Ref RW<Local Transform>, Ref RO<Player Move Input>>() does not scan entities. It:",
+          "audio": "audio/book-02-cache-lines/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Matches the query mask against the (small) list of archetypes, a handful of bitwise ops. For each matching archetype, walks its chunk list. For each chunk, takes a raw pointer to each component array. Loops 0.count.",
+          "audio": "audio/book-02-cache-lines/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "The per-entity cost is a struct read and a struct write. The per-query cost is the archetype matching, done once.",
+          "audio": "audio/book-02-cache-lines/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Trap, adding or removing a component moves the entity to a different chunk. That is a memcpy of every component plus bookkeeping, and it invalidates any raw pointer you were holding. This is why DOTS code obsessively defers structural changes into an Entity Command Buffer and plays it back at a known safe point. It is the same discipline as \"don't free() inside the interrupt handler\".",
+          "audio": "audio/book-02-cache-lines/ch-b15.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "Moving chunks for a boolean is absurd, so Entities added enableable components. The chunk header carries a 128-bit mask per enableable type. Disabling one flips a bit; the entity stays put. Queries respect the mask via Chunk Entity Enumerator.",
+          "audio": "audio/book-02-cache-lines/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Remember this word: Simulate. It is an enableable tag component, and in Part III it becomes the single most important bit in the whole prediction system. Net Code flips it to say \"this entity should tick on this tick\". Forget to respect it and your capsule integrates its velocity five times per frame instead of once.",
+          "audio": "audio/book-02-cache-lines/ch-b18.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Every chunk stores a uint version per component type, bumped whenever a system takes write access. With Change Filter<T>() compares versions and skips whole chunks.",
+          "audio": "audio/book-02-cache-lines/ch-b20.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "Hardware analogy, a dirty bit per cache line, except the granularity is a chunk and the write-back is a system deciding whether to bother.",
+          "audio": "audio/book-02-cache-lines/ch-b21.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Nothing is free. The bill for all that throughput:",
+          "audio": "audio/book-02-cache-lines/ch-b23.opus"
+        },
+        {
+          "id": "b24",
+          "title": "b24",
+          "focus": null,
+          "text": "No references. A component cannot hold a class. It holds an Entity handle and you look it up, which is a random access, i.e. the exact thing you were avoiding. Structural changes are expensive. Design so they are rare and batched. Debugging is different. There is no object to inspect. You inspect chunks. Get comfortable with the Entities Hierarchy and Entity Query in the debugger.",
+          "audio": "audio/book-02-cache-lines/ch-b24.opus"
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "Probe, count what is actually resident: ``csharp var q = em.Create Entity Query(Component Type.Read Only<Unity.Net Code.Ghost Instance>()); q.Calculate Entity Count(); // entities q.Calculate Chunk Count(); // chunks, the number that predicts your cost ``",
+          "audio": "audio/book-02-cache-lines/ch-b25.opus"
+        },
+        {
+          "id": "b26",
+          "title": "b26",
+          "focus": null,
+          "text": "Next: how many independent machines are we actually running?",
+          "audio": "audio/book-02-cache-lines/ch-b26.opus"
+        },
+        {
+          "id": "b27",
+          "title": "b27",
+          "focus": null,
+          "text": "then 03 \u00b7 Worlds: six machines in one process",
+          "audio": "audio/book-02-cache-lines/ch-b27.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-03-worlds",
+      "title": "03 \u00b7 Worlds: six machines in one process",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b1",
+          "title": "b1",
+          "focus": null,
+          "text": "03 \u00b7 Worlds: six machines in one process",
+          "audio": "audio/book-03-worlds/ch-b1.opus"
+        },
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "A World is an Entity Manager (its own chunk allocator, its own entity IDs) plus a list of systems. Two worlds share nothing. Entity #42 in Client World and entity #42 in Server World are unrelated, the way PID 42 on two machines is unrelated.",
+          "audio": "audio/book-03-worlds/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "Hardware analogy, a world is a separate address space. Same silicon, same frame, zero shared state. The only way data crosses is a message on the wire.",
+          "audio": "audio/book-03-worlds/ch-b3.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Service World is the one that outlives everything, it owns the state graph that says \"we are in Menu\" or \"we are in Game\", and it is what creates and destroys the others.",
+          "audio": "audio/book-03-worlds/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Probe, see them live: ``csharp foreach (var w in World.All) Debug.Log($\"{w.Name} flags={w.Flags}\"); ``",
+          "audio": null
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Each world carries World Flags. Systems declare where they are allowed to exist:",
+          "audio": "audio/book-03-worlds/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Bovine Labs adds its own world kinds on top of Unity's, in Bovine Labs.Core/Worlds.cs:",
+          "audio": "audio/book-03-worlds/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Worlds.Server Local is doing real work: it means \"authority\", whether that authority is a netcode server or an offline single-player world. Write your authoritative rules against that and single-player comes free.",
+          "audio": "audio/book-03-worlds/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Trap, a system with no [World System Filter] defaults to Local Simulation | Server Simulation | Client Simulation, so it lands in every game world including the server. Half of all \"why did that run twice?\" bugs are a missing filter.",
+          "audio": "audio/book-03-worlds/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Groups: the ordering is a graph, not a list",
+          "audio": "audio/book-03-worlds/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Systems do not run in declaration order, alphabetical order, or file order. They run in the order of a topologically-sorted dependency graph built from attributes.",
+          "audio": "audio/book-03-worlds/ch-b13.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Trap, [Update Before] only works between systems in the same group. Point it at a system in another group and Unity logs a warning and ignores it. You will see exactly this warning in our project's console, coming from Unity's own Companion Game Object Update Transform System. Harmless there; not harmless in your code.",
+          "audio": "audio/book-03-worlds/ch-b15.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "Our project uses ISystem everywhere except where it genuinely cannot, the same rule the packages follow. Connection Approval Server System is a System Base precisely because it awaits an HTTP call to Unity Authentication.",
+          "audio": "audio/book-03-worlds/ch-b17.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "ICustom Bootstrap lets you take over world creation. Nerve does, via Bovine Labs Bootstrap: Client Server Bootstrap. It is why our worlds are named and shaped the way they are, and why Create Client Server Worlds() is the thing the service graph calls when you press Start Game.",
+          "audio": "audio/book-03-worlds/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Next: the part where all those chunks get chewed in parallel.",
+          "audio": "audio/book-03-worlds/ch-b20.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-04-burst-and-jobs",
+      "title": "04 \u00b7 Burst and jobs",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Two separate technologies that people blur together. Keep them apart in your head:",
+          "audio": "audio/book-04-burst-and-jobs/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "Burst is a compiler. It turns a subset of C# into machine code via LLVM. Jobs is a scheduler. It runs work on worker threads with enforced data safety.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b3.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "You can use either without the other. Together they are why DOTS is fast.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b4.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "Hardware analogy, Burst is a cross-compiler with -O3 -ffast-math -march=native aimed at a language that normally forbids all three. [Burst Compile] is you signing the waiver.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b7.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Trap, [Burst Compile] on the methods but not on the struct silently does nothing. No error, no warning. Your system just runs at Mono speed forever. This is the single most common invisible perf bug in DOTS.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Inside a bursted method you may not touch: class, string, object, try/catch (in release), Unity Engine.Debug.Log, LINQ, delegates that aren't Function Pointer. Our Player Gather Input System deliberately has no [Burst Compile] on On Update, because Keyboard.current is a managed object. That is the correct call, not a compromise.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b10.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Burst compiles a separate copy of static fields. A static int written from managed code is invisible to bursted code. The supported bridge is Shared Static<T>:",
+          "audio": "audio/book-04-burst-and-jobs/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "That is exactly how the sample's Start Game button reaches E C S, and how Nerve's Client Disconnection Outcome escapes the graph. When you see Shared Static, read it as \"a global that Burst and Mono agree on\".",
+          "audio": "audio/book-04-burst-and-jobs/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "Jobs: a dependency graph the compiler checks",
+          "audio": "audio/book-04-burst-and-jobs/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "state.Dependency is a Job Handle, a token in that graph. Schedule a job, get a handle, pass it on. The safety system tracks which Native Arrays each job reads and writes and refuses to compile or run an unsafe combination.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Hardware analogy, the job system is a scoreboard. Every Native Container is a register with readers and writers tracked; the scheduler stalls dependents until hazards clear. Unity's version just yells at you at compile time instead of stalling silently.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "The escape hatches, and when they are legitimate",
+          "audio": "audio/book-04-burst-and-jobs/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "All three appear in this stack. Client App Context uses the third to hold a System State*, because a Grove context must reach the system it is running inside. That is not sloppiness, it is the same reason you cast away volatile exactly once in a driver, in a place with a comment.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Why our capsule code runs single-threaded",
+          "audio": "audio/book-04-burst-and-jobs/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Player Move System uses System API.Query with foreach, on the main thread, bursted. Two capsules. Scheduling a parallel job for two entities would cost more in scheduling overhead than it saves.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b20.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "The lesson generalises: parallelism is a throughput tool with a fixed setup cost. Below a few thousand entities, foreach on the main thread wins. Measure before you schedule.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b21.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "Probe, Jobs then Burst then Open Inspector in the editor shows the actual assembly Burst generated for any bursted method. Read it. If you were expecting vmulps and you see a call into a math library, something broke your vectorization.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Part I done. You now know the machine. Next: what is actually installed on it.",
+          "audio": "audio/book-04-burst-and-jobs/ch-b23.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-05-package-map",
+      "title": "05 \u00b7 The package map",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "21 direct dependencies. Every one earns its slot, we got the manifest down from 49 and then had to add several back, because of a mechanism you will meet in the next chapter.",
+          "audio": "audio/book-05-package-map/ch-b2.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "The dependency direction matters: Grove knows nothing about games. It is a generic graph executor. Canopy adds \"states\". Nerve adds \"multiplayer app\". Read them in that order and each one is small.",
+          "audio": "audio/book-05-package-map/ch-b6.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Entities and Net Code are pinned to a fork in vex-studio/tertle-monorepo, at one exact commit. Bovine Labs needs behaviour the shipping packages do not expose yet. The pin is a commit SHA, not a branch, which is the only sane way to depend on a fork.",
+          "audio": "audio/book-05-package-map/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Trap, mixing a forked com.unity.entities with a registry com.unity.netcode gives you version-solver errors that read like nonsense. Both come from the fork or neither does.",
+          "audio": "audio/book-05-package-map/ch-b9.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "That table is the chapter's whole point. Four of our packages exist purely to satisfy compile-time constraints. Chapter 06 explains the mechanism, and it is the nastiest silent failure in the entire Unity toolchain.",
+          "audio": "audio/book-05-package-map/ch-b11.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Three assemblies for ~400 lines of code looks like over-engineering. It is not; chapter 06 shows what happens when you collapse them.",
+          "audio": "audio/book-05-package-map/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "Probe, the real resolved graph, including transitives: ``bash cat Library/Package Manager/Project Cache | head -50 ls Library/Package Cache/ ``",
+          "audio": "audio/book-05-package-map/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "then 06 \u00b7 Assemblies, and the silent-death trap",
+          "audio": "audio/book-05-package-map/ch-b15.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-06-assemblies",
+      "title": "06 \u00b7 Assemblies, and the silent-death trap",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b1",
+          "title": "b1",
+          "focus": null,
+          "text": "06 \u00b7 Assemblies, and the silent-death trap",
+          "audio": "audio/book-06-assemblies/ch-b1.opus"
+        },
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "This chapter is worth more than its length. It describes a failure mode that produces no error, no warning, and no output, the code simply is not there. We lost hours to it twice.",
+          "audio": "audio/book-06-assemblies/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "An assembly definition is a compilation unit",
+          "audio": "audio/book-06-assemblies/ch-b3.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Unity compiles one DLL per.assembly definition. The file is the linker script:",
+          "audio": "audio/book-06-assemblies/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "version Defines, \"if that package exists, define this symbol\"",
+          "audio": "audio/book-06-assemblies/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Note the scope: per assembly. Every assembly definition that wants UNITY_NETCODE must declare its own version Defines entry. Symbols do not inherit from referenced assemblies. This is why the same 8-entry block is copy-pasted into every assembly definition in the Bovine Labs stack, and now into ours.",
+          "audio": "audio/book-06-assemblies/ch-b6.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "define Constraints, \"compile me only if ALL of these are defined\"",
+          "audio": "audio/book-06-assemblies/ch-b7.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "THE TRAP, define Constraints is all-or-nothing at the assembly level. If one symbol is missing, Unity does not compile the assembly. Not partially. At all. It produces no DLL, logs nothing, and every type in it silently ceases to exist.",
+          "audio": "audio/book-06-assemblies/ch-b9.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "We had stripped the manifest to a minimum. Five of those six were unsatisfied. So Bovine Labs.Nerve.State, the assembly containing sessions, ownership, approval, and every client node, was not built. The symptom was \"these types don't exist\", which reads like a bad using, which sends you hunting in exactly the wrong place.",
+          "audio": "audio/book-06-assemblies/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "The fix was installing four packages we thought we did not need. That is chapter 05's table.",
+          "audio": "audio/book-06-assemblies/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Probe, the only reliable check. If your assembly is missing from this list, its constraints failed: ``bash ls Library/Script Assemblies/ | grep -i nerve ``",
+          "audio": "audio/book-06-assemblies/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "The second trap: referencing an editor-only assembly from runtime code",
+          "audio": "audio/book-06-assemblies/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Bovine Labs.Nerve.State.Authoring has \"UNITY_EDITOR\" in its define Constraints. It is an editor-only assembly.",
+          "audio": "audio/book-06-assemblies/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Our Daggertooth assembly definition referenced it. In the editor: fine, everything compiles, everything works, ship it. In a player build, UNITY_EDITOR is undefined, that assembly is not built, and the reference silently drops, taking every type we used from it.",
+          "audio": "audio/book-06-assemblies/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "This is a bug that cannot reproduce until the day you make your first build, at which point it looks like a catastrophic regression.",
+          "audio": "audio/book-06-assemblies/ch-b17.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Rule of thumb, and it is the same rule the sample follows:",
+          "audio": "audio/book-06-assemblies/ch-b19.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "Most Bovine Labs assemblies set auto Referenced: false. That means they are not automatically visible to Assembly-CSharp, you must reference them explicitly. It is deliberate: it prevents accidental coupling and it keeps compile times down. It also means \"I can't see the type\" often just means \"add the reference\".",
+          "audio": "audio/book-06-assemblies/ch-b21.opus"
+        },
+        {
+          "id": "b24",
+          "title": "b24",
+          "focus": null,
+          "text": "Is the DLL in Library/Script Assemblies/? Does your assembly definition reference the assembly? Does your assembly definition declare the version Defines for symbols you use in #if? Do your define Constraints match the constraints of everything you reference? Is anything you reference UNITY_EDITOR-only while you are not?",
+          "audio": "audio/book-06-assemblies/ch-b24.opus"
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "Five questions. They would have saved us both incidents.",
+          "audio": "audio/book-06-assemblies/ch-b25.opus"
+        },
+        {
+          "id": "b26",
+          "title": "b26",
+          "focus": null,
+          "text": "then 07 \u00b7 Core: settings, logging, and the registry",
+          "audio": "audio/book-06-assemblies/ch-b26.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-07-core",
+      "title": "07 \u00b7 Core: settings, logging, and the registry",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b1",
+          "title": "b1",
+          "focus": null,
+          "text": "07 \u00b7 Core: settings, logging, and the registry",
+          "audio": "audio/book-07-core/ch-b1.opus"
+        },
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Bovine Labs.Core is the base plate. Four subsystems matter to us.",
+          "audio": "audio/book-07-core/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "1. Settings, a Scriptable Object that becomes an entity",
+          "audio": "audio/book-07-core/ch-b3.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "The problem: designers want to tune numbers in the Inspector. E C S wants blittable data in chunks. Settings is the bridge.",
+          "audio": "audio/book-07-core/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Each Settings Base implements Bake(Baker<Settings Authoring>) and adds whatever components it wants onto one entity.",
+          "audio": "audio/book-07-core/ch-b5.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "Which world does a settings asset land in? [Settings World(\"client\")] says. The lookup lives in Editor Settings:",
+          "audio": "audio/book-07-core/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Editor Settings Utility.Get Settings<T>() does the whole dance in one call: finds or creates the asset in Assets/Settings/Settings/, reads [Settings World], and inserts it into the right prefab's array (sorted, deduped, null-pruned).",
+          "audio": "audio/book-07-core/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "That one call is how our Client State Settings got wired. Read it as the supported API and never hand-edit those prefab arrays.",
+          "audio": "audio/book-07-core/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Probe, after creating a settings asset, confirm the link: ``bash grep -A2 \"settings:\" \"./Settings/Authoring/Client Settings.prefab\" ``",
+          "audio": "audio/book-07-core/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "2. K, typed constants without magic strings",
+          "audio": "audio/book-07-core/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "K is a code-generated set of named byte/int constants sourced from settings assets, so layer masks and enum-ish IDs stop being magic numbers scattered through code. You will see Assets/Settings/K/ in this project. It is small; it is not on our critical path; know it exists so you do not reinvent it.",
+          "audio": "audio/book-07-core/ch-b12.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "Unity Engine.Debug.Log is a managed call. Bursted code cannot make it. BLLogger is a singleton component holding a native ring buffer:",
+          "audio": "audio/book-07-core/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "A managed system drains the buffer each frame and forwards to Unity's console. Grove's Graph Impl grabs it into Grove Context.Logger so any node, anywhere, can log without breaking Burst.",
+          "audio": "audio/book-07-core/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Hardware analogy, this is a UART with a D M A ring buffer. The fast path writes into a circular buffer with no formatting; a slow consumer drains and formats. Same pattern, same reason.",
+          "audio": "audio/book-07-core/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "4. Object Definition, a handle registry for prefabs",
+          "audio": "audio/book-07-core/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "The problem: an E C S component cannot hold a prefab reference. It can hold an int.",
+          "audio": "audio/book-07-core/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Each prefab gets an Object Definition asset carrying a stable numeric ID. A settings asset registers them all. At bake time that becomes a lookup table; at runtime you spawn by ID.",
+          "audio": "audio/book-07-core/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Our two definitions: Player Capsule = 2, Player Controller = 3. Server Settings points player Controller and player Character at them, which is how Nerve's spawn code knows what to instantiate for a joining player.",
+          "audio": "audio/book-07-core/ch-b20.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "IDs are assigned by an editor post-processor, Auto Ref Processor. It batches work through Editor Application.delay Call and keeps an Already Processed Assets set marked [No Auto Statics Cleanup], so the set survives domain reload.",
+          "audio": "audio/book-07-core/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Trap, if an asset lands in that set before it is fully importable, it is skipped and never revisited. Symptom: every Object Definition.ID is 0 and the registry is empty, with no error. We hit this exactly once and unstuck it by reflecting into the processor to clear the set and re-run. That is unsupported and still sits in our debt list; the supported unstick is to delete Library/ and let the import order be natural.",
+          "audio": "audio/book-07-core/ch-b23.opus"
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "Four patterns, all of which you will now recognise in Nerve because Nerve is built from them:",
+          "audio": "audio/book-07-core/ch-b25.opus"
+        },
+        {
+          "id": "b26",
+          "title": "b26",
+          "focus": null,
+          "text": "Inspector data then entity via a baker on a prefab in a world-targeted scene. Managed identity then runtime identity via a numeric handle and a table. Slow, managed work then ring buffer drained by a managed consumer. Editor-time wiring then a utility that owns the whole dance, not hand-edited assets.",
+          "audio": "audio/book-07-core/ch-b26.opus"
+        },
+        {
+          "id": "b27",
+          "title": "b27",
+          "focus": null,
+          "text": "then 08 \u00b7 Grove: a virtual machine for gameplay logic",
+          "audio": "audio/book-07-core/ch-b27.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-08-grove",
+      "title": "08 \u00b7 Grove: a virtual machine for gameplay logic",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b1",
+          "title": "b1",
+          "focus": null,
+          "text": "08 \u00b7 Grove: a virtual machine for gameplay logic",
+          "audio": "audio/book-08-grove/ch-b1.opus"
+        },
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "This is the chapter where your background pays the biggest dividend, because Grove is not a \"visual scripting tool\". Grove is a bytecode VM with an ahead-of-time linker, a flat instruction image, and a switch-dispatch interpreter generated at compile time.",
+          "audio": "audio/book-08-grove/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "You have written one of these. Possibly for a bootloader.",
+          "audio": "audio/book-08-grove/ch-b3.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "One node exists in four forms, and confusing them is the main source of Grove pain:",
+          "audio": "audio/book-08-grove/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Hardware analogy, Node then Auth then Data is compile then link then flash. Execute is the instruction decoder. [Execute Node((int)Nerve Execution Types.Client Go In Game, \u2026)] is an opcode assignment.",
+          "audio": "audio/book-08-grove/ch-b6.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Literally an opcode table. The negative offset namespaces Nerve's opcodes away from Grove's built-ins so two packages can extend the same VM without colliding.",
+          "audio": "audio/book-08-grove/ch-b8.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "At bake time the whole graph is flattened into one Blob Asset Reference<Graph Data>, a single contiguous allocation, relocatable, with internal offsets instead of pointers.",
+          "audio": "audio/book-08-grove/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Blob Ptr<T> is a relative offset, not an address. That is what makes the whole image memcpy-able, cache-friendly, and shareable read-only across every entity running the graph.",
+          "audio": "audio/book-08-grove/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Hardware analogy, position-independent code with PC-relative addressing. Same trick, same reason: you do not know where it will be loaded.",
+          "audio": "audio/book-08-grove/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Dispatch: source generation, not virtual calls",
+          "audio": "audio/book-08-grove/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "A blob cannot hold a delegate. So Grove's source generator scans for [Execute Node], collects every opcode, and generates a switch:",
+          "audio": "audio/book-08-grove/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Burst compiles that switch into a jump table. No virtual dispatch, no function pointer indirection, fully inlinable. This is why Grove is fast enough to run per-entity.",
+          "audio": "audio/book-08-grove/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "The generic <T> on every Execute is the context type. The generator instantiates the switch once per context type, so Client App Context gets its own specialised copy with everything monomorphised.",
+          "audio": "audio/book-08-grove/ch-b16.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Every node receives ref T context. Nodes are pure functions over (their data, the context). The context is how a node reaches the world.",
+          "audio": "audio/book-08-grove/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "partial matters: the generator adds Create Generated / Update Generated / Set Chunk Generated and the IContext Generator<T> implementation by scanning your Buffer Container<> / Component Container<> fields.",
+          "audio": "audio/book-08-grove/ch-b19.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "The blob is read-only and shared. Anything a node needs to remember goes in Dynamic Buffer<Grove State> on the entity, a hash map keyed by Graph State Util.Get Key(grove Context, node Id, local Key).",
+          "audio": "audio/book-08-grove/ch-b21.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "That is exactly how Client Go In Game remembers \"I already sent the remote procedure call for this connection\" across ticks, and how Client Connection Tracker publishes the snapshot the gate reads.",
+          "audio": "audio/book-08-grove/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Hardware analogy, blob = ROM, Grove State = RAM, Grove Context = the register file plus MMIO window. The VM is Harvard architecture.",
+          "audio": "audio/book-08-grove/ch-b23.opus"
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "Note the ordering that makes our client system work: Get Execution copies the context by value, so writing execution.Context.Connection afterwards is what the run actually sees.",
+          "audio": "audio/book-08-grove/ch-b25.opus"
+        },
+        {
+          "id": "b27",
+          "title": "b27",
+          "focus": null,
+          "text": "Now: what happens when you build a state machine on top of it.",
+          "audio": "audio/book-08-grove/ch-b27.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-09-canopy",
+      "title": "09 \u00b7 Canopy: hierarchical states",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Canopy is one idea: a state is a node that can contain other states. Everything else follows.",
+          "audio": "audio/book-09-canopy/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Rules the validator enforces (Canopy Graph Validation):",
+          "audio": "audio/book-09-canopy/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "That third one is delightful and worth pausing on. Canopy State Id is a hash of a Fixed String64Bytes, so two different names can collide. The validator brute-forces the check at author time rather than letting you ship a 1-in-2^n heisenbug.",
+          "audio": "audio/book-09-canopy/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Hardware analogy, a CAM with collision detection at programming time. Same reason you validate a hash table's key set offline when lookups must be O(1) and correct.",
+          "audio": "audio/book-09-canopy/ch-b6.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "At any moment the machine has an active path from root to a leaf, not a single state. In our client graph the active path is root then gameplay. Both are active. root's blocks run every tick, which is exactly why the connection tracker lives there and keeps working no matter which child is current.",
+          "audio": "audio/book-09-canopy/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Trap, put the connection tracker on connecting instead of root and you stop detecting disconnects the moment you enter gameplay. The bug appears only after a successful connection, which is the worst possible time to find it.",
+          "audio": "audio/book-09-canopy/ch-b9.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "A state is a container. The work is in blocks attached to it.",
+          "audio": "audio/book-09-canopy/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Blocks receive a Canopy Update State, which is an enum-ish signal:",
+          "audio": "audio/book-09-canopy/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Every block must check for Exit and bail. Look at any Nerve node and the first three lines are the same:",
+          "audio": "audio/book-09-canopy/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "Trap, forget that check and your block does its work while the state is being torn down, typically after the data it depends on is gone.",
+          "audio": "audio/book-09-canopy/ch-b14.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "There are no transition edges in the graph. A node just calls:",
+          "audio": "audio/book-09-canopy/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "where On Disconnection is a Canopy State Id authored as a string. The machine resolves it, exits the old path bottom-up, enters the new path top-down.",
+          "audio": "audio/book-09-canopy/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "This is deliberate. Edges in a visual graph get unreadable fast; a named jump is a goto and is honest about it. The validator still checks that every Canopy Go To target exists.",
+          "audio": "audio/book-09-canopy/ch-b18.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Remember History on a composite state makes re-entry resume the child you left, instead of the default child. Classic UML shallow history. Free, and occasionally exactly what a pause menu wants.",
+          "audio": "audio/book-09-canopy/ch-b20.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "Three calls, and that is the whole driver system:",
+          "audio": "audio/book-09-canopy/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Plus Exit on destroy, which walks the active path calling every block with Canopy Update State.Exit so nothing leaks. Our Client App State System.On Destroy does this, skip it and the last state never cleans up.",
+          "audio": "audio/book-09-canopy/ch-b23.opus"
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "Because \"app flow\" is a hierarchical state machine, and once it is data:",
+          "audio": "audio/book-09-canopy/ch-b25.opus"
+        },
+        {
+          "id": "b26",
+          "title": "b26",
+          "focus": null,
+          "text": "a designer can see it the validator can prove it well-formed the tests can build one in six lines (Client Connection Tracker Execution Tests does) and you can ship a different one per world without recompiling",
+          "audio": "audio/book-09-canopy/ch-b26.opus"
+        },
+        {
+          "id": "b27",
+          "title": "b27",
+          "focus": null,
+          "text": "That last point is the one we exploited today: the sample shipped a service graph and a menu graph, and we added a client graph without touching a single package file.",
+          "audio": "audio/book-09-canopy/ch-b27.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-10-nerve",
+      "title": "10 \u00b7 Nerve: the game framework",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Nerve is the layer that answers: who creates the worlds, what loads into them, who is allowed to connect, and what do they get to control?",
+          "audio": "audio/book-10-nerve/ch-b2.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Bovine Labs Bootstrap implements ICustom Bootstrap. It creates Service World at startup and exposes Create Client Server Worlds(), which the service graph's Create World node calls when you press Start Game.",
+          "audio": "audio/book-10-nerve/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Trap, Requested Play Type defaults to Client And Server. In a Multiplayer Play Mode virtual player that means it builds a second Server World, which tries to bind 127.0.0.1:7979, which is already taken. Chapter 23 is entirely about this.",
+          "audio": "audio/book-10-nerve/ch-b6.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "A Sub Scene Set says these scenes load into worlds matching these flags:",
+          "audio": "audio/book-10-nerve/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "This is the mechanism that puts our Client State Settings in the client world: it is on Client Settings.prefab, instantiated in Client.unity, which Required Client loads into anything flagged Client. Trace it backwards from a missing entity and you will land here.",
+          "audio": "audio/book-10-nerve/ch-b9.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Each world gets a Nerve Graph Settings subclass carrying a graph asset:",
+          "audio": "audio/book-10-nerve/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Three graph types, three importers, three [Menu Item]s, Client Nerve Graph shipped with Nerve all along. The sample just never authored a.cnerve.",
+          "audio": "audio/book-10-nerve/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "4 \u00b7 Authentication, and the hole we found",
+          "audio": "audio/book-10-nerve/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "With approval off (the default) both systems call state.Enabled = false in On Create. Nothing ever adds Connection Approved. And Player Connection System only spawns for connections that have it. So on a default project, no player ever spawns, silently.",
+          "audio": "audio/book-10-nerve/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Turning approval on is not free either: our topology is a separate Client World + Server World, and World.Is Server() is true for that Server World, so it takes the real J W T branch and calls out to player-auth.services.api.unity.com.",
+          "audio": "audio/book-10-nerve/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Our Local Approve Connection System fills the gap, trivially approving with Account Identity = \"local-{network Id}\". It is labelled a hack in its own doc comment because it is one, and the comment says exactly when to delete it.",
+          "audio": "audio/book-10-nerve/ch-b16.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Two entities per player, not one. The controller is the persistent identity (survives respawn); the controlled is the current pawn. Command Target on the connection points at whatever entity should receive this player's input.",
+          "audio": "audio/book-10-nerve/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "That is why our two-player run shows 4 ghosts: 2 controllers + 2 capsules. If you ever see 3, two clients adopted the same controller, an identity collision.",
+          "audio": "audio/book-10-nerve/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Probe, count them per world: ``csharp em.Create Entity Query(Component Type.Read Only<Ghost Instance>()).Calculate Entity Count() ``",
+          "audio": "audio/book-10-nerve/ch-b20.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-11-anchor-ui",
+      "title": "11 \u00b7 Anchor and the UI layer",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "UI is where a DOTS project gets awkward: UI Toolkit is managed, event-driven, and allocation-happy; E C S is none of those. Anchor is the negotiated peace treaty.",
+          "audio": "audio/book-11-anchor-ui/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "App UI gives you the widget set and a navigation stack (Anchor Settings.Start Destination is \"splash\" in our sample). Anchor gives you View Model objects that a U X M L binding can read and an E C S system can write, plus the UXMLService that resolves types at import.",
+          "audio": "audio/book-11-anchor-ui/ch-b4.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Buttons rendered. Buttons highlighted on hover. Buttons did nothing when clicked.",
+          "audio": "audio/book-11-anchor-ui/ch-b6.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "THE TRAP, data-source-type in U X M L is resolved when the asset is imported, not when the panel is built. If the assembly containing that type has not been compiled yet, the reference is silently dropped and never retried.",
+          "audio": "audio/book-11-anchor-ui/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "The fix is one line, and it is worth memorising:",
+          "audio": "audio/book-11-anchor-ui/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Force-reimport the.uxml after scripts compile. Any time you add U X M L and C# in the same operation, you owe yourself this.",
+          "audio": "audio/book-11-anchor-ui/ch-b10.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "I inspected button.data Source at runtime, found null, and declared that the proof. It was not: data Source inherits down the visual tree, and reading it on a leaf does not report the inherited value. The real evidence was clickable.command == null.",
+          "audio": "audio/book-11-anchor-ui/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "The lesson generalises past UI: a null read is only evidence if you know the read is authoritative. In a stack with inheritance, resolution order, or lazy binding, it usually is not.",
+          "audio": "audio/book-11-anchor-ui/ch-b13.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Two Shared Statics, and that is the entire API surface:",
+          "audio": "audio/book-11-anchor-ui/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Hardware analogy, a doorbell register. The managed side writes a bit; the fast side polls and clears it. No allocation, no callback across the Burst boundary, no ownership question.",
+          "audio": "audio/book-11-anchor-ui/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "This is exactly how we drove the game from the CLI during testing:",
+          "audio": "audio/book-11-anchor-ui/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "One eval call, no mouse. Because the UI is just a writer to a register, anything can be that writer.",
+          "audio": "audio/book-11-anchor-ui/ch-b18.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Never put game logic in a UI callback. Write a request; let a system act. If a binding looks broken, suspect import order before you suspect the binding. [Settings World]-style world targeting applies to UI too, the menu UI lives in the menu world and dies with it. Prefer one Shared Static request struct per direction over a growing event bus. It stays greppable.",
+          "audio": "audio/book-11-anchor-ui/ch-b20.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "then 12 \u00b7 From editor node to runtime bytes",
+          "audio": "audio/book-11-anchor-ui/ch-b21.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-12-authoring-to-blob",
+      "title": "12 \u00b7 From editor node to runtime bytes",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "The full toolchain, end to end. This is the chapter to re-read when a graph \"doesn't do anything\", because the answer is always which stage did it die at.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Stage by stage, with the failure signature",
+          "audio": "audio/book-12-authoring-to-blob/ch-b4.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Doing this in code rather than by hand in the graph window is the difference between a reproducible project and an artifact nobody dares regenerate. Nerve's own sample builds its graphs this way; so does ours (Assets/Editor/Client Graph Setup.cs).",
+          "audio": "audio/book-12-authoring-to-blob/ch-b6.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "Failure signature: Try Set Value returns false then you used the wrong option name. Our helper throws and prints every available option, which turns a 20-minute hunt into a one-line message.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b7.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "[Use With Graph(typeof(Client Nerve Graph))] on a node is the gate. Put a Client Go In Game Node in a.snerve and the toolkit will not offer it.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Failure signature: graph asset imports but Asset Database.Load Asset At Path<Nerve Graph Auth> returns null then the importer did not run, usually a stale Library/.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b10.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Runs on every graph change and at bake. Our setup script re-checks explicitly and throws, so a broken graph fails at build time rather than as a silent no-op at runtime.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b12.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "Note file ID: 9196009390298549883, the Nerve Graph Auth is a sub-asset inside the.cnerve file, not the file itself. Both the guid and the file ID must be right.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Failure signature: 'X' is missing a Nerve graph. at bake.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b15.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "baker.Depends On is what makes editing the graph re-bake the subscene. Omit it and you edit a graph, see no change, and lose an hour.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Failure signature: graph edits have no runtime effect then missing Depends On, or the subscene did not re-import.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b18.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "The entity now carries Nerve State Machine { Graph, State Id } and a Dynamic Buffer<Grove State>. The executor's query is With All RW<Grove State>().With All RW<Nerve State Machine>(), if either is missing, the system finds nothing and does nothing, quietly.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b20.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "When a graph does nothing, walk down this list; the first no is your bug.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "We used exactly this ladder to land the client graph, and steps 5, 7 are where the two non-obvious hops live.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b23.opus"
+        },
+        {
+          "id": "b24",
+          "title": "b24",
+          "focus": null,
+          "text": "Probe, step 7, in play mode: ``csharp foreach (var w in World.All) Debug.Log($\"{w.Name}: {w.Entity Manager.Create Entity Query( Component Type.Read Only<Nerve State Machine>()).Calculate Entity Count()}\"); ``",
+          "audio": null
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "Part II done. You can now read every package in the stack. Time for the wire.",
+          "audio": "audio/book-12-authoring-to-blob/ch-b25.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-13-topology",
+      "title": "13 \u00b7 Network topology",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Forget \"multiplayer\" for a second. Look at what is physically there.",
+          "audio": "audio/book-13-topology/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Both drivers exist in the same process here. Net Code registers two transports:",
+          "audio": "audio/book-13-topology/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Our host's own client uses I P C; the second Play Mode player uses U D P to loopback. That is why the Play Mode Tools window shows both endpoints on the server row.",
+          "audio": "audio/book-13-topology/ch-b5.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "There is no Connection class. A connection is an entity, and its component set is its state machine:",
+          "audio": "audio/book-13-topology/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Read that chain as a checklist. Every \"player doesn't spawn\" bug is one of those components missing, and the ladder in chapter 19 walks it.",
+          "audio": "audio/book-13-topology/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Trap, no ghosts are sent until Network Stream In Game exists on the connection. Not \"fewer\". None. It is the single flag that arms the whole snapshot system, and it is why chapter 21's client graph matters so much.",
+          "audio": "audio/book-13-topology/ch-b9.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "The transport composes pipeline stages per channel:",
+          "audio": "audio/book-13-topology/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Hardware analogy, a protocol stack assembled from composable shift registers. Each stage owns a slice of per-connection state and hands a buffer to the next.",
+          "audio": "audio/book-13-topology/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Snapshots are deliberately unreliable: a lost snapshot is not worth retransmitting, because the next one (20 milliseconds later) already contains newer truth. Commands are the same. Only remote procedure calls and ghost spawn/despawn need reliability.",
+          "audio": "audio/book-13-topology/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "That single design decision is why Net Code tolerates packet loss gracefully and why you must never assume a specific tick's data arrived.",
+          "audio": "audio/book-13-topology/ch-b14.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Connection Events For Tick is a Native Array<Net Code Connection Event>.Read Only valid for this tick only. Connection State.State walks Unknown then Connecting then Handshake then Approval then Connected then Disconnected.",
+          "audio": "audio/book-13-topology/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "Nerve's Client Connection Tracker consumes exactly this array and folds it into a durable Client Connection Snapshot in graph state, because the events vanish next tick but the conclusion (\"we are disconnected, reason Timeout\") must persist.",
+          "audio": "audio/book-13-topology/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Hardware analogy, the event array is a status register you must read before the next clock edge. The snapshot is the latch you copy it into.",
+          "audio": "audio/book-13-topology/ch-b18.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Client Server Bootstrap.Requested Play Type decides which worlds get built:",
+          "audio": "audio/book-13-topology/ch-b20.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "With com.unity.dedicated-server installed, UNITY_USE_MULTIPLAYER_ROLES is defined and Multiplayer Roles override this per virtual player. Chapter 23 shows why that is the difference between a working second player and a port-bind crash.",
+          "audio": "audio/book-13-topology/ch-b21.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "Probe, what the driver actually bound: ``csharp var d = System API.Get Singleton<Network Stream Driver>(); // Play Mode Tools shows the same thing: [I P C.] [U D P.] ``",
+          "audio": "audio/book-13-topology/ch-b22.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-14-ghosts",
+      "title": "14 \u00b7 Ghosts: replicating state",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "A ghost is an entity the server owns and mirrors to clients. Our capsule is one. So is the controller.",
+          "audio": "audio/book-14-ghosts/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Ghost Authoring Component on the prefab produces a serialization schema: which components, which fields, at what precision, with what change-detection. Baking generates serializer code per ghost type, no reflection at runtime.",
+          "audio": "audio/book-14-ghosts/ch-b4.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "That third row is the whole design in one dropdown. Chapter 17 unpacks it.",
+          "audio": "audio/book-14-ghosts/ch-b6.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "For a player capsule, Owner Predicted is nearly always right: you need your own capsule to respond in zero frames; you do not need someone else's to be frame-exact, you need it smooth.",
+          "audio": "audio/book-14-ghosts/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Snapshots: delta-compressed, importance-scheduled",
+          "audio": "audio/book-14-ghosts/ch-b9.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Three consequences you must internalise:",
+          "audio": "audio/book-14-ghosts/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "A snapshot is not the whole world. It is as much of it as fits in ~1200 bytes, prioritised. Low-importance ghosts update at a lower effective rate. This is a feature. Delta baselines are per connection. The server remembers what each client has ACKed. Loss is normal. The next snapshot re-bases automatically.",
+          "audio": "audio/book-14-ghosts/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Hardware analogy, importance scheduling is a weighted round-robin arbiter on a fixed-width bus. You do not get more bandwidth; you get to choose who wastes it.",
+          "audio": "audio/book-14-ghosts/ch-b13.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Fewer bits on the wire, and, crucially, quantized values compare equal more often, so delta compression finds more unchanged fields. Choose per field: position often 1000, rotation 1000, a health value maybe 1.",
+          "audio": "audio/book-14-ghosts/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "Trap, quantization is a real precision loss, applied before the client compares predicted vs received. Set it too coarse and prediction will disagree with the server constantly, causing continuous micro-rollbacks that look like jitter. Set it too fine and you burn bandwidth. This is a tuning knob, not a formality.",
+          "audio": "audio/book-14-ghosts/ch-b17.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Ghost Relevancy lets the server decide a ghost simply does not exist for a given connection, interest management, fog of war, zoning. Nerve wraps this in a Relevancy Settings asset, which our project has registered on Server Settings.prefab.",
+          "audio": "audio/book-14-ghosts/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "For two capsules on one map it does nothing. At 200 players it is the difference between shipping and not.",
+          "audio": "audio/book-14-ghosts/ch-b20.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "Our capsules are server-spawned: Player Connection System instantiates on the server, and the client materialises them when the snapshot arrives. That is why ghosts=2 appears in the client world without the client ever calling Instantiate.",
+          "audio": "audio/book-14-ghosts/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Probe, see the schema Unity actually generated: `` Multiplayer then Ghost Snapshot Inspector (in play mode) `` It shows per-ghost byte cost. If a ghost is unexpectedly expensive, a field you did not mean to replicate is in the schema.",
+          "audio": "audio/book-14-ghosts/ch-b23.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-15-the-tick",
+      "title": "15 \u00b7 The tick",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Chapter 01 said the frame loop is a lousy clock. Net Code builds a good one on top of it. This chapter is that clock.",
+          "audio": "audio/book-15-the-tick/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Simulation Tick Rate is authored in Client Server Tick Rate. Everything on the wire is stamped with a Network Tick, a wrapping uint, so never compare with <. Use tick.Is Newer Than(other), which handles wraparound the way a sequence-number comparison must.",
+          "audio": "audio/book-15-the-tick/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Hardware analogy, Network Tick is a wrapping counter with a comparator that understands modular distance. Exactly like TCP sequence numbers. Comparing raw values works for hours and then breaks once, catastrophically.",
+          "audio": "audio/book-15-the-tick/ch-b5.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Three different \"nows\" on one screen simultaneously. Your capsule is drawn at the predicted tick; the other player's capsule is drawn at the interpolated tick. That is not a bug, that is the entire trade, made explicit.",
+          "audio": "audio/book-15-the-tick/ch-b8.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "A command for tick T must be in the server's hands before the server simulates T. So the client must generate it early, at least one-way latency plus jitter margin. Net Code measures round trip time continuously and adjusts the lead automatically. When the network worsens, the client silently runs further ahead.",
+          "audio": "audio/book-15-the-tick/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Trap, a command that arrives late is dropped, and the server extrapolates from the last input it has. That reads to the player as \"my input was eaten\". If you see this, look at the command age stats in Play Mode Tools before you look at your input code.",
+          "audio": "audio/book-15-the-tick/ch-b11.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Render at 144 hertz with a 60 hertz simulation and most frames have no new tick. Rendering at the last full tick would visibly stutter. So Net Code runs a partial tick: the prediction group simulates a fraction of a tick purely for presentation, then throws it away and re-runs the full tick when it truly arrives.",
+          "audio": "audio/book-15-the-tick/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "Trap, spawn a particle, play a sound, or increment a counter in the prediction group without checking Is First Time Fully Predicting Tick and it happens several times per tick. Every \"my gun fires 3 bullets per trigger pull\" bug is this.",
+          "audio": "audio/book-15-the-tick/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Continuous integration (moving a transform) is safe in partial ticks. One-shot side effects are not.",
+          "audio": "audio/book-15-the-tick/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "The prediction group runs N times per frame",
+          "audio": "audio/book-15-the-tick/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "This is why Predicted Simulation System Group is special and why chapter 17 exists.",
+          "audio": "audio/book-15-the-tick/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "System API.Time.Delta Time inside prediction",
+          "audio": "audio/book-15-the-tick/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Inside the prediction group, the delta is the tick delta, not the frame delta. That is why our movement code is correct without doing anything clever:",
+          "audio": "audio/book-15-the-tick/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "If it used frame delta, a rollback replaying 10 ticks in one frame would move the capsule 10 frames' worth of distance. Determinism dies, and it dies only under packet loss, which is the worst kind of bug to reproduce.",
+          "audio": "audio/book-15-the-tick/ch-b20.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "Higher tick rate = lower input latency, more CPU on the server, more bandwidth, and more rollback work per correction. It multiplies through everything.",
+          "audio": "audio/book-15-the-tick/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Probe, read the live clock: ``csharp var t = System API.Get Singleton<Network Time>(); Debug.Log($\"server={t.Server Tick} partial={t.Is Partial Tick} first Full={t.Is First Time Fully Predicting Tick}\"); ``",
+          "audio": null
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-16-commands",
+      "title": "16 \u00b7 Commands: input on the wire",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "The single most important sentence in this book:",
+          "audio": "audio/book-16-commands/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Our component is four bytes and it is the whole protocol:",
+          "audio": "audio/book-16-commands/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "If we sent Position instead, a modified client could write any position it liked and the server would obey. That is client authority, and it is the hole every cheat engine walks through. Unity's own prediction docs open by warning about it.",
+          "audio": "audio/book-16-commands/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "What IInput Component Data generates for you",
+          "audio": "audio/book-16-commands/ch-b6.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "You write one struct; the generator produces the buffer type, the serializer, and the send/receive systems. The buffer is a ring of the last ~64 ticks, not a single value, because the server needs history, and because rollback needs to replay it.",
+          "audio": "audio/book-16-commands/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Hardware analogy, a circular D M A buffer with a timestamp per slot. The producer writes at the head; the consumer reads by timestamp, not by position.",
+          "audio": "audio/book-16-commands/ch-b8.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Stages 2 and 5 are the ones nobody expects, and they are why the design works:",
+          "audio": "audio/book-16-commands/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Stage 5 is the magic. During a rollback replaying ticks 100, 110, this group re-materialises the exact input from tick 100, then 101, and so on. Your movement system reads Player Move Input and never knows it is in a replay.",
+          "audio": "audio/book-16-commands/ch-b11.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Three details that are all load-bearing:",
+          "audio": "audio/book-16-commands/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "With All<Ghost Owner Is Local>(), without it you would write input into every player's capsule in your world. Net Code adds this tag to ghosts whose Ghost Owner.Network Id matches yours. No [Burst Compile], Keyboard.current is managed. Correct, not a compromise. Client Simulation only, the server must never invent input.",
+          "audio": "audio/book-16-commands/ch-b14.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "Our capsule uses Auto Command Target. Nerve also sets Command Target on the connection via Player Connection System, because Nerve supports controlling different pawns over time.",
+          "audio": "audio/book-16-commands/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Trap, if input reaches the client's own capsule but the server never moves, suspect routing first. The client is happily predicting with input the server has no reason to associate with that entity.",
+          "audio": "audio/book-16-commands/ch-b18.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Each command packet contains the last few ticks of input, not just one. Lose a packet and the next one still carries the missing tick. This is why unreliable transport is acceptable for input: the redundancy is in the payload, not the protocol.",
+          "audio": "audio/book-16-commands/ch-b20.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "Probe, Play Mode Tools shows command age and how many commands the server is holding. A steadily growing age means the client's prediction lead is drifting.",
+          "audio": "audio/book-16-commands/ch-b21.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-17-prediction",
+      "title": "17 \u00b7 Prediction and rollback",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "This is the heart of the machine, and you have built it before, in silicon.",
+          "audio": "audio/book-17-prediction/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "Hardware analogy, a branch predictor with speculative execution and a pipeline flush. The client speculates forward on predicted input. The server is the branch resolution unit. On a mispredict, you flush and replay from the checkpoint. Same structure, same costs, same failure modes.",
+          "audio": "audio/book-17-prediction/ch-b3.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Round trip is 50 milliseconds. If the client waited for the server to confirm every step, pressing W would move your capsule 50 milliseconds later. Unplayable.",
+          "audio": "audio/book-17-prediction/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "So the client does not wait. It applies your input immediately, assuming the server will agree. Usually it does.",
+          "audio": "audio/book-17-prediction/ch-b6.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Every step of that replay runs your systems, with the input from the command ring buffer for that exact tick. Which is why chapter 16's stage 5 exists.",
+          "audio": "audio/book-17-prediction/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Simulate: the one bit that makes it work",
+          "audio": "audio/book-17-prediction/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Simulate is an enableable tag component. Before each tick of the prediction loop, Net Code enables it on exactly the ghosts that should simulate that tick and disables it on the rest.",
+          "audio": "audio/book-17-prediction/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "THE TRAP, omit With All<Simulate>() and your system integrates every predicted entity on every iteration of the rollback loop. Replaying 10 ticks moves the capsule 10\u00d7 too far. It looks fine on a perfect connection and disintegrates the moment a packet drops. This is the single most common Net Code bug, and it only appears under exactly the conditions that are hardest to reproduce.",
+          "audio": "audio/book-17-prediction/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Think of Simulate as the clock-enable line on a register. The clock is running; the enable decides who latches this edge.",
+          "audio": "audio/book-17-prediction/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Why our movement system is written the way it is",
+          "audio": "audio/book-17-prediction/ch-b13.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "There is no client version and no server version. One rule, executed twice. That is what \"server-authoritative with client prediction\" actually means in code.",
+          "audio": "audio/book-17-prediction/ch-b15.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "Anything inside the prediction group can run many times for the same tick. Therefore:",
+          "audio": "audio/book-17-prediction/ch-b17.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Every predicted ghost carries Predicted Ghost { Applied Tick, Prediction Start Tick }. It tells you which server tick the current state was last corrected from. Useful for debugging: if Applied Tick is far behind Server Tick, this ghost has not been corrected in a while.",
+          "audio": "audio/book-17-prediction/ch-b20.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Quantization. The server's float, quantized and dequantized, is not bit-identical. Input timing. A command arriving one tick late changes the server's simulation. Other players. You cannot predict what someone else pressed. Their capsule affects yours; your prediction of the shared world was wrong. Server-only events. A pickup despawning, a door opening.",
+          "audio": "audio/book-17-prediction/ch-b23.opus"
+        },
+        {
+          "id": "b24",
+          "title": "b24",
+          "focus": null,
+          "text": "Small rollbacks every few seconds are normal and healthy. Continuous large rollbacks mean your prediction is genuinely diverging, look at floating-point non-determinism, at uninitialised state, and at systems missing Simulate.",
+          "audio": "audio/book-17-prediction/ch-b24.opus"
+        },
+        {
+          "id": "b26",
+          "title": "b26",
+          "focus": null,
+          "text": "Rollback cost = (ticks to replay) \u00d7 (cost of your predicted systems). A 200 milliseconds spike at 60 hertz is 12 replayed ticks in one frame. If your predicted simulation costs 2 milliseconds, that frame costs 24 milliseconds and you drop it.",
+          "audio": "audio/book-17-prediction/ch-b26.opus"
+        },
+        {
+          "id": "b27",
+          "title": "b27",
+          "focus": null,
+          "text": "Hardware analogy, deeper pipeline, more expensive flush. Same engineering answer: keep the predicted set small, keep predicted systems cheap, and do not predict what does not need to feel instant.",
+          "audio": "audio/book-17-prediction/ch-b27.opus"
+        },
+        {
+          "id": "b28",
+          "title": "b28",
+          "focus": null,
+          "text": "Probe, Play Mode Tools then prediction stats shows ticks-per-frame. Sustained values above 1 mean you are replaying constantly.",
+          "audio": "audio/book-17-prediction/ch-b28.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-18-interpolation",
+      "title": "18 \u00b7 Interpolation",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Prediction is for the entity you control. Interpolation is for everything else, and it is the cheaper, calmer half of the system.",
+          "audio": "audio/book-18-interpolation/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Snapshots arrive every ~50 milliseconds (20 hertz send rate is common) while you render every ~7 milliseconds. You cannot show the newest snapshot the instant it arrives; you would get a slideshow with teleports.",
+          "audio": "audio/book-18-interpolation/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "So the client renders in the past, between two snapshots it already has:",
+          "audio": "audio/book-18-interpolation/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Always between two known-good points. Never extrapolating. Never guessing.",
+          "audio": "audio/book-18-interpolation/ch-b6.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "Prediction vs interpolation, side by side",
+          "audio": "audio/book-18-interpolation/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "In our game both are on screen at once. Your capsule is drawn ~25 milliseconds ahead of the server; the other player's is drawn ~100 milliseconds behind. Neither of you sees \"now\". Nobody ever does.",
+          "audio": "audio/book-18-interpolation/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Hardware analogy, an elastic buffer between two clock domains. You accept latency to absorb jitter. Make it too small and you underrun (visible stutter); too large and you add pointless lag. Same knob, same trade, same tuning instinct.",
+          "audio": "audio/book-18-interpolation/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Ghost Importance and the interpolation buffer",
+          "audio": "audio/book-18-interpolation/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "The buffer must hold enough history to bracket the interpolation tick even when packets drop. Net Code sizes it from the tick rate and observed jitter. If a ghost's data is missing for the bracketing ticks, the client holds the last known value, which reads as a brief freeze rather than a teleport. That is the correct failure mode.",
+          "audio": "audio/book-18-interpolation/ch-b11.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "You can. Default Ghost Mode = Predicted on every ghost, and every client simulates the whole world. Fighting games and some shooters do this.",
+          "audio": "audio/book-18-interpolation/ch-b13.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Every ghost replays on every rollback. Cost scales with predicted entities \u00d7 replayed ticks. Every predicted entity must be deterministic across machines. Physics, if predicted, must be deterministic, which is a large commitment.",
+          "audio": "audio/book-18-interpolation/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Owner Predicted says: pay that price for exactly the one entity where latency is unacceptable, and take the cheap smooth path for everything else. For a capsule game it is free correctness.",
+          "audio": "audio/book-18-interpolation/ch-b16.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "When a rollback moves your predicted capsule, snapping is visible. Net Code can blend the visual position toward the corrected one over a few frames (Ghost Prediction Smoothing / Smoothing Action).",
+          "audio": "audio/book-18-interpolation/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Trap, smoothing operates on the rendered transform, not the simulated one. Never read a smoothed value back into simulation, or you have built a feedback loop between presentation and truth. Presentation reads from simulation. Never the reverse.",
+          "audio": "audio/book-18-interpolation/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "What to check when the other capsule looks wrong",
+          "audio": "audio/book-18-interpolation/ch-b20.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "Probe, Ghost Snapshot Inspector shows arrival timing per ghost. Irregular arrival with regular sends means the problem is the wire, not your code.",
+          "audio": "audio/book-18-interpolation/ch-b21.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "Part III done. You now know the wire. Time to trace one keypress all the way through it.",
+          "audio": "audio/book-18-interpolation/ch-b22.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-19-connection-lifecycle",
+      "title": "19 \u00b7 Connection lifecycle",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Eight steps from \"socket\" to \"I can move my capsule\". Learn this chain and you can diagnose any join failure in about ninety seconds.",
+          "audio": "audio/book-19-connection-lifecycle/ch-b2.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Probe, this one command answers \"where did it stop\": ``csharp foreach (var w in World.All) { var em = w.Entity Manager; var conn = em.Create Entity Query(Component Type.Read Only<Network Stream Connection>()); var in Game = em.Create Entity Query(Component Type.Read Only<Network Stream Connection>(), Component Type.Read Only<Network Stream In Game>()); var ghosts = em.Create Entity Query(Component Type.Read Only<Ghost Instance>()); Debug.Log($\"{w.Name}: conns={conn.Calculate Entity Count()} \" + $\"in Game={in Game.Calculate Entity Count()} ghosts={ghosts.Calculate Entity Count()}\"); } ` conns=1 in Game=0 then step 5 or 6. in Game=1 ghosts=0` then step 7.",
+          "audio": "audio/book-19-connection-lifecycle/ch-b5.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Both approval systems disable themselves when network.require-connection-approval is false, which is the default:",
+          "audio": "audio/book-19-connection-lifecycle/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "So on a stock project nothing ever adds Connection Approved, and Player Connection System requires it. No player ever spawns, and nothing is logged.",
+          "audio": "audio/book-19-connection-lifecycle/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Turning approval on is not a free switch either: Connection Approval Server System only skips J W T validation when World.Is Server() is false, a purely local world. A separate Server World in one process is a server world, so it takes the real branch and calls Unity Authentication over the network.",
+          "audio": "audio/book-19-connection-lifecycle/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Our Local Approve Connection System fills the gap with Account Identity = \"local-{network Id}\", labelled as a hack in its own doc comment, with the delete condition written down.",
+          "audio": "audio/book-19-connection-lifecycle/ch-b11.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Network Stream In Game is the flag that arms the entire snapshot system. Nerve sends the request from a node, Bovine Labs.Nerve.State/States/Client/Go In Game.cs, that runs inside a client Grove graph. The sample ships a service graph and a menu graph. It ships no client graph. So the node existed and never executed.",
+          "audio": "audio/book-19-connection-lifecycle/ch-b13.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Disconnect Reason tells you which: Timeout, Closed By Remote, Connection Close, Max Connection Attempts, Approval Failure, Protocol Error.",
+          "audio": "audio/book-19-connection-lifecycle/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "Nerve draws one more distinction worth stealing: a disconnect is voluntary only if it is Connection Close and you had already entered the game. Quitting looks different from being kicked at the door, and the UI should say different things.",
+          "audio": "audio/book-19-connection-lifecycle/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Trap, connection events live for one tick. If you poll them from a system that does not run every tick, you will miss disconnects intermittently. Latch them into durable state the moment you see them, which is precisely what the tracker node does.",
+          "audio": "audio/book-19-connection-lifecycle/ch-b18.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-20-keypress-to-pixel",
+      "title": "20 \u00b7 Keypress to pixel",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "The full trace. One W press, two capsules, two screens. Every hop, in order.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "This is the chapter the whole book exists for. If you can narrate this from memory, you are done.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b3.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "Key contact closes. Keyboard controller debounces, sends a HID report over USB. Host controller raises an interrupt. Kernel HID driver decodes, queues an evdev event. Display server delivers it to the focused window. Unity's message pump drains it.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b7.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Input System updates Keyboard.current. This is managed memory. Player Gather Input System runs in Ghost Input System Group. Not bursted, it touches managed input. It filters With All<Ghost Owner Is Local>() so it writes only your capsule's Player Move Input. Player Move Input.Move = (1, 0) for W. Intent. Four bytes. Not a position.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b9.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Copy Input To Command Buffer System Group (Order Last) copies the component into Input Buffer Data<Player Move Input>[current Tick], a ring slot stamped with the tick. Command Send System serialises the last few ticks (built-in redundancy) and sends unreliably.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b11.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Copy Command Buffer To Input System Group (Order First inside Predicted Simulation System Group) reads the ring slot for the tick being simulated back into the component. Player Move System runs with With All<Simulate, Ghost Owner>(). Simulate is the clock-enable. Delta is one tick. Local Transform.Position += (1,0,0)\u00b7Speed\u00b7dt. Your capsule has already moved, zero frames after the keypress.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b13.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Packet crosses I P C or loopback U D P. Command Receive System writes into the server's own Input Buffer Data ring for that ghost.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b15.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "Server reaches that tick. Copy Command Buffer To Input System Group materialises the input. The same Player Move System, one [World System Filter] covering both worlds, runs. Same constant, same delta, same maths. Server's Local Transform is now the truth. If the client had lied, it would not matter: the server never received a position, only a direction.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b17.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Ghost Send System collects, prioritises, delta-compresses against each connection's ACKed baseline, and sends.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b19.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "Ghost Receive System compares the received state for tick T with what you predicted for T. Match then nothing happens. Mismatch then restore and replay ticks T+1.now, re-feeding stored input each tick. You never see it.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b21.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Same snapshot arrives. Their copy of your capsule is interpolated, drawn between two received snapshots, roughly 100 milliseconds behind the server. Smooth, slightly stale, never wrong.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b23.opus"
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "Entities.Graphics uploads Local To World matrices to G P U buffers, issues batched draws. U R P renders. Present blocks on vsync. Photons.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b25.opus"
+        },
+        {
+          "id": "b27",
+          "title": "b27",
+          "focus": null,
+          "text": "Both players see a different world, and both are correct. Server-authoritative multiplayer is the engineering discipline of making that disagreement invisible.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b27.opus"
+        },
+        {
+          "id": "b29",
+          "title": "b29",
+          "focus": null,
+          "text": "Probe, the one-liner that separates the first three rows: ``csharp // in Client World and Server World, per tick Debug.Log($\"{world.Name} move={input.Move} pos={transform.Position}\"); ` If client move is non-zero and server move` is zero, it is hop 12, 14. Every time.",
+          "audio": "audio/book-20-keypress-to-pixel/ch-b29.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-21-client-graph",
+      "title": "21 \u00b7 The client graph",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "A worked example of the whole stack: Grove + Canopy + Nerve + settings routing, doing one real job.",
+          "audio": "audio/book-21-client-graph/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Something must add Network Stream In Game to the client's connection and send a Go In Game Request remote procedure call. Without it, zero snapshots flow (chapter 13).",
+          "audio": "audio/book-21-client-graph/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Nerve already ships the node that does this. It just never runs, because running it requires a client graph and the sample authors none.",
+          "audio": "audio/book-21-client-graph/ch-b5.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "The chain state then Initialize then Startup Gate then Client Go In Game looks like ceremony. It is not, the types force it:",
+          "audio": "audio/book-21-client-graph/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "So: a state can run a block; only Initialize can drive a context node; only Startup Gate provides Initialize State; only inside it can Client Go In Game exist.",
+          "audio": "audio/book-21-client-graph/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Hardware analogy, this is type-level pin compatibility. You cannot plug a 3.3 V part into a 5 V header because the connector will not accept it. The graph editor enforces the same thing, at author time.",
+          "audio": "audio/book-21-client-graph/ch-b9.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Every block AND-s into Is Completed. The gate jumps only when all report done. It is a barrier with a target, and it is reusable for any \"wait for N things, then advance\".",
+          "audio": "audio/book-21-client-graph/ch-b11.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "Idempotent by identity, not by boolean. Keying on the connection identity means a reconnect with a new entity re-sends correctly, while a retry on the same connection does not spam. State lives in Grove State, not in a static. Works per entity, survives, costs nothing. The gate is the retry loop. No timers, no coroutines.",
+          "audio": "audio/book-21-client-graph/ch-b14.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Nerve ships the nodes. It does not ship a context or a driver, those are per-project, exactly like the sample's Menu and Service ones.",
+          "audio": "audio/book-21-client-graph/ch-b16.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Trap, Get Execution returns a copy of the context. Assign before it and your values are overwritten by Update(); assign after and they land. Get this backwards and the graph runs with a zeroed connection forever, silently.",
+          "audio": "audio/book-21-client-graph/ch-b18.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "A single world carrying both flags. Our separate Client World + Server World in one process is not a host, Is Host() is false for both. That is correct here: it makes Go In Game add Network Stream In Game on the client side, which is exactly what a real client needs.",
+          "audio": "audio/book-21-client-graph/ch-b20.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "Assets/Editor/Client Graph Setup.cs, [Menu Item(\"Daggertooth/Rebuild Client Graph\")]. Same approach as Nerve's own Sample Project Setup. Advantages over clicking in the graph window:",
+          "audio": "audio/book-21-client-graph/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "reviewable in a diff reproducible in CI validation failures throw instead of logging the helper prints every available option name when Try Set Value fails",
+          "audio": "audio/book-21-client-graph/ch-b23.opus"
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "Delete the old workaround system, run, and ask the graph where it is:",
+          "audio": "audio/book-21-client-graph/ch-b25.opus"
+        },
+        {
+          "id": "b26",
+          "title": "b26",
+          "focus": null,
+          "text": "in Game=1 proves the remote procedure call went out. state = gameplay proves the graph sent it, that state is reachable only through the gate, and the gate opens only when the node reports completed. No leftover code can produce that reading.",
+          "audio": "audio/book-21-client-graph/ch-b26.opus"
+        },
+        {
+          "id": "b27",
+          "title": "b27",
+          "focus": null,
+          "text": "That is what a falsifiable check looks like: a value that is impossible unless the mechanism you claim is working, worked.",
+          "audio": "audio/book-21-client-graph/ch-b27.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-22-ownership",
+      "title": "22 \u00b7 Ownership and spawning",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Who is allowed to move what, and how does a capsule exist in the first place.",
+          "audio": "audio/book-22-ownership/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Ghost Owner Is Local is the one you filter input on (chapter 16). Ghost Owner is the one you filter rules on, our Player Move System uses With All<Simulate, Ghost Owner>() so it moves player-owned things on both client and server.",
+          "audio": "audio/book-22-ownership/ch-b4.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Nerve does not spawn one thing. It spawns two, and the split is worth copying:",
+          "audio": "audio/book-22-ownership/ch-b6.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "Why bother? Because \"the player\" and \"the thing the player is currently driving\" are different lifetimes:",
+          "audio": "audio/book-22-ownership/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Respawn then new pawn, same controller, score and identity intact. Enter a vehicle then controller re-points at the vehicle; input follows. Spectate then controller with no pawn. Reconnect then match by Account Identity, re-attach to the existing controller.",
+          "audio": "audio/book-22-ownership/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Hardware analogy, the controller is a stable device handle; the pawn is the currently mapped buffer. You re-point the handle; you do not tear down the session.",
+          "audio": "audio/book-22-ownership/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "This is why our two-player run shows 4 ghosts: 2 controllers + 2 capsules. Seeing 3 would mean two connections adopted the same controller, an identity collision, which is exactly the risk Account Identity = \"local-{network Id}\" carries and which the 4-ghost reading disproves.",
+          "audio": "audio/book-22-ownership/ch-b10.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Every one of those must be present. Chapter 19's ladder is really just \"which of these four is missing\".",
+          "audio": "audio/book-22-ownership/ch-b13.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Looks for an existing controller with the same Account Identity (reconnect path). If none, instantiates Server Settings.player Controller. Instantiates Server Settings.player Character as the controlled entity. Links them (Primary Controlled Entity), sets Ghost Owner.Network Id on both. Points the connection's Command Target at the pawn.",
+          "audio": "audio/book-22-ownership/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Controller Ownership Initialize System then propagates ownership down linked entity groups, so a pawn with child entities has them all owned consistently.",
+          "audio": "audio/book-22-ownership/ch-b16.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Miss any link and the failure is silent. The most common misses, in order of frequency:",
+          "audio": "audio/book-22-ownership/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "The Object Definition is not in Object Management Settings then ID resolves to nothing. The settings asset is not on the Settings Authoring prefab then never bakes. The prefab is missing Ghost Authoring Component then spawns, but only on the server. Has Owner unchecked then no Ghost Owner then input filters match nothing.",
+          "audio": "audio/book-22-ownership/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Trap, we hit a fifth: Player Move Input Authoring was declared inside Player Move Input.cs. Unity only creates a Mono Script when the file name matches the class name, so the component serialised as m_Script: {file ID: 0}, a missing script. It baked nothing, the capsule spawned with no input component, and nothing anywhere complained. One Mono Behaviour per file, named after the file. Always.",
+          "audio": "audio/book-22-ownership/ch-b20.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "The client writes exactly one thing: what it wants. Everything else it receives. That single sentence is the security model.",
+          "audio": "audio/book-22-ownership/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Probe, who owns what, right now: ``csharp foreach (var (owner, e) in System API.Query<Ref RO<Ghost Owner>>().With Entity Access()) Debug.Log($\"{e} owned by Network Id {owner.Value RO.Network Id}\"); ``",
+          "audio": null
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-23-mppm",
+      "title": "23 \u00b7 Two players on one machine",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Multiplayer Play Mode (multiplayer play mode) runs extra editor instances, virtual players, that share your project folder and attach to the same play session. It is how you test two clients without building.",
+          "audio": "audio/book-23-mppm/ch-b2.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "A virtual player is a real second editor process with its own World.All, its own sockets, and its own domain. It shares your Editor Prefs, and Client Server Bootstrap.Requested Play Type is stored there.",
+          "audio": "audio/book-23-mppm/ch-b5.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "The console error is a port-bind exception followed by a cascade, Mod Loading Scene found 2 instances, entity assertion failures. The cascade is louder than the cause, which is why it misleads.",
+          "audio": "audio/book-23-mppm/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "The obvious fix, \"change Play Mode Type to Client in Play Mode Tools\", does not work, because Play Mode Tools is a window in the main editor and a virtual player does not have one. The pref you would change is the shared one you must not change.",
+          "audio": "audio/book-23-mppm/ch-b8.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Installing com.unity.dedicated-server defines UNITY_USE_MULTIPLAYER_ROLES as a version Define. That flips Multiplayer Play Mode Preferences from the shared-Editor Prefs path to the per-player-role path, and each virtual player gets its own dropdown.",
+          "audio": "audio/book-23-mppm/ch-b10.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "A visible confirmation that the switch took effect: Play Mode Type in Play Mode Tools goes grey. Roles now override it, so the old control is disabled. If it is still editable, the define is not active.",
+          "audio": "audio/book-23-mppm/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Hardware analogy, you were trying to configure two boards by editing one shared EEPROM. Roles give each board its own strapping pins.",
+          "audio": "audio/book-23-mppm/ch-b13.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "4 ghosts = 2 players \u00d7 (controller + capsule). Chapter 22 explains why two per player, and why 3 would be an ownership bug.",
+          "audio": "audio/book-23-mppm/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "Other multiplayer play mode facts worth having",
+          "audio": "audio/book-23-mppm/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "That last row is why we drove verification through the editor CLI instead of the GUI, eval into the running instance, dump World.All, read the counts. When the GUI cannot reach a process, script the process.",
+          "audio": "audio/book-23-mppm/ch-b18.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Thin Client Simulation worlds simulate no rendering and no presentation, they exist to generate load and fake input. Great for testing 50 connections. They also do not load client subscenes in this project (Required Client targets Client, not Thin Client), so a thin client has no Nerve State Machine and no client graph. If you add thin clients later, that is the first thing you will need to wire.",
+          "audio": "audio/book-23-mppm/ch-b20.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "Probe, from a script, confirm what a given instance actually built: ``csharp foreach (var w in World.All) Debug.Log($\"{w.Name} {w.Flags}\"); ` One Server World` total across all instances. If you see two, roles are not applied.",
+          "audio": "audio/book-23-mppm/ch-b21.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "Part IV done. Now the internals, the knobs, and the design judgement.",
+          "audio": "audio/book-23-mppm/ch-b22.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-24-debug-playbook",
+      "title": "24 \u00b7 The debugging playbook",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Every trap in this book, in one table, ordered by how much time it steals. All of these are silent, that is what makes them expensive.",
+          "audio": "audio/book-24-debug-playbook/ch-b2.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "When something does not happen, walk down. The first no is your bug.",
+          "audio": "audio/book-24-debug-playbook/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Most people start at 5. Steps 1, 4 are where the silent failures live, and each is one command.",
+          "audio": "audio/book-24-debug-playbook/ch-b6.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "If that line never prints, it is step 1 or 2, not your logic.",
+          "audio": "audio/book-24-debug-playbook/ch-b10.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Canopy State Id.To String() prints the type name, not the id, compare against candidates instead.",
+          "audio": "audio/book-24-debug-playbook/ch-b13.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "com.unity.pipeline puts an HTTP control plane in the running editor. This is how we verified everything in this book without touching the mouse:",
+          "audio": "audio/book-24-debug-playbook/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Trap, always pass --project-path. Auto-detection picked the wrong editor instance for us once, and the results were confusingly plausible.  Trap, eval scripts run in a REPL context that already has implicit usings. A leading using System.Linq; is parsed as a using statement, not a directive, and the file fails to compile with baffling errors. Use fully-qualified names.",
+          "audio": "audio/book-24-debug-playbook/ch-b16.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Reproduce the failure as a number, not a feeling. in Game=0 is debuggable; \"it doesn't work\" is not. Prove the mechanism, not the outcome. state = gameplay proved the graph ran, because no other code path can set it. An outcome can have many causes; a mechanism has one. Suspect the toolchain before your logic in this stack, because the toolchain fails silently and your logic usually fails loudly. When a null read is your evidence, ask whether the read is authoritative. Inherited, lazy, and deferred values lie to naive reads. This cost us an hour on the UI bug and it is the most transferable lesson here.",
+          "audio": "audio/book-24-debug-playbook/ch-b18.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-25-linux-libs",
+      "title": "25 \u00b7 The Linux library saga",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "The most you-shaped chapter in the book. No E C S, no networking, just the dynamic linker, sonames, and a search-path rule that is not transitive.",
+          "audio": "audio/book-25-linux-libs/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Unity 6000.7.0a3 on Ubuntu 26.04. The editor exits with code 127, or launches fine and then every multiplayer play mode virtual player dies with:",
+          "audio": "audio/book-25-linux-libs/ch-b4.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "A soname bump (.so.2 then.so.16) is an ABI break declaration. That is the whole point of sonames. So ln -s libxml2.so.16 libxml2.so.2 is not a fix, it is a promise you cannot keep, and it will pay out months later somewhere unrelated.",
+          "audio": "audio/book-25-linux-libs/ch-b6.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "The machine had a stale ldconfig cache entry pointing at libxml2.so.2 inside an uninstalled older editor. The file was gone; the cache still advertised it. Some paths worked by accident.",
+          "audio": "audio/book-25-linux-libs/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Running sudo ldconfig cleared the stale entry, and turned \"working by accident\" into a clean, honest exit 127.",
+          "audio": "audio/book-25-linux-libs/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Trap, I called ldconfig \"free\". It was not. It was load-bearing garbage. A cache rebuild is only free if the cache is describing reality, and a stale entry pointing at a deleted file is precisely the case where it is not. The general rule: never run a \"harmless refresh\" on state you have not inspected. The refresh is harmless; discovering what the state was actually doing is not.",
+          "audio": "audio/book-25-linux-libs/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "The fix, and why the obvious version fails",
+          "audio": "audio/book-25-linux-libs/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Step one: put the right library, with the right soname, next to the editor.",
+          "audio": "audio/book-25-linux-libs/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "And it still fails. Here is why, and it is the good part:",
+          "audio": "audio/book-25-linux-libs/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "THE MECHANISM, run path is not transitive. Unity's binary has a run path containing $ORIGIN, so the loader finds Editor/libxml2.so.2. But when the loader then resolves libxml2's own DT_NEEDED entry for libicui18n.so.74, it does not consult Unity's run path. run path applies only to the direct dependencies of the object that declares it. (RPATH, the deprecated predecessor, was transitive. run path deliberately is not, that was the point of introducing it.)",
+          "audio": "audio/book-25-linux-libs/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "L D library path, by contrast, is consulted for every object in the process. So:",
+          "audio": "audio/book-25-linux-libs/ch-b15.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "The wrapper also fixes multiplayer play mode, because virtual players are child processes and inherit the environment. One export, every process.",
+          "audio": "audio/book-25-linux-libs/ch-b17.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Note L D library path outranks run path. That ordering is exactly what makes the wrapper work.",
+          "audio": "audio/book-25-linux-libs/ch-b19.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "Because a soname is a contract. Two generations of the same library in the global namespace will resolve fine for months and then break something unrelated, at the worst time, with no trail. Scoping to Editor/ means only Unity sees the old ABI, which is precisely what 6000.7.0a2 was doing before the regression.",
+          "audio": "audio/book-25-linux-libs/ch-b21.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "Trap, an editor upgrade replaces Unity and silently removes the wrapper. Re-apply after every upgrade, or script it.",
+          "audio": "audio/book-25-linux-libs/ch-b22.opus"
+        },
+        {
+          "id": "b24",
+          "title": "b24",
+          "focus": null,
+          "text": "A soname bump is an ABI break. Never alias across one. run path is not transitive; L D library path is. This single fact explains a huge class of \"I copied the.so and it still can't find it\" bugs. Scope compatibility shims as narrowly as possible. Process-local beats system-wide, always. A stale cache entry can be load-bearing. Inspect before you refresh. ldd is your nm here. When a process will not start, ask the loader, not the app.",
+          "audio": "audio/book-25-linux-libs/ch-b24.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-26-extend",
+      "title": "26 \u00b7 Extending the stack",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Four recipes. Each is a complete, minimal change with the exact files touched.",
+          "audio": "audio/book-26-extend/ch-b2.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Trap, adding a [Ghost Field] changes the ghost schema, which changes the protocol version. Old clients get a handshake mismatch. Rebuild both sides together.",
+          "audio": "audio/book-26-extend/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Recipe 2 \u00b7 Add a rule that both sides run",
+          "audio": "audio/book-26-extend/ch-b6.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "The template is our movement system, and the shape is non-negotiable:",
+          "audio": "audio/book-26-extend/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Checklist: both world flags \u00b7 prediction group \u00b7 Simulate \u00b7 no branch on Is Server \u00b7 no one-shot side effects (or gate on Is First Time Fully Predicting Tick).",
+          "audio": "audio/book-26-extend/ch-b8.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Four files, one per representation (chapter 08):",
+          "audio": "audio/book-26-extend/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Trap, pick an opcode range that cannot collide with Grove's, Canopy's, or Nerve's. Nerve uses -Nerve Id.Offset - n. Give yourself your own offset and document it.",
+          "audio": "audio/book-26-extend/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Recipe 4 \u00b7 Add a world-targeted settings asset",
+          "audio": "audio/book-26-extend/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Then one editor call does the whole wiring:",
+          "audio": "audio/book-26-extend/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "Creates the asset, reads [Settings World(\"server\")], and inserts it into Server Settings.prefab. Never hand-edit that array.",
+          "audio": "audio/book-26-extend/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Recipe 5 \u00b7 Add a state to the client graph",
+          "audio": "audio/book-26-extend/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Edit Assets/Editor/Client Graph Setup.cs, not the graph window:",
+          "audio": "audio/book-26-extend/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "Run Daggertooth then Rebuild Client Graph. The validator will tell you immediately if you broke the one-default-child rule.",
+          "audio": "audio/book-26-extend/ch-b17.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Every extension in this stack is: declare data then declare the code that consumes it then declare how it is authored then declare where it lives. Four declarations, four places, always the same four. Once you see it, the stack stops feeling large.",
+          "audio": "audio/book-26-extend/ch-b19.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-27-build-your-own",
+      "title": "27 \u00b7 Build your own",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "The final exam. Not \"can you use this stack\", could you write it?",
+          "audio": "audio/book-27-build-your-own/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "Below is what each layer would cost you, what the hard part actually is, and the order to attempt it in. Build even two of these and you will never be confused by the real ones again.",
+          "audio": "audio/book-27-build-your-own/ch-b3.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "The hard part is not the layout. It is the structural change: adding a component means computing the new archetype, finding or creating a chunk, memcpy-ing every component, patching the entity lookup, and invalidating outstanding pointers. Get that right and the rest is bookkeeping.",
+          "audio": "audio/book-27-build-your-own/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Milestone: 100k entities, one component write each, faster than the array-of-structs version.",
+          "audio": "audio/book-27-build-your-own/ch-b6.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "You are writing a linker and an interpreter.",
+          "audio": "audio/book-27-build-your-own/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "The hard part is relative addressing. Every pointer inside the image must be an offset from its own location, so the whole thing is memcpy-able and shareable. That is Blob Ptr<T>, and it is the same discipline as writing position-independent code.",
+          "audio": "audio/book-27-build-your-own/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Milestone: author a 5-node graph, save it, load it into a fresh process, execute it with zero allocations.",
+          "audio": "audio/book-27-build-your-own/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Layer 3 \u00b7 A hierarchical state machine, two days",
+          "audio": "audio/book-27-build-your-own/ch-b11.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "states form a tree; the active path is root then leaf Enter / Update / Exit signals propagate along the path transitions are named jumps, resolved by hash validate at author time: one root, one default child per composite, no id collisions",
+          "audio": "audio/book-27-build-your-own/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "The hard part is exit/enter ordering. Exit bottom-up, enter top-down, and never let a block observe a half-torn-down path. That is why every Canopy node opens with the Exit check.",
+          "audio": "audio/book-27-build-your-own/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Milestone: a graph where a leaf jump correctly exits three levels and enters two.",
+          "audio": "audio/book-27-build-your-own/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Layer 4 \u00b7 Snapshot replication, two weeks",
+          "audio": "audio/book-27-build-your-own/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "The hard part is per-connection baselines. Every client has ACKed a different tick, so the server must remember what each one knows and delta against that. Get it wrong and clients decode garbage, intermittently, under loss only.",
+          "audio": "audio/book-27-build-your-own/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Milestone: 50 entities, 20 hertz, 5% simulated packet loss, no visible corruption.",
+          "audio": "audio/book-27-build-your-own/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Layer 5 \u00b7 Prediction and rollback, the real boss",
+          "audio": "audio/book-27-build-your-own/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "The hard part is that your simulation must be replayable. Which means:",
+          "audio": "audio/book-27-build-your-own/ch-b20.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "no reads of frame-varying data (frame delta, Time.time, Random without a seeded state) no side effects that are not idempotent per tick all predicted state must be in the checkpoint, anything stored outside it silently survives the rollback and desyncs",
+          "audio": "audio/book-27-build-your-own/ch-b21.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "That last bullet is the one that bites. A cached value in a system field is invisible to the checkpoint and will corrupt every replay.",
+          "audio": "audio/book-27-build-your-own/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Milestone: 200 milliseconds artificial latency, capsule feels instant, no visible correction.",
+          "audio": "audio/book-27-build-your-own/ch-b23.opus"
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "If you can describe all five, you can read any networked engine, Unreal's replication, Photon Quantum, Overwatch's E C S talk, Rocket League's rollback. They are the same five layers with different names and different trade-offs.",
+          "audio": "audio/book-27-build-your-own/ch-b25.opus"
+        },
+        {
+          "id": "b27",
+          "title": "b27",
+          "focus": null,
+          "text": "A chunk is a D M A buffer and an archetype is its type. A blob is position-independent code; Grove State is its RAM. Simulate is a clock-enable line. Send intent, never results. Nobody on screen is seeing \"now\", and your job is to make that invisible.",
+          "audio": "audio/book-27-build-your-own/ch-b27.opus"
+        },
+        {
+          "id": "b29",
+          "title": "b29",
+          "focus": null,
+          "text": "Add physics to the predicted set. Determinism becomes a real constraint; that is where the next tier of difficulty lives. Add thin clients and wire them a graph (chapter 23's last section). Replace Local Approve Connection System with real approval, and discover what Unity Authentication actually costs on a cold connection. Predict a spawn (projectiles). It is the hardest common case: the client creates an entity the server has not confirmed, and they must be matched.",
+          "audio": "audio/book-27-build-your-own/ch-b29.opus"
+        },
+        {
+          "id": "b30",
+          "title": "b30",
+          "focus": null,
+          "text": "You started at a clock edge. You now know every hop from there to two capsules on two screens, why each hop exists, and what it looks like when it breaks.",
+          "audio": "audio/book-27-build-your-own/ch-b30.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-28-grove-internals",
+      "title": "28 \u00b7 Grove internals, in full",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Chapter 08 gave you the shape. This is the datasheet.",
+          "audio": "audio/book-28-grove-internals/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Grove has more than \"nodes\". It has kinds, and the kind decides what the blob holds and how dispatch reaches it.",
+          "audio": "audio/book-28-grove-internals/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Two dispatch verbs, not one: Execute (side effects, returns nothing) and Calculate (pure, returns T). That split is why data ports can be evaluated lazily and why a data node can be shared by several execution nodes without ordering problems.",
+          "audio": "audio/book-28-grove-internals/ch-b5.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "Three rules that fall out of this layout:",
+          "audio": "audio/book-28-grove-internals/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Blob Ptr<T> is a relative offset. The image is position-independent, so it can be memcpy'd, cached, and shared read-only by every entity. The image is immutable at runtime. No node may write to it. All mutable state goes in Grove State. Graph Id disambiguates. Two entities running different graphs keep separate state because the key includes the graph id.",
+          "audio": "audio/book-28-grove-internals/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "Hardware analogy, you are looking at a flashed image with a header table. Root is the reset vector. Nodes[] is the code segment. Inputs/Outputs is the symbol table.",
+          "audio": "audio/book-28-grove-internals/ch-b9.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Keys are built by Graph State Util.Get Key(.) from three ingredients:",
+          "audio": "audio/book-28-grove-internals/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Values are blittable structs stored inline. No allocation, Burst-safe, per entity, and it survives across ticks and across rollbacks (it lives on the entity, so it is checkpointed with everything else).",
+          "audio": "audio/book-28-grove-internals/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Trap, do not cache node state in a static or in a system field. It will not be per entity, it will not be checkpointed, and under prediction rollback it will silently desync. Grove State exists precisely to make the right thing easy.",
+          "audio": "audio/book-28-grove-internals/ch-b13.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "That last row is the performance secret and the compile-time cost. Every context type gets its own monomorphised dispatch, no generic virtual calls, everything inlinable, Burst sees concrete types all the way down.",
+          "audio": "audio/book-28-grove-internals/ch-b16.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Forget partial and you get a wall of \"does not implement IContext Generator<T>\" errors that point at the interface rather than at the missing keyword.",
+          "audio": "audio/book-28-grove-internals/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Containers: how a node reaches component data",
+          "audio": "audio/book-28-grove-internals/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Set Chunk(chunk, index) refreshes them once per chunk; nodes then index by grove Context.Entity Index In Chunk. That is why per-entity access inside a node is an array index, not a lookup, the expensive part happened once per chunk.",
+          "audio": "audio/book-28-grove-internals/ch-b20.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "Two ways to reuse one graph with different numbers:",
+          "audio": "audio/book-28-grove-internals/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Both are resolved at bake time, so the runtime image is already specialised. There is no runtime branch and no lookup cost. It is template instantiation, done by the baker.",
+          "audio": "audio/book-28-grove-internals/ch-b23.opus"
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "Graph Options.Supports Subgraphs is on for all three Nerve graph types. A subgraph is a whole.cnerve/.snerve referenced as one node, with its own scope in Grove Node State (see Push Subgraph Scope). Scoping means node ids inside a subgraph do not collide with the parent, so the same subgraph can appear twice in one graph with independent state.",
+          "audio": "audio/book-28-grove-internals/ch-b25.opus"
+        },
+        {
+          "id": "b26",
+          "title": "b26",
+          "focus": null,
+          "text": "Hardware analogy, a subgraph is a linked library with its own symbol namespace, instantiated at link time rather than called at runtime.",
+          "audio": "audio/book-28-grove-internals/ch-b26.opus"
+        },
+        {
+          "id": "b27",
+          "title": "b27",
+          "focus": null,
+          "text": "Disable Auto Inclusion Of Nodes From Graph Assembly",
+          "audio": "audio/book-28-grove-internals/ch-b27.opus"
+        },
+        {
+          "id": "b28",
+          "title": "b28",
+          "focus": null,
+          "text": "Without this flag, Graph Toolkit would offer every node in the assembly in every graph. With it, a node appears only where [Use With Graph(.)] says. That is why a.snerve cannot contain Client Go In Game Node, and why adding a node to the wrong graph type is impossible rather than merely wrong.",
+          "audio": "audio/book-28-grove-internals/ch-b28.opus"
+        },
+        {
+          "id": "b30",
+          "title": "b30",
+          "focus": null,
+          "text": "UNITY_INCLUDE_INSTRUMENTATION compiles a debug pass that walks every node after execution and calls Debug(.) on it, plus a Selected Entity singleton so the graph window can show live values for one entity. It is off in players and costs nothing there.",
+          "audio": "audio/book-28-grove-internals/ch-b30.opus"
+        },
+        {
+          "id": "b32",
+          "title": "b32",
+          "focus": null,
+          "text": "The hash lookups are the only non-trivial per-entity cost. If a graph is hot, the first optimisation is fewer keyed state values, not fewer nodes.",
+          "audio": "audio/book-28-grove-internals/ch-b32.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-29-netcode-settings",
+      "title": "29 \u00b7 Every knob in NetCode",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "A reference chapter. Each setting: what it does, what it costs, and how to choose.",
+          "audio": "audio/book-29-netcode-settings/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "1 \u00b7 Tick and send rate, Client Server Tick Rate",
+          "audio": "audio/book-29-netcode-settings/ch-b3.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "The one people miss: Network Tick Rate is separate from Simulation Tick Rate. Simulating at 60 and sending at 20 is the standard shape, three sims per snapshot, one third of the bandwidth, and interpolation hides the difference.",
+          "audio": "audio/book-29-netcode-settings/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "Batching kicks in when the server falls behind: it merges several ticks into one step with a larger delta. It protects against a death spiral and it degrades input fidelity. If you see the batching warning outside of editor hitches, your server tick is genuinely too expensive.",
+          "audio": "audio/book-29-netcode-settings/ch-b5.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "Optimization Mode.Static is the cheapest win in the whole system. A static ghost that has not changed is not serialised, not delta-compared, and not sent. For level props and parked vehicles it removes them from the bandwidth budget entirely.",
+          "audio": "audio/book-29-netcode-settings/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "3 \u00b7 Per-field replication, [Ghost Field]",
+          "audio": "audio/book-29-netcode-settings/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "[Ghost Component(.)] controls the component as a whole:",
+          "audio": "audio/book-29-netcode-settings/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Design rule, Owner Send Type = Send To Owner on anything only the owner needs (ammo, cooldowns, private state) is both a bandwidth saving and an anti-cheat measure: information you never send cannot be extracted.",
+          "audio": "audio/book-29-netcode-settings/ch-b10.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "Quantization error is 0.5 / Quantization in world units.",
+          "audio": "audio/book-29-netcode-settings/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Too coarse and the client's prediction disagrees with the dequantized server value every tick, producing constant micro-rollbacks that read as jitter. Too fine and you pay bits for precision no one can see. Match it to your world scale, not to a habit.",
+          "audio": "audio/book-29-netcode-settings/ch-b13.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Importance vs relevancy is the distinction to internalise:",
+          "audio": "audio/book-29-netcode-settings/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Use relevancy for zones, rooms, and fog of war. Use importance for everything that is visible but not equally urgent. Relevancy is also a security boundary: a client cannot wall-hack data it was never sent.",
+          "audio": "audio/book-29-netcode-settings/ch-b16.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Prediction switching is the advanced move: predict only the ghosts near the local player, interpolate the rest, and reassign as they approach. It keeps rollback cost bounded in a crowded world. Budget it by predicted entity count, because rollback cost is predicted entities \u00d7 replayed ticks.",
+          "audio": "audio/book-29-netcode-settings/ch-b18.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "Runs after a rollback and blends the rendered value toward the corrected one.",
+          "audio": "audio/book-29-netcode-settings/ch-b20.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "Trap, smoothing must never feed back into simulation. Presentation reads simulation; the reverse is a feedback loop that diverges.",
+          "audio": "audio/book-29-netcode-settings/ch-b21.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Always develop with emulation on. 80 milliseconds round trip time and 2% loss as your daily setting will surface every prediction bug while it is still cheap. A LAN-perfect connection hides exactly the class of bug that ships.",
+          "audio": "audio/book-29-netcode-settings/ch-b23.opus"
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "Nerve wraps this in a Relevancy Settings asset, which our project registers on Server Settings.prefab.",
+          "audio": "audio/book-29-netcode-settings/ch-b25.opus"
+        },
+        {
+          "id": "b27",
+          "title": "b27",
+          "focus": null,
+          "text": "Thin clients are the cheapest scale test you will ever write: no rendering, no presentation, real connections, real commands. Give them a fake-input system and you can put 50 players on your laptop.",
+          "audio": "audio/book-29-netcode-settings/ch-b27.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-30-feel",
+      "title": "30 \u00b7 How it is made to feel nice",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Every trick in this chapter exists to hide the same fact: information takes time to travel, and players will not forgive it. These are the mechanisms, ranked by how much perceived quality they buy.",
+          "audio": "audio/book-30-feel/ch-b2.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "A 60 milliseconds round trip time with no prediction puts you at \"sluggish\" on every single input. That is the problem the entire stack is arranged around.",
+          "audio": "audio/book-30-feel/ch-b4.opus"
+        },
+        {
+          "id": "b5",
+          "title": "b5",
+          "focus": null,
+          "text": "1 \u00b7 Prediction, buys the most, costs the most",
+          "audio": "audio/book-30-feel/ch-b5.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Perceived input latency: zero. The price is a replay whenever the server disagrees, and a hard requirement that your simulation is replayable (chapter 17).",
+          "audio": "audio/book-30-feel/ch-b6.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "2 \u00b7 Interpolation, buys smoothness for everyone else",
+          "audio": "audio/book-30-feel/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Rendering other players in the past, between two known snapshots, converts irregular arrival into regular motion. It is a jitter buffer, and it is why a 20 hertz snapshot rate can look like 144 hertz motion.",
+          "audio": "audio/book-30-feel/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "3 \u00b7 Partial ticks, buys smoothness between ticks",
+          "audio": "audio/book-30-feel/ch-b9.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Simulate at 60, render at 144, and 60% of frames have nothing new. Partial ticks run a fraction of a tick purely for presentation, then throw it away.",
+          "audio": "audio/book-30-feel/ch-b10.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Trap, one-shot effects must be gated on Is First Time Fully Predicting Tick, or they fire on every partial tick too.",
+          "audio": "audio/book-30-feel/ch-b11.opus"
+        },
+        {
+          "id": "b12",
+          "title": "b12",
+          "focus": null,
+          "text": "4 \u00b7 Command redundancy, buys resilience to loss for free",
+          "audio": "audio/book-30-feel/ch-b12.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Each command packet contains the last several ticks of input, not just one. A dropped packet costs nothing because the next one carries the gap. This is why input feels solid on a lossy connection while positions still visibly hitch.",
+          "audio": "audio/book-30-feel/ch-b13.opus"
+        },
+        {
+          "id": "b14",
+          "title": "b14",
+          "focus": null,
+          "text": "5 \u00b7 Snapshot delta compression, buys bandwidth, which buys rate",
+          "audio": "audio/book-30-feel/ch-b14.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Only changed fields are sent, delta-coded against what each client last ACKed. Fewer bits per ghost means more ghosts per packet means a higher effective update rate for everything.",
+          "audio": "audio/book-30-feel/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "Quantization amplifies this: quantized values compare equal more often, so more fields are \"unchanged\".",
+          "audio": "audio/book-30-feel/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "6 \u00b7 Importance scheduling, buys the illusion of a full world",
+          "audio": "audio/book-30-feel/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "The server cannot send everything. It sends the most important things this tick and defers the rest. Nearby, moving, dangerous things update at a high rate; distant scenery updates occasionally. The player perceives a fully live world because the parts they are looking at are live.",
+          "audio": "audio/book-30-feel/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "7 \u00b7 Correction smoothing, buys invisibility for the fix",
+          "audio": "audio/book-30-feel/ch-b19.opus"
+        },
+        {
+          "id": "b20",
+          "title": "b20",
+          "focus": null,
+          "text": "When a rollback moves your capsule, snapping is visible. Blending the rendered position over a few frames hides small corrections entirely. Above Max Smoothing Distance it snaps instead, because sliding a long way looks worse than a clean cut.",
+          "audio": "audio/book-30-feel/ch-b20.opus"
+        },
+        {
+          "id": "b22",
+          "title": "b22",
+          "focus": null,
+          "text": "The advanced one. The client shoots at what it sees, which is the past. Naively, the server checks against the present and the shot misses.",
+          "audio": "audio/book-30-feel/ch-b22.opus"
+        },
+        {
+          "id": "b23",
+          "title": "b23",
+          "focus": null,
+          "text": "Track Interpolation Delay on the ghost is what makes the server able to reconstruct \"what did this client see\". The trade is real and famous: behind cover and still shot. Every shooter picks a point on that spectrum; none escape it.",
+          "audio": "audio/book-30-feel/ch-b23.opus"
+        },
+        {
+          "id": "b24",
+          "title": "b24",
+          "focus": null,
+          "text": "9 \u00b7 Time synchronisation, buys stability under changing conditions",
+          "audio": "audio/book-30-feel/ch-b24.opus"
+        },
+        {
+          "id": "b25",
+          "title": "b25",
+          "focus": null,
+          "text": "The client continuously measures round trip time and jitter, then adjusts:",
+          "audio": "audio/book-30-feel/ch-b25.opus"
+        },
+        {
+          "id": "b26",
+          "title": "b26",
+          "focus": null,
+          "text": "how far ahead it predicts (so commands land just in time) how far behind it interpolates (so the buffer never underruns)",
+          "audio": "audio/book-30-feel/ch-b26.opus"
+        },
+        {
+          "id": "b27",
+          "title": "b27",
+          "focus": null,
+          "text": "It does this by nudging the rate of local time, not by jumping. Slow drift is invisible; a jump is not.",
+          "audio": "audio/book-30-feel/ch-b27.opus"
+        },
+        {
+          "id": "b28",
+          "title": "b28",
+          "focus": null,
+          "text": "Hardware analogy, a PLL. You do not step the clock; you adjust its frequency and let phase converge. Same reason: discontinuities are what people notice.",
+          "audio": "audio/book-30-feel/ch-b28.opus"
+        },
+        {
+          "id": "b30",
+          "title": "b30",
+          "focus": null,
+          "text": "Ghosts marked Optimization Mode.Static that have not changed are skipped entirely. Every ghost you can mark static is bandwidth handed back to the ghosts that need it.",
+          "audio": "audio/book-30-feel/ch-b30.opus"
+        },
+        {
+          "id": "b32",
+          "title": "b32",
+          "focus": null,
+          "text": "Six independent mechanisms, each hiding one consequence of the same physical fact. None of them removes latency. They relocate it to places players do not look.",
+          "audio": "audio/book-30-feel/ch-b32.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-31-when-to-use-what",
+      "title": "31 \u00b7 When to use what",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "Decision tables. Keep this chapter open while designing a feature.",
+          "audio": "audio/book-31-when-to-use-what/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "A \u00b7 How should this data reach the other side?",
+          "audio": "audio/book-31-when-to-use-what/ch-b3.opus"
+        },
+        {
+          "id": "b4",
+          "title": "b4",
+          "focus": null,
+          "text": "Rule, if you are about to send an remote procedure call every tick, you wanted a ghost field. If you are about to put a one-shot event in a ghost field, you wanted an remote procedure call.",
+          "audio": "audio/book-31-when-to-use-what/ch-b4.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "Cost check: rollback cost is predicted entities \u00d7 replayed ticks. Every entity you add to the predicted set multiplies every correction.",
+          "audio": "audio/book-31-when-to-use-what/ch-b6.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Pre-spawned is free and badly under-used. If it exists at level load and the server does not create it, bake it.",
+          "audio": "audio/book-31-when-to-use-what/ch-b8.opus"
+        },
+        {
+          "id": "b10",
+          "title": "b10",
+          "focus": null,
+          "text": "Raise sim rate for simulation fidelity. Raise send rate for visual freshness. They are different problems.",
+          "audio": "audio/book-31-when-to-use-what/ch-b10.opus"
+        },
+        {
+          "id": "b15",
+          "title": "b15",
+          "focus": null,
+          "text": "Our project uses both, correctly: Player Move System is a plain system (one rule, no states); the connection flow is a graph (states, gates, transitions, recovery).",
+          "audio": "audio/book-31-when-to-use-what/ch-b15.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "I \u00b7 Which world does this settings asset target?",
+          "audio": "audio/book-31-when-to-use-what/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "J \u00b7 Quick sanity table for a new feature",
+          "audio": "audio/book-31-when-to-use-what/ch-b17.opus"
+        },
+        {
+          "id": "b18",
+          "title": "b18",
+          "focus": null,
+          "text": "Before writing a line, answer these six:",
+          "audio": "audio/book-31-when-to-use-what/ch-b18.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Question 6 is the one people skip. For our client graph the answer was state = gameplay, a value unreachable unless the mechanism worked.",
+          "audio": "audio/book-31-when-to-use-what/ch-b19.opus"
+        }
+      ],
+      "nodes": {}
+    },
+    {
+      "id": "book-32-tying-it-together",
+      "title": "32 \u00b7 Tying it together",
+      "blurb": "",
+      "map": null,
+      "chapters": [
+        {
+          "id": "b2",
+          "title": "b2",
+          "focus": null,
+          "text": "One feature, designed end to end, touching every layer. Follow this and the stack stops being a list of packages and becomes one machine.",
+          "audio": "audio/book-32-tying-it-together/ch-b2.opus"
+        },
+        {
+          "id": "b3",
+          "title": "b3",
+          "focus": null,
+          "text": "The feature: a dash. Tap Shift, the capsule lunges forward, then a cooldown before you can dash again. It must feel instant, be cheat-proof, and be visible to the other player.",
+          "audio": "audio/book-32-tying-it-together/ch-b3.opus"
+        },
+        {
+          "id": "b6",
+          "title": "b6",
+          "focus": null,
+          "text": "IInput Component Data supports event-style fields that survive the tick they were pressed on:",
+          "audio": "audio/book-32-tying-it-together/ch-b6.opus"
+        },
+        {
+          "id": "b7",
+          "title": "b7",
+          "focus": null,
+          "text": "Input Event exists precisely because a bool sampled per frame and consumed per tick loses presses. It carries a counter so the consumer can tell \"pressed once\" from \"still held\" even across a rollback.",
+          "audio": "audio/book-32-tying-it-together/ch-b7.opus"
+        },
+        {
+          "id": "b8",
+          "title": "b8",
+          "focus": null,
+          "text": "Step 3 \u00b7 Replicated state for the cooldown",
+          "audio": "audio/book-32-tying-it-together/ch-b8.opus"
+        },
+        {
+          "id": "b9",
+          "title": "b9",
+          "focus": null,
+          "text": "A tick, not a float timer. Ticks are the shared clock; a float seconds value would drift between the two simulations and desync under replay.",
+          "audio": "audio/book-32-tying-it-together/ch-b9.opus"
+        },
+        {
+          "id": "b11",
+          "title": "b11",
+          "focus": null,
+          "text": "Every constraint from the book is visible here:",
+          "audio": "audio/book-32-tying-it-together/ch-b11.opus"
+        },
+        {
+          "id": "b13",
+          "title": "b13",
+          "focus": null,
+          "text": "Without that gate the effect fires on every partial tick and on every replayed tick of every rollback. This is the single most common \"why does my gun fire three times\" bug.",
+          "audio": "audio/book-32-tying-it-together/ch-b13.opus"
+        },
+        {
+          "id": "b16",
+          "title": "b16",
+          "focus": null,
+          "text": "If dashing should be blocked in a menu, or should trigger a state change, add a Grove node. If it is just a rule, leave it as a system. Chapter 31, table H.",
+          "audio": "audio/book-32-tying-it-together/ch-b16.opus"
+        },
+        {
+          "id": "b17",
+          "title": "b17",
+          "focus": null,
+          "text": "For a dash: leave it a system. No states, no transitions, no designer-facing flow.",
+          "audio": "audio/book-32-tying-it-together/ch-b17.opus"
+        },
+        {
+          "id": "b19",
+          "title": "b19",
+          "focus": null,
+          "text": "Step 6 is the important one. A check that cannot fail is not a check. Break the thing on purpose once, confirm your test catches it, then fix it. That is the difference between \"I believe it works\" and \"I know what would tell me it didn't\".",
+          "audio": "audio/book-32-tying-it-together/ch-b19.opus"
+        },
+        {
+          "id": "b21",
+          "title": "b21",
+          "focus": null,
+          "text": "Six steps. Every multiplayer feature you will ever build fits them. Weapons, vehicles, abilities, inventory, doors, the answers change, the questions do not.",
+          "audio": "audio/book-32-tying-it-together/ch-b21.opus"
+        }
+      ],
+      "nodes": {}
     }
   ]
 }

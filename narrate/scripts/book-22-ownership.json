@@ -1,0 +1,99 @@
+{
+  "id": "book-22-ownership",
+  "title": "22 · Ownership and spawning",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Who is allowed to move what, and how does a capsule exist in the first place."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Ghost Owner Is Local is the one you filter input on (chapter 16). Ghost Owner is the one you filter rules on, our Player Move System uses With All<Simulate, Ghost Owner>() so it moves player-owned things on both client and server."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Nerve does not spawn one thing. It spawns two, and the split is worth copying:"
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Why bother? Because \"the player\" and \"the thing the player is currently driving\" are different lifetimes:"
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Respawn then new pawn, same controller, score and identity intact. Enter a vehicle then controller re-points at the vehicle; input follows. Spectate then controller with no pawn. Reconnect then match by Account Identity, re-attach to the existing controller."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Hardware analogy, the controller is a stable device handle; the pawn is the currently mapped buffer. You re-point the handle; you do not tear down the session."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "This is why our two-player run shows 4 ghosts: 2 controllers + 2 capsules. Seeing 3 would mean two connections adopted the same controller, an identity collision, which is exactly the risk Account Identity = \"local-{network Id}\" carries and which the 4-ghost reading disproves."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Every one of those must be present. Chapter 19's ladder is really just \"which of these four is missing\"."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Looks for an existing controller with the same Account Identity (reconnect path). If none, instantiates Server Settings.player Controller. Instantiates Server Settings.player Character as the controlled entity. Links them (Primary Controlled Entity), sets Ghost Owner.Network Id on both. Points the connection's Command Target at the pawn."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Controller Ownership Initialize System then propagates ownership down linked entity groups, so a pawn with child entities has them all owned consistently."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Miss any link and the failure is silent. The most common misses, in order of frequency:"
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "The Object Definition is not in Object Management Settings then ID resolves to nothing. The settings asset is not on the Settings Authoring prefab then never bakes. The prefab is missing Ghost Authoring Component then spawns, but only on the server. Has Owner unchecked then no Ghost Owner then input filters match nothing."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Trap, we hit a fifth: Player Move Input Authoring was declared inside Player Move Input.cs. Unity only creates a Mono Script when the file name matches the class name, so the component serialised as m_Script: {file ID: 0}, a missing script. It baked nothing, the capsule spawned with no input component, and nothing anywhere complained. One Mono Behaviour per file, named after the file. Always."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "The client writes exactly one thing: what it wants. Everything else it receives. That single sentence is the security model."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Probe, who owns what, right now: ``csharp foreach (var (owner, e) in System API.Query<Ref RO<Ghost Owner>>().With Entity Access()) Debug.Log($\"{e} owned by Network Id {owner.Value RO.Network Id}\"); ``"
+    }
+  ],
+  "nodes": {}
+}

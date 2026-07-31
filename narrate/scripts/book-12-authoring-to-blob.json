@@ -1,0 +1,105 @@
+{
+  "id": "book-12-authoring-to-blob",
+  "title": "12 · From editor node to runtime bytes",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "The full toolchain, end to end. This is the chapter to re-read when a graph \"doesn't do anything\", because the answer is always which stage did it die at."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Stage by stage, with the failure signature"
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Doing this in code rather than by hand in the graph window is the difference between a reproducible project and an artifact nobody dares regenerate. Nerve's own sample builds its graphs this way; so does ours (Assets/Editor/Client Graph Setup.cs)."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Failure signature: Try Set Value returns false then you used the wrong option name. Our helper throws and prints every available option, which turns a 20-minute hunt into a one-line message."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "[Use With Graph(typeof(Client Nerve Graph))] on a node is the gate. Put a Client Go In Game Node in a.snerve and the toolkit will not offer it."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Failure signature: graph asset imports but Asset Database.Load Asset At Path<Nerve Graph Auth> returns null then the importer did not run, usually a stale Library/."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Runs on every graph change and at bake. Our setup script re-checks explicitly and throws, so a broken graph fails at build time rather than as a silent no-op at runtime."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Note file ID: 9196009390298549883, the Nerve Graph Auth is a sub-asset inside the.cnerve file, not the file itself. Both the guid and the file ID must be right."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Failure signature: 'X' is missing a Nerve graph. at bake."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "baker.Depends On is what makes editing the graph re-bake the subscene. Omit it and you edit a graph, see no change, and lose an hour."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Failure signature: graph edits have no runtime effect then missing Depends On, or the subscene did not re-import."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "The entity now carries Nerve State Machine { Graph, State Id } and a Dynamic Buffer<Grove State>. The executor's query is With All RW<Grove State>().With All RW<Nerve State Machine>(), if either is missing, the system finds nothing and does nothing, quietly."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "When a graph does nothing, walk down this list; the first no is your bug."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "We used exactly this ladder to land the client graph, and steps 5, 7 are where the two non-obvious hops live."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "Probe, step 7, in play mode: ``csharp foreach (var w in World.All) Debug.Log($\"{w.Name}: {w.Entity Manager.Create Entity Query( Component Type.Read Only<Nerve State Machine>()).Calculate Entity Count()}\"); ``"
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Part II done. You can now read every package in the stack. Time for the wire."
+    }
+  ],
+  "nodes": {}
+}

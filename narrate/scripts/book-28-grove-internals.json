@@ -1,0 +1,135 @@
+{
+  "id": "book-28-grove-internals",
+  "title": "28 · Grove internals, in full",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Chapter 08 gave you the shape. This is the datasheet."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Grove has more than \"nodes\". It has kinds, and the kind decides what the blob holds and how dispatch reaches it."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Two dispatch verbs, not one: Execute (side effects, returns nothing) and Calculate (pure, returns T). That split is why data ports can be evaluated lazily and why a data node can be shared by several execution nodes without ordering problems."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Three rules that fall out of this layout:"
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Blob Ptr<T> is a relative offset. The image is position-independent, so it can be memcpy'd, cached, and shared read-only by every entity. The image is immutable at runtime. No node may write to it. All mutable state goes in Grove State. Graph Id disambiguates. Two entities running different graphs keep separate state because the key includes the graph id."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Hardware analogy, you are looking at a flashed image with a header table. Root is the reset vector. Nodes[] is the code segment. Inputs/Outputs is the symbol table."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Keys are built by Graph State Util.Get Key(.) from three ingredients:"
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Values are blittable structs stored inline. No allocation, Burst-safe, per entity, and it survives across ticks and across rollbacks (it lives on the entity, so it is checkpointed with everything else)."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Trap, do not cache node state in a static or in a system field. It will not be per entity, it will not be checkpointed, and under prediction rollback it will silently desync. Grove State exists precisely to make the right thing easy."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "That last row is the performance secret and the compile-time cost. Every context type gets its own monomorphised dispatch, no generic virtual calls, everything inlinable, Burst sees concrete types all the way down."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Forget partial and you get a wall of \"does not implement IContext Generator<T>\" errors that point at the interface rather than at the missing keyword."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Containers: how a node reaches component data"
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Set Chunk(chunk, index) refreshes them once per chunk; nodes then index by grove Context.Entity Index In Chunk. That is why per-entity access inside a node is an array index, not a lookup, the expensive part happened once per chunk."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Two ways to reuse one graph with different numbers:"
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Both are resolved at bake time, so the runtime image is already specialised. There is no runtime branch and no lookup cost. It is template instantiation, done by the baker."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Graph Options.Supports Subgraphs is on for all three Nerve graph types. A subgraph is a whole.cnerve/.snerve referenced as one node, with its own scope in Grove Node State (see Push Subgraph Scope). Scoping means node ids inside a subgraph do not collide with the parent, so the same subgraph can appear twice in one graph with independent state."
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "Hardware analogy, a subgraph is a linked library with its own symbol namespace, instantiated at link time rather than called at runtime."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "Disable Auto Inclusion Of Nodes From Graph Assembly"
+    },
+    {
+      "id": "b28",
+      "title": "b28",
+      "focus": null,
+      "text": "Without this flag, Graph Toolkit would offer every node in the assembly in every graph. With it, a node appears only where [Use With Graph(.)] says. That is why a.snerve cannot contain Client Go In Game Node, and why adding a node to the wrong graph type is impossible rather than merely wrong."
+    },
+    {
+      "id": "b30",
+      "title": "b30",
+      "focus": null,
+      "text": "UNITY_INCLUDE_INSTRUMENTATION compiles a debug pass that walks every node after execution and calls Debug(.) on it, plus a Selected Entity singleton so the graph window can show live values for one entity. It is off in players and costs nothing there."
+    },
+    {
+      "id": "b32",
+      "title": "b32",
+      "focus": null,
+      "text": "The hash lookups are the only non-trivial per-entity cost. If a graph is hot, the first optimisation is fewer keyed state values, not fewer nodes."
+    }
+  ],
+  "nodes": {}
+}

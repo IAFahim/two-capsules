@@ -1,0 +1,147 @@
+{
+  "id": "book-07-core",
+  "title": "07 · Core: settings, logging, and the registry",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b1",
+      "title": "b1",
+      "focus": null,
+      "text": "07 · Core: settings, logging, and the registry"
+    },
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Bovine Labs.Core is the base plate. Four subsystems matter to us."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "1. Settings, a Scriptable Object that becomes an entity"
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "The problem: designers want to tune numbers in the Inspector. E C S wants blittable data in chunks. Settings is the bridge."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Each Settings Base implements Bake(Baker<Settings Authoring>) and adds whatever components it wants onto one entity."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Which world does a settings asset land in? [Settings World(\"client\")] says. The lookup lives in Editor Settings:"
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Editor Settings Utility.Get Settings<T>() does the whole dance in one call: finds or creates the asset in Assets/Settings/Settings/, reads [Settings World], and inserts it into the right prefab's array (sorted, deduped, null-pruned)."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "That one call is how our Client State Settings got wired. Read it as the supported API and never hand-edit those prefab arrays."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Probe, after creating a settings asset, confirm the link: ``bash grep -A2 \"settings:\" \"./Settings/Authoring/Client Settings.prefab\" ``"
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "2. K, typed constants without magic strings"
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "K is a code-generated set of named byte/int constants sourced from settings assets, so layer masks and enum-ish IDs stop being magic numbers scattered through code. You will see Assets/Settings/K/ in this project. It is small; it is not on our critical path; know it exists so you do not reinvent it."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Unity Engine.Debug.Log is a managed call. Bursted code cannot make it. BLLogger is a singleton component holding a native ring buffer:"
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "A managed system drains the buffer each frame and forwards to Unity's console. Grove's Graph Impl grabs it into Grove Context.Logger so any node, anywhere, can log without breaking Burst."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Hardware analogy, this is a UART with a D M A ring buffer. The fast path writes into a circular buffer with no formatting; a slow consumer drains and formats. Same pattern, same reason."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "4. Object Definition, a handle registry for prefabs"
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "The problem: an E C S component cannot hold a prefab reference. It can hold an int."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Each prefab gets an Object Definition asset carrying a stable numeric ID. A settings asset registers them all. At bake time that becomes a lookup table; at runtime you spawn by ID."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Our two definitions: Player Capsule = 2, Player Controller = 3. Server Settings points player Controller and player Character at them, which is how Nerve's spawn code knows what to instantiate for a joining player."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "IDs are assigned by an editor post-processor, Auto Ref Processor. It batches work through Editor Application.delay Call and keeps an Already Processed Assets set marked [No Auto Statics Cleanup], so the set survives domain reload."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Trap, if an asset lands in that set before it is fully importable, it is skipped and never revisited. Symptom: every Object Definition.ID is 0 and the registry is empty, with no error. We hit this exactly once and unstuck it by reflecting into the processor to clear the set and re-run. That is unsupported and still sits in our debt list; the supported unstick is to delete Library/ and let the import order be natural."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Four patterns, all of which you will now recognise in Nerve because Nerve is built from them:"
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "Inspector data then entity via a baker on a prefab in a world-targeted scene. Managed identity then runtime identity via a numeric handle and a table. Slow, managed work then ring buffer drained by a managed consumer. Editor-time wiring then a utility that owns the whole dance, not hand-edited assets."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "then 08 · Grove: a virtual machine for gameplay logic"
+    }
+  ],
+  "nodes": {}
+}

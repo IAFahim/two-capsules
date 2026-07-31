@@ -1,0 +1,93 @@
+{
+  "id": "book-26-extend",
+  "title": "26 · Extending the stack",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Four recipes. Each is a complete, minimal change with the exact files touched."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Trap, adding a [Ghost Field] changes the ghost schema, which changes the protocol version. Old clients get a handshake mismatch. Rebuild both sides together."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Recipe 2 · Add a rule that both sides run"
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "The template is our movement system, and the shape is non-negotiable:"
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Checklist: both world flags · prediction group · Simulate · no branch on Is Server · no one-shot side effects (or gate on Is First Time Fully Predicting Tick)."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Four files, one per representation (chapter 08):"
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Trap, pick an opcode range that cannot collide with Grove's, Canopy's, or Nerve's. Nerve uses -Nerve Id.Offset - n. Give yourself your own offset and document it."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Recipe 4 · Add a world-targeted settings asset"
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Then one editor call does the whole wiring:"
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Creates the asset, reads [Settings World(\"server\")], and inserts it into Server Settings.prefab. Never hand-edit that array."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Recipe 5 · Add a state to the client graph"
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Edit Assets/Editor/Client Graph Setup.cs, not the graph window:"
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Run Daggertooth then Rebuild Client Graph. The validator will tell you immediately if you broke the one-default-child rule."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Every extension in this stack is: declare data then declare the code that consumes it then declare how it is authored then declare where it lives. Four declarations, four places, always the same four. Once you see it, the stack stops feeling large."
+    }
+  ],
+  "nodes": {}
+}

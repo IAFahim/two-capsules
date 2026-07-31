@@ -1,0 +1,93 @@
+{
+  "id": "book-20-keypress-to-pixel",
+  "title": "20 · Keypress to pixel",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "The full trace. One W press, two capsules, two screens. Every hop, in order."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "This is the chapter the whole book exists for. If you can narrate this from memory, you are done."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Key contact closes. Keyboard controller debounces, sends a HID report over USB. Host controller raises an interrupt. Kernel HID driver decodes, queues an evdev event. Display server delivers it to the focused window. Unity's message pump drains it."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Input System updates Keyboard.current. This is managed memory. Player Gather Input System runs in Ghost Input System Group. Not bursted, it touches managed input. It filters With All<Ghost Owner Is Local>() so it writes only your capsule's Player Move Input. Player Move Input.Move = (1, 0) for W. Intent. Four bytes. Not a position."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Copy Input To Command Buffer System Group (Order Last) copies the component into Input Buffer Data<Player Move Input>[current Tick], a ring slot stamped with the tick. Command Send System serialises the last few ticks (built-in redundancy) and sends unreliably."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Copy Command Buffer To Input System Group (Order First inside Predicted Simulation System Group) reads the ring slot for the tick being simulated back into the component. Player Move System runs with With All<Simulate, Ghost Owner>(). Simulate is the clock-enable. Delta is one tick. Local Transform.Position += (1,0,0)·Speed·dt. Your capsule has already moved, zero frames after the keypress."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Packet crosses I P C or loopback U D P. Command Receive System writes into the server's own Input Buffer Data ring for that ghost."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Server reaches that tick. Copy Command Buffer To Input System Group materialises the input. The same Player Move System, one [World System Filter] covering both worlds, runs. Same constant, same delta, same maths. Server's Local Transform is now the truth. If the client had lied, it would not matter: the server never received a position, only a direction."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Ghost Send System collects, prioritises, delta-compresses against each connection's ACKed baseline, and sends."
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Ghost Receive System compares the received state for tick T with what you predicted for T. Match then nothing happens. Mismatch then restore and replay ticks T+1.now, re-feeding stored input each tick. You never see it."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Same snapshot arrives. Their copy of your capsule is interpolated, drawn between two received snapshots, roughly 100 milliseconds behind the server. Smooth, slightly stale, never wrong."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Entities.Graphics uploads Local To World matrices to G P U buffers, issues batched draws. U R P renders. Present blocks on vsync. Photons."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "Both players see a different world, and both are correct. Server-authoritative multiplayer is the engineering discipline of making that disagreement invisible."
+    },
+    {
+      "id": "b29",
+      "title": "b29",
+      "focus": null,
+      "text": "Probe, the one-liner that separates the first three rows: ``csharp // in Client World and Server World, per tick Debug.Log($\"{world.Name} move={input.Move} pos={transform.Position}\"); ` If client move is non-zero and server move` is zero, it is hop 12, 14. Every time."
+    }
+  ],
+  "nodes": {}
+}

@@ -1,0 +1,171 @@
+{
+  "id": "book-30-feel",
+  "title": "30 · How it is made to feel nice",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Every trick in this chapter exists to hide the same fact: information takes time to travel, and players will not forgive it. These are the mechanisms, ranked by how much perceived quality they buy."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "A 60 milliseconds round trip time with no prediction puts you at \"sluggish\" on every single input. That is the problem the entire stack is arranged around."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "1 · Prediction, buys the most, costs the most"
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Perceived input latency: zero. The price is a replay whenever the server disagrees, and a hard requirement that your simulation is replayable (chapter 17)."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "2 · Interpolation, buys smoothness for everyone else"
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Rendering other players in the past, between two known snapshots, converts irregular arrival into regular motion. It is a jitter buffer, and it is why a 20 hertz snapshot rate can look like 144 hertz motion."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "3 · Partial ticks, buys smoothness between ticks"
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Simulate at 60, render at 144, and 60% of frames have nothing new. Partial ticks run a fraction of a tick purely for presentation, then throw it away."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Trap, one-shot effects must be gated on Is First Time Fully Predicting Tick, or they fire on every partial tick too."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "4 · Command redundancy, buys resilience to loss for free"
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Each command packet contains the last several ticks of input, not just one. A dropped packet costs nothing because the next one carries the gap. This is why input feels solid on a lossy connection while positions still visibly hitch."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "5 · Snapshot delta compression, buys bandwidth, which buys rate"
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Only changed fields are sent, delta-coded against what each client last ACKed. Fewer bits per ghost means more ghosts per packet means a higher effective update rate for everything."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Quantization amplifies this: quantized values compare equal more often, so more fields are \"unchanged\"."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "6 · Importance scheduling, buys the illusion of a full world"
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "The server cannot send everything. It sends the most important things this tick and defers the rest. Nearby, moving, dangerous things update at a high rate; distant scenery updates occasionally. The player perceives a fully live world because the parts they are looking at are live."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "7 · Correction smoothing, buys invisibility for the fix"
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "When a rollback moves your capsule, snapping is visible. Blending the rendered position over a few frames hides small corrections entirely. Above Max Smoothing Distance it snaps instead, because sliding a long way looks worse than a clean cut."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "The advanced one. The client shoots at what it sees, which is the past. Naively, the server checks against the present and the shot misses."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Track Interpolation Delay on the ghost is what makes the server able to reconstruct \"what did this client see\". The trade is real and famous: behind cover and still shot. Every shooter picks a point on that spectrum; none escape it."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "9 · Time synchronisation, buys stability under changing conditions"
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "The client continuously measures round trip time and jitter, then adjusts:"
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "how far ahead it predicts (so commands land just in time) how far behind it interpolates (so the buffer never underruns)"
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "It does this by nudging the rate of local time, not by jumping. Slow drift is invisible; a jump is not."
+    },
+    {
+      "id": "b28",
+      "title": "b28",
+      "focus": null,
+      "text": "Hardware analogy, a PLL. You do not step the clock; you adjust its frequency and let phase converge. Same reason: discontinuities are what people notice."
+    },
+    {
+      "id": "b30",
+      "title": "b30",
+      "focus": null,
+      "text": "Ghosts marked Optimization Mode.Static that have not changed are skipped entirely. Every ghost you can mark static is bandwidth handed back to the ghosts that need it."
+    },
+    {
+      "id": "b32",
+      "title": "b32",
+      "focus": null,
+      "text": "Six independent mechanisms, each hiding one consequence of the same physical fact. None of them removes latency. They relocate it to places players do not look."
+    }
+  ],
+  "nodes": {}
+}

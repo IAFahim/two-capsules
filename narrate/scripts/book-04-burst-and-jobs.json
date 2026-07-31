@@ -1,0 +1,117 @@
+{
+  "id": "book-04-burst-and-jobs",
+  "title": "04 · Burst and jobs",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Two separate technologies that people blur together. Keep them apart in your head:"
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "Burst is a compiler. It turns a subset of C# into machine code via LLVM. Jobs is a scheduler. It runs work on worker threads with enforced data safety."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "You can use either without the other. Together they are why DOTS is fast."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Hardware analogy, Burst is a cross-compiler with -O3 -ffast-math -march=native aimed at a language that normally forbids all three. [Burst Compile] is you signing the waiver."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Trap, [Burst Compile] on the methods but not on the struct silently does nothing. No error, no warning. Your system just runs at Mono speed forever. This is the single most common invisible perf bug in DOTS."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Inside a bursted method you may not touch: class, string, object, try/catch (in release), Unity Engine.Debug.Log, LINQ, delegates that aren't Function Pointer. Our Player Gather Input System deliberately has no [Burst Compile] on On Update, because Keyboard.current is a managed object. That is the correct call, not a compromise."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Burst compiles a separate copy of static fields. A static int written from managed code is invisible to bursted code. The supported bridge is Shared Static<T>:"
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "That is exactly how the sample's Start Game button reaches E C S, and how Nerve's Client Disconnection Outcome escapes the graph. When you see Shared Static, read it as \"a global that Burst and Mono agree on\"."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Jobs: a dependency graph the compiler checks"
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "state.Dependency is a Job Handle, a token in that graph. Schedule a job, get a handle, pass it on. The safety system tracks which Native Arrays each job reads and writes and refuses to compile or run an unsafe combination."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Hardware analogy, the job system is a scoreboard. Every Native Container is a register with readers and writers tracked; the scheduler stalls dependents until hazards clear. Unity's version just yells at you at compile time instead of stalling silently."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "The escape hatches, and when they are legitimate"
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "All three appear in this stack. Client App Context uses the third to hold a System State*, because a Grove context must reach the system it is running inside. That is not sloppiness, it is the same reason you cast away volatile exactly once in a driver, in a place with a comment."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Why our capsule code runs single-threaded"
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Player Move System uses System API.Query with foreach, on the main thread, bursted. Two capsules. Scheduling a parallel job for two entities would cost more in scheduling overhead than it saves."
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "The lesson generalises: parallelism is a throughput tool with a fixed setup cost. Below a few thousand entities, foreach on the main thread wins. Measure before you schedule."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Probe, Jobs then Burst then Open Inspector in the editor shows the actual assembly Burst generated for any bursted method. Read it. If you were expecting vmulps and you see a call into a math library, something broke your vectorization."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Part I done. You now know the machine. Next: what is actually installed on it."
+    }
+  ],
+  "nodes": {}
+}

@@ -1,0 +1,105 @@
+{
+  "id": "book-13-topology",
+  "title": "13 · Network topology",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Forget \"multiplayer\" for a second. Look at what is physically there."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Both drivers exist in the same process here. Net Code registers two transports:"
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Our host's own client uses I P C; the second Play Mode player uses U D P to loopback. That is why the Play Mode Tools window shows both endpoints on the server row."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "There is no Connection class. A connection is an entity, and its component set is its state machine:"
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Read that chain as a checklist. Every \"player doesn't spawn\" bug is one of those components missing, and the ladder in chapter 19 walks it."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Trap, no ghosts are sent until Network Stream In Game exists on the connection. Not \"fewer\". None. It is the single flag that arms the whole snapshot system, and it is why chapter 21's client graph matters so much."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "The transport composes pipeline stages per channel:"
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Hardware analogy, a protocol stack assembled from composable shift registers. Each stage owns a slice of per-connection state and hands a buffer to the next."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Snapshots are deliberately unreliable: a lost snapshot is not worth retransmitting, because the next one (20 milliseconds later) already contains newer truth. Commands are the same. Only remote procedure calls and ghost spawn/despawn need reliability."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "That single design decision is why Net Code tolerates packet loss gracefully and why you must never assume a specific tick's data arrived."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Connection Events For Tick is a Native Array<Net Code Connection Event>.Read Only valid for this tick only. Connection State.State walks Unknown then Connecting then Handshake then Approval then Connected then Disconnected."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Nerve's Client Connection Tracker consumes exactly this array and folds it into a durable Client Connection Snapshot in graph state, because the events vanish next tick but the conclusion (\"we are disconnected, reason Timeout\") must persist."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Hardware analogy, the event array is a status register you must read before the next clock edge. The snapshot is the latch you copy it into."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Client Server Bootstrap.Requested Play Type decides which worlds get built:"
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "With com.unity.dedicated-server installed, UNITY_USE_MULTIPLAYER_ROLES is defined and Multiplayer Roles override this per virtual player. Chapter 23 shows why that is the difference between a working second player and a port-bind crash."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Probe, what the driver actually bound: ``csharp var d = System API.Get Singleton<Network Stream Driver>(); // Play Mode Tools shows the same thing: [I P C.] [U D P.] ``"
+    }
+  ],
+  "nodes": {}
+}

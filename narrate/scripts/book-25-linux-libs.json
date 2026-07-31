@@ -1,0 +1,105 @@
+{
+  "id": "book-25-linux-libs",
+  "title": "25 · The Linux library saga",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "The most you-shaped chapter in the book. No E C S, no networking, just the dynamic linker, sonames, and a search-path rule that is not transitive."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Unity 6000.7.0a3 on Ubuntu 26.04. The editor exits with code 127, or launches fine and then every multiplayer play mode virtual player dies with:"
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "A soname bump (.so.2 then.so.16) is an ABI break declaration. That is the whole point of sonames. So ln -s libxml2.so.16 libxml2.so.2 is not a fix, it is a promise you cannot keep, and it will pay out months later somewhere unrelated."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "The machine had a stale ldconfig cache entry pointing at libxml2.so.2 inside an uninstalled older editor. The file was gone; the cache still advertised it. Some paths worked by accident."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Running sudo ldconfig cleared the stale entry, and turned \"working by accident\" into a clean, honest exit 127."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Trap, I called ldconfig \"free\". It was not. It was load-bearing garbage. A cache rebuild is only free if the cache is describing reality, and a stale entry pointing at a deleted file is precisely the case where it is not. The general rule: never run a \"harmless refresh\" on state you have not inspected. The refresh is harmless; discovering what the state was actually doing is not."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "The fix, and why the obvious version fails"
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Step one: put the right library, with the right soname, next to the editor."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "And it still fails. Here is why, and it is the good part:"
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "THE MECHANISM, run path is not transitive. Unity's binary has a run path containing $ORIGIN, so the loader finds Editor/libxml2.so.2. But when the loader then resolves libxml2's own DT_NEEDED entry for libicui18n.so.74, it does not consult Unity's run path. run path applies only to the direct dependencies of the object that declares it. (RPATH, the deprecated predecessor, was transitive. run path deliberately is not, that was the point of introducing it.)"
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "L D library path, by contrast, is consulted for every object in the process. So:"
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "The wrapper also fixes multiplayer play mode, because virtual players are child processes and inherit the environment. One export, every process."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Note L D library path outranks run path. That ordering is exactly what makes the wrapper work."
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Because a soname is a contract. Two generations of the same library in the global namespace will resolve fine for months and then break something unrelated, at the worst time, with no trail. Scoping to Editor/ means only Unity sees the old ABI, which is precisely what 6000.7.0a2 was doing before the regression."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Trap, an editor upgrade replaces Unity and silently removes the wrapper. Re-apply after every upgrade, or script it."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "A soname bump is an ABI break. Never alias across one. run path is not transitive; L D library path is. This single fact explains a huge class of \"I copied the.so and it still can't find it\" bugs. Scope compatibility shims as narrowly as possible. Process-local beats system-wide, always. A stale cache entry can be load-bearing. Inspect before you refresh. ldd is your nm here. When a process will not start, ask the loader, not the app."
+    }
+  ],
+  "nodes": {}
+}

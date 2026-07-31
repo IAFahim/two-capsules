@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Read · Two Capsules</title>
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#111a2d; --card:#16203a; --ink:#e9eefb; --muted:#93a4c6;
+    --line:#22304f; --a:#5eead4; --ok:#34d399; --hl:rgba(94,234,212,.13);
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#fbfcfe; --panel:#fff; --card:#f4f7fb; --ink:#111a2b; --muted:#4a5a78;
+           --line:#dce3ef; --a:#0d9488; --ok:#059669; --hl:rgba(13,148,136,.10); }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;color:var(--ink);background:var(--bg);display:grid;grid-template-rows:auto 1fr auto;
+       font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+  a{color:var(--a);text-decoration:none} a:hover{text-decoration:underline}
+  button{font:inherit;color:inherit;cursor:pointer}
+
+  .top{display:flex;gap:12px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+  .brand{font-weight:700;white-space:nowrap}
+  .brand small{display:block;font-weight:400;color:var(--muted);font-size:.7rem}
+  select{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:6px 10px;font:inherit;font-size:.85rem;max-width:46vw}
+  .spacer{flex:1}
+  .top button,.top a.btn{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:6px 11px;font-size:.82rem}
+  .top button:hover,.top a.btn:hover{border-color:var(--a)}
+  .top button[aria-pressed="true"]{border-color:var(--a);color:var(--a)}
+
+  .wrap{overflow:auto;padding:26px 20px 60px}
+  article{max-width:74ch;margin:0 auto;line-height:1.68;font-size:1.03rem}
+  article h1{font-size:1.9rem;line-height:1.18;margin:.2em 0 .5em;letter-spacing:-.015em}
+  article h2{font-size:1.28rem;margin:1.9em 0 .5em;letter-spacing:-.01em}
+  article h3{font-size:1.05rem;margin:1.5em 0 .4em}
+  article p,article ul,article ol,article blockquote{margin:.85em 0}
+  article li{margin:.3em 0}
+  article code{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:.88em}
+  article pre.code{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 15px;overflow:auto;font-size:.83rem;line-height:1.5}
+  article pre.code code{background:none;border:0;padding:0}
+  article blockquote{border-left:3px solid var(--a);padding:.4em 0 .4em 14px;color:var(--ink);background:var(--hl);border-radius:0 9px 9px 0}
+  article table{width:100%;border-collapse:collapse;margin:1.1em 0;font-size:.92rem;display:block;overflow-x:auto}
+  article th,article td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  article th{background:var(--card);font-weight:650}
+  article hr{border:0;border-top:1px solid var(--line);margin:2.2em 0}
+  article pre.mermaid{background:transparent;border:0;text-align:center;margin:1.4em 0}
+  article pre.mermaid svg{max-width:100%;height:auto}
+
+  [data-b]{scroll-margin-top:24px;border-radius:9px;transition:background .25s ease}
+  [data-b].now{background:var(--hl);box-shadow:0 0 0 8px var(--hl)}
+  [data-b].done{opacity:.92}
+  [data-b][data-has]{cursor:pointer}
+  [data-b][data-has]:hover{background:var(--hl)}
+
+  .bar{border-top:1px solid var(--line);background:var(--panel);padding:9px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .bar button{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:7px 13px;font-size:.85rem}
+  .bar button:hover{border-color:var(--a)}
+  .bar button.pri{border-color:var(--a);color:var(--a)}
+  .prog{flex:1;min-width:120px;height:5px;border-radius:99px;background:var(--card);overflow:hidden}
+  .prog i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s ease}
+  .hint{color:var(--muted);font-size:.76rem}
+  .hint kbd{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+  @media (prefers-reduced-motion: reduce){ [data-b],.prog i{transition:none} }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand">Two Capsules <small>read along, or let it read to you</small></div>
+  <select id="chapters" aria-label="Chapter"></select>
+  <button id="prevCh" title="Previous chapter">◀</button>
+  <button id="nextCh" title="Next chapter">▶</button>
+  <div class="spacer"></div>
+  <button id="mute" aria-pressed="false">🔊 Voice</button>
+  <button id="speed">1.0×</button>
+  <a class="btn" href="explore.html">Maps ↗</a>
+  <a class="btn" href="index.html">Index ↗</a>
+</div>
+
+<div class="wrap" id="wrap"><article id="doc"></article></div>
+
+<div class="bar">
+  <button id="play" class="pri">▶ Read to me</button>
+  <button id="back" title="Previous block">↑</button>
+  <button id="fwd" title="Next block">↓</button>
+  <div class="prog"><i id="progBar"></i></div>
+  <span class="hint" id="state">pick a chapter</span>
+  <span class="hint"><kbd>Space</kbd> play · <kbd>J</kbd>/<kbd>K</kbd> move · <kbd>M</kbd> mute</span>
+</div>
+
+<audio id="au" preload="none"></audio>
+<script src="assets/mermaid.min.js"></script>
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const au = $("au"), doc = $("doc"), wrap = $("wrap");
+  let index = [], man = null, ch = null, clips = [], at = -1, playing = false, unlocked = false;
+  const SPEEDS = [1, 1.25, 1.5, 0.85]; let si = 0;
+  const muted = () => $("mute").getAttribute("aria-pressed") === "true";
+
+  ["pointerdown","keydown"].forEach(e => document.addEventListener(e, () => {
+    if (unlocked) return; unlocked = true;
+    au.muted = true; au.play().then(() => { au.pause(); au.muted = false; }).catch(() => { au.muted = false; });
+  }, true));
+
+  const dark = () => matchMedia("(prefers-color-scheme: dark)").matches;
+  if (window.mermaid) mermaid.initialize({ startOnLoad:false, theme: dark() ? "dark" : "default",
+    themeVariables:{ fontFamily:"ui-sans-serif, system-ui, sans-serif" }, securityLevel:"loose" });
+
+  // ---------- narration lookup ----------
+  function lessonFor(slug){ return man && man.lessons.find(l => l.id === "book-" + slug); }
+
+  function buildClips(){
+    const l = lessonFor(ch.slug);
+    const byId = {}; (l ? l.chapters : []).forEach(c => byId[c.id] = c);
+    clips = [];
+    doc.querySelectorAll("[data-b]").forEach(el => {
+      const c = byId[el.getAttribute("data-b")];
+      if (!c) return;
+      el.setAttribute("data-has", "1");
+      el.addEventListener("click", () => { const i = clips.findIndex(x => x.el === el); if (i >= 0) go(i, false); });
+      clips.push({ el, audio: c.audio, text: c.text });
+    });
+    $("state").textContent = clips.length ? clips.length + " sections · " + (l && l.chapters.some(c => c.audio) ? "narrated" : "text only") : "no narration for this chapter";
+  }
+
+  function paint(){
+    clips.forEach((c, i) => { c.el.classList.toggle("now", i === at); c.el.classList.toggle("done", i < at); });
+    $("progBar").style.width = clips.length ? (100 * Math.max(0, at + 1) / clips.length) + "%" : "0%";
+  }
+
+  function go(i, keepPlaying){
+    if (!clips.length) return;
+    at = Math.max(0, Math.min(clips.length - 1, i));
+    const c = clips[at];
+    paint();
+    c.el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+    au.pause();
+    if (!c.audio || muted()) { if (keepPlaying) setTimeout(() => { if (playing) go(at + 1, true); }, 900); return; }
+    au.src = "narrate/" + c.audio; au.playbackRate = SPEEDS[si];
+    au.play().catch(() => {});
+  }
+
+  au.addEventListener("ended", () => { if (playing && at < clips.length - 1) go(at + 1, true); else if (playing) stop(); });
+  function play(){ playing = true; $("play").textContent = "❚❚ Pause"; go(at < 0 ? 0 : at, true); }
+  function stop(){ playing = false; $("play").textContent = "▶ Read to me"; au.pause(); }
+
+  // ---------- chapter loading ----------
+  async function load(slug){
+    stop(); at = -1;
+    const r = await fetch("reader/" + slug + ".json"); ch = await r.json();
+    doc.innerHTML = ch.html;
+    $("chapters").value = slug;
+    location.hash = slug;
+    document.title = ch.title + " · Two Capsules";
+    wrap.scrollTop = 0;
+    if (window.mermaid) {
+      try { await mermaid.run({ nodes: doc.querySelectorAll("pre.mermaid") }); } catch(_) {}
+    }
+    buildClips(); paint();
+  }
+
+  function hop(d){
+    const i = index.findIndex(c => c.slug === ch.slug);
+    const n = index[i + d]; if (n) load(n.slug);
+  }
+
+  // ---------- controls ----------
+  $("play").addEventListener("click", () => playing ? stop() : play());
+  $("fwd").addEventListener("click", () => go(at + 1, playing));
+  $("back").addEventListener("click", () => go(at - 1, playing));
+  $("prevCh").addEventListener("click", () => hop(-1));
+  $("nextCh").addEventListener("click", () => hop(1));
+  $("chapters").addEventListener("change", (e) => load(e.target.value));
+  $("mute").addEventListener("click", (e) => {
+    const on = e.currentTarget.getAttribute("aria-pressed") === "true";
+    e.currentTarget.setAttribute("aria-pressed", on ? "false" : "true");
+    e.currentTarget.textContent = on ? "🔊 Voice" : "🔇 Muted";
+    if (!on) au.pause();
+  });
+  $("speed").addEventListener("click", () => {
+    si = (si + 1) % SPEEDS.length;
+    $("speed").textContent = SPEEDS[si].toFixed(2).replace(/0$/, "") + "×";
+    au.playbackRate = SPEEDS[si];
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "SELECT" || e.target.tagName === "INPUT") return;
+    const k = e.key.toLowerCase();
+    if (e.key === " ") { e.preventDefault(); playing ? stop() : play(); }
+    else if (k === "j") go(at + 1, playing);
+    else if (k === "k") go(at - 1, playing);
+    else if (k === "m") $("mute").click();
+    else if (k === "[") hop(-1);
+    else if (k === "]") hop(1);
+  });
+
+  // ---------- boot ----------
+  Promise.all([
+    fetch("reader/index.json").then(r => r.json()),
+    fetch("narrate/manifest.json").then(r => r.json()).catch(() => null),
+  ]).then(([idx, m]) => {
+    index = idx; man = m;
+    const sel = $("chapters");
+    idx.forEach(c => { const o = document.createElement("option"); o.value = c.slug; o.textContent = c.title; sel.append(o); });
+    load((location.hash || "").replace("#", "") || idx[0].slug);
+  }).catch(() => {
+    doc.innerHTML = "<h1>Reader payload missing</h1><p>Run <code>python3 tools/build_reader.py</code> to generate it.</p>";
+  });
+})();
+</script>
+</body>
+</html>

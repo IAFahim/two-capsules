@@ -1,0 +1,117 @@
+{
+  "id": "book-29-netcode-settings",
+  "title": "29 · Every knob in NetCode",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "A reference chapter. Each setting: what it does, what it costs, and how to choose."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "1 · Tick and send rate, Client Server Tick Rate"
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "The one people miss: Network Tick Rate is separate from Simulation Tick Rate. Simulating at 60 and sending at 20 is the standard shape, three sims per snapshot, one third of the bandwidth, and interpolation hides the difference."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Batching kicks in when the server falls behind: it merges several ticks into one step with a larger delta. It protects against a death spiral and it degrades input fidelity. If you see the batching warning outside of editor hitches, your server tick is genuinely too expensive."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Optimization Mode.Static is the cheapest win in the whole system. A static ghost that has not changed is not serialised, not delta-compared, and not sent. For level props and parked vehicles it removes them from the bandwidth budget entirely."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "3 · Per-field replication, [Ghost Field]"
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "[Ghost Component(.)] controls the component as a whole:"
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Design rule, Owner Send Type = Send To Owner on anything only the owner needs (ammo, cooldowns, private state) is both a bandwidth saving and an anti-cheat measure: information you never send cannot be extracted."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Quantization error is 0.5 / Quantization in world units."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Too coarse and the client's prediction disagrees with the dequantized server value every tick, producing constant micro-rollbacks that read as jitter. Too fine and you pay bits for precision no one can see. Match it to your world scale, not to a habit."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Importance vs relevancy is the distinction to internalise:"
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Use relevancy for zones, rooms, and fog of war. Use importance for everything that is visible but not equally urgent. Relevancy is also a security boundary: a client cannot wall-hack data it was never sent."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Prediction switching is the advanced move: predict only the ghosts near the local player, interpolate the rest, and reassign as they approach. It keeps rollback cost bounded in a crowded world. Budget it by predicted entity count, because rollback cost is predicted entities × replayed ticks."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Runs after a rollback and blends the rendered value toward the corrected one."
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Trap, smoothing must never feed back into simulation. Presentation reads simulation; the reverse is a feedback loop that diverges."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Always develop with emulation on. 80 milliseconds round trip time and 2% loss as your daily setting will surface every prediction bug while it is still cheap. A LAN-perfect connection hides exactly the class of bug that ships."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Nerve wraps this in a Relevancy Settings asset, which our project registers on Server Settings.prefab."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "Thin clients are the cheapest scale test you will ever write: no rendering, no presentation, real connections, real commands. Give them a fake-input system and you can put 50 players on your laptop."
+    }
+  ],
+  "nodes": {}
+}

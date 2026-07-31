@@ -1,0 +1,99 @@
+{
+  "id": "book-03-worlds",
+  "title": "03 · Worlds: six machines in one process",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b1",
+      "title": "b1",
+      "focus": null,
+      "text": "03 · Worlds: six machines in one process"
+    },
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "A World is an Entity Manager (its own chunk allocator, its own entity IDs) plus a list of systems. Two worlds share nothing. Entity #42 in Client World and entity #42 in Server World are unrelated, the way PID 42 on two machines is unrelated."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "Hardware analogy, a world is a separate address space. Same silicon, same frame, zero shared state. The only way data crosses is a message on the wire."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Service World is the one that outlives everything, it owns the state graph that says \"we are in Menu\" or \"we are in Game\", and it is what creates and destroys the others."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Probe, see them live: ``csharp foreach (var w in World.All) Debug.Log($\"{w.Name} flags={w.Flags}\"); ``"
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Each world carries World Flags. Systems declare where they are allowed to exist:"
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Bovine Labs adds its own world kinds on top of Unity's, in Bovine Labs.Core/Worlds.cs:"
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Worlds.Server Local is doing real work: it means \"authority\", whether that authority is a netcode server or an offline single-player world. Write your authoritative rules against that and single-player comes free."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Trap, a system with no [World System Filter] defaults to Local Simulation | Server Simulation | Client Simulation, so it lands in every game world including the server. Half of all \"why did that run twice?\" bugs are a missing filter."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Groups: the ordering is a graph, not a list"
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Systems do not run in declaration order, alphabetical order, or file order. They run in the order of a topologically-sorted dependency graph built from attributes."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Trap, [Update Before] only works between systems in the same group. Point it at a system in another group and Unity logs a warning and ignores it. You will see exactly this warning in our project's console, coming from Unity's own Companion Game Object Update Transform System. Harmless there; not harmless in your code."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Our project uses ISystem everywhere except where it genuinely cannot, the same rule the packages follow. Connection Approval Server System is a System Base precisely because it awaits an HTTP call to Unity Authentication."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "ICustom Bootstrap lets you take over world creation. Nerve does, via Bovine Labs Bootstrap: Client Server Bootstrap. It is why our worlds are named and shaped the way they are, and why Create Client Server Worlds() is the thing the service graph calls when you press Start Game."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Next: the part where all those chunks get chewed in parallel."
+    }
+  ],
+  "nodes": {}
+}

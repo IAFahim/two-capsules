@@ -1,0 +1,129 @@
+{
+  "id": "book-06-assemblies",
+  "title": "06 · Assemblies, and the silent-death trap",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b1",
+      "title": "b1",
+      "focus": null,
+      "text": "06 · Assemblies, and the silent-death trap"
+    },
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "This chapter is worth more than its length. It describes a failure mode that produces no error, no warning, and no output, the code simply is not there. We lost hours to it twice."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "An assembly definition is a compilation unit"
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Unity compiles one DLL per.assembly definition. The file is the linker script:"
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "version Defines, \"if that package exists, define this symbol\""
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Note the scope: per assembly. Every assembly definition that wants UNITY_NETCODE must declare its own version Defines entry. Symbols do not inherit from referenced assemblies. This is why the same 8-entry block is copy-pasted into every assembly definition in the Bovine Labs stack, and now into ours."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "define Constraints, \"compile me only if ALL of these are defined\""
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "THE TRAP, define Constraints is all-or-nothing at the assembly level. If one symbol is missing, Unity does not compile the assembly. Not partially. At all. It produces no DLL, logs nothing, and every type in it silently ceases to exist."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "We had stripped the manifest to a minimum. Five of those six were unsatisfied. So Bovine Labs.Nerve.State, the assembly containing sessions, ownership, approval, and every client node, was not built. The symptom was \"these types don't exist\", which reads like a bad using, which sends you hunting in exactly the wrong place."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "The fix was installing four packages we thought we did not need. That is chapter 05's table."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Probe, the only reliable check. If your assembly is missing from this list, its constraints failed: ``bash ls Library/Script Assemblies/ | grep -i nerve ``"
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "The second trap: referencing an editor-only assembly from runtime code"
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Bovine Labs.Nerve.State.Authoring has \"UNITY_EDITOR\" in its define Constraints. It is an editor-only assembly."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Our Daggertooth assembly definition referenced it. In the editor: fine, everything compiles, everything works, ship it. In a player build, UNITY_EDITOR is undefined, that assembly is not built, and the reference silently drops, taking every type we used from it."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "This is a bug that cannot reproduce until the day you make your first build, at which point it looks like a catastrophic regression."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Rule of thumb, and it is the same rule the sample follows:"
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Most Bovine Labs assemblies set auto Referenced: false. That means they are not automatically visible to Assembly-CSharp, you must reference them explicitly. It is deliberate: it prevents accidental coupling and it keeps compile times down. It also means \"I can't see the type\" often just means \"add the reference\"."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "Is the DLL in Library/Script Assemblies/? Does your assembly definition reference the assembly? Does your assembly definition declare the version Defines for symbols you use in #if? Do your define Constraints match the constraints of everything you reference? Is anything you reference UNITY_EDITOR-only while you are not?"
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Five questions. They would have saved us both incidents."
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "then 07 · Core: settings, logging, and the registry"
+    }
+  ],
+  "nodes": {}
+}

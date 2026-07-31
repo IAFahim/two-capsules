@@ -1,0 +1,57 @@
+{
+  "id": "book-05-package-map",
+  "title": "05 · The package map",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "21 direct dependencies. Every one earns its slot, we got the manifest down from 49 and then had to add several back, because of a mechanism you will meet in the next chapter."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "The dependency direction matters: Grove knows nothing about games. It is a generic graph executor. Canopy adds \"states\". Nerve adds \"multiplayer app\". Read them in that order and each one is small."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Entities and Net Code are pinned to a fork in vex-studio/tertle-monorepo, at one exact commit. Bovine Labs needs behaviour the shipping packages do not expose yet. The pin is a commit SHA, not a branch, which is the only sane way to depend on a fork."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Trap, mixing a forked com.unity.entities with a registry com.unity.netcode gives you version-solver errors that read like nonsense. Both come from the fork or neither does."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "That table is the chapter's whole point. Four of our packages exist purely to satisfy compile-time constraints. Chapter 06 explains the mechanism, and it is the nastiest silent failure in the entire Unity toolchain."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Three assemblies for ~400 lines of code looks like over-engineering. It is not; chapter 06 shows what happens when you collapse them."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Probe, the real resolved graph, including transitives: ``bash cat Library/Package Manager/Project Cache | head -50 ls Library/Package Cache/ ``"
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "then 06 · Assemblies, and the silent-death trap"
+    }
+  ],
+  "nodes": {}
+}

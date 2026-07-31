@@ -1,0 +1,57 @@
+{
+  "id": "book-24-debug-playbook",
+  "title": "24 · The debugging playbook",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Every trap in this book, in one table, ordered by how much time it steals. All of these are silent, that is what makes them expensive."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "When something does not happen, walk down. The first no is your bug."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Most people start at 5. Steps 1, 4 are where the silent failures live, and each is one command."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "If that line never prints, it is step 1 or 2, not your logic."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Canopy State Id.To String() prints the type name, not the id, compare against candidates instead."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "com.unity.pipeline puts an HTTP control plane in the running editor. This is how we verified everything in this book without touching the mouse:"
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Trap, always pass --project-path. Auto-detection picked the wrong editor instance for us once, and the results were confusingly plausible.  Trap, eval scripts run in a REPL context that already has implicit usings. A leading using System.Linq; is parsed as a using statement, not a directive, and the file fails to compile with baffling errors. Use fully-qualified names."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Reproduce the failure as a number, not a feeling. in Game=0 is debuggable; \"it doesn't work\" is not. Prove the mechanism, not the outcome. state = gameplay proved the graph ran, because no other code path can set it. An outcome can have many causes; a mechanism has one. Suspect the toolchain before your logic in this stack, because the toolchain fails silently and your logic usually fails loudly. When a null read is your evidence, ask whether the read is authoritative. Inherited, lazy, and deferred values lie to naive reads. This cost us an hour on the UI bug and it is the most transferable lesson here."
+    }
+  ],
+  "nodes": {}
+}

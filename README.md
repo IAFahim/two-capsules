@@ -175,3 +175,18 @@ Prose, diagrams, and diagram sources: **MIT**.
 The packages described remain their authors'. BovineLabs Core, Grove, Canopy, Nerve, and
 Anchor are commercial products; this book documents behaviour and cites paths, it does not
 reproduce them. Buy them — the book is much better with the sources open beside it.
+
+## Which Unity is this "today"?
+
+This book describes one exact snapshot. If something here stops matching your project,
+that is drift, not a lie — diff against these:
+
+| | |
+|---|---|
+| Unity | `6000.7.0a3` |
+| `com.unity.entities` / `com.unity.netcode` | tertle monorepo fork @ `d55ffc7dcdbd044fbb96f59b50b0b44d00c9bbae` |
+| BovineLabs Core · Grove · Canopy · Nerve · Anchor | same fork, same commit |
+| NetCode-adjacent | `multiplayer.playmode 3.0.0` · `dedicated-server 3.0.0` |
+
+Deliberately not auto-verified against the packages. Learning what is true *now* beats
+machinery that guards a future you will be equipped to notice yourself.

@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -96,9 +97,17 @@ def gen(path: Path, *, force: bool, speed: float) -> int:
         final = dest.with_suffix(".opus")
         if final.exists() and not force and final.stat().st_size > 0:
             continue
+        if not re.search(r"[A-Za-z]{2}", text):
+            continue
         print(f"  synth {lesson}/{clip_id}  ({len(text)} chars)", flush=True)
         t0 = time.time()
-        speak(text, dest, speed=speed)
+        try:
+            speak(text, dest, speed=speed)
+        except RuntimeError as e:
+            print(f"    !! skipped: {e}", flush=True)
+            if dest.with_suffix(".partial.wav").exists():
+                dest.with_suffix(".partial.wav").unlink()
+            continue
         final = encode(dest)
         print(f"    -> {final.stat().st_size:,} bytes in {time.time() - t0:.1f}s", flush=True)
         made += 1

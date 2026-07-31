@@ -1,0 +1,123 @@
+{
+  "id": "book-09-canopy",
+  "title": "09 · Canopy: hierarchical states",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Canopy is one idea: a state is a node that can contain other states. Everything else follows."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "Rules the validator enforces (Canopy Graph Validation):"
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "That third one is delightful and worth pausing on. Canopy State Id is a hash of a Fixed String64Bytes, so two different names can collide. The validator brute-forces the check at author time rather than letting you ship a 1-in-2^n heisenbug."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Hardware analogy, a CAM with collision detection at programming time. Same reason you validate a hash table's key set offline when lookups must be O(1) and correct."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "At any moment the machine has an active path from root to a leaf, not a single state. In our client graph the active path is root then gameplay. Both are active. root's blocks run every tick, which is exactly why the connection tracker lives there and keeps working no matter which child is current."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Trap, put the connection tracker on connecting instead of root and you stop detecting disconnects the moment you enter gameplay. The bug appears only after a successful connection, which is the worst possible time to find it."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "A state is a container. The work is in blocks attached to it."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Blocks receive a Canopy Update State, which is an enum-ish signal:"
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Every block must check for Exit and bail. Look at any Nerve node and the first three lines are the same:"
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Trap, forget that check and your block does its work while the state is being torn down, typically after the data it depends on is gone."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "There are no transition edges in the graph. A node just calls:"
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "where On Disconnection is a Canopy State Id authored as a string. The machine resolves it, exits the old path bottom-up, enters the new path top-down."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "This is deliberate. Edges in a visual graph get unreadable fast; a named jump is a goto and is honest about it. The validator still checks that every Canopy Go To target exists."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Remember History on a composite state makes re-entry resume the child you left, instead of the default child. Classic UML shallow history. Free, and occasionally exactly what a pause menu wants."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Three calls, and that is the whole driver system:"
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Plus Exit on destroy, which walks the active path calling every block with Canopy Update State.Exit so nothing leaks. Our Client App State System.On Destroy does this, skip it and the last state never cleans up."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Because \"app flow\" is a hierarchical state machine, and once it is data:"
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "a designer can see it the validator can prove it well-formed the tests can build one in six lines (Client Connection Tracker Execution Tests does) and you can ship a different one per world without recompiling"
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "That last point is the one we exploited today: the sample shipped a service graph and a menu graph, and we added a client graph without touching a single package file."
+    }
+  ],
+  "nodes": {}
+}

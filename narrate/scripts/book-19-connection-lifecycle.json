@@ -1,0 +1,69 @@
+{
+  "id": "book-19-connection-lifecycle",
+  "title": "19 · Connection lifecycle",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Eight steps from \"socket\" to \"I can move my capsule\". Learn this chain and you can diagnose any join failure in about ninety seconds."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Probe, this one command answers \"where did it stop\": ``csharp foreach (var w in World.All) { var em = w.Entity Manager; var conn = em.Create Entity Query(Component Type.Read Only<Network Stream Connection>()); var in Game = em.Create Entity Query(Component Type.Read Only<Network Stream Connection>(), Component Type.Read Only<Network Stream In Game>()); var ghosts = em.Create Entity Query(Component Type.Read Only<Ghost Instance>()); Debug.Log($\"{w.Name}: conns={conn.Calculate Entity Count()} \" + $\"in Game={in Game.Calculate Entity Count()} ghosts={ghosts.Calculate Entity Count()}\"); } ` conns=1 in Game=0 then step 5 or 6. in Game=1 ghosts=0` then step 7."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Both approval systems disable themselves when network.require-connection-approval is false, which is the default:"
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "So on a stock project nothing ever adds Connection Approved, and Player Connection System requires it. No player ever spawns, and nothing is logged."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Turning approval on is not a free switch either: Connection Approval Server System only skips J W T validation when World.Is Server() is false, a purely local world. A separate Server World in one process is a server world, so it takes the real branch and calls Unity Authentication over the network."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Our Local Approve Connection System fills the gap with Account Identity = \"local-{network Id}\", labelled as a hack in its own doc comment, with the delete condition written down."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Network Stream In Game is the flag that arms the entire snapshot system. Nerve sends the request from a node, Bovine Labs.Nerve.State/States/Client/Go In Game.cs, that runs inside a client Grove graph. The sample ships a service graph and a menu graph. It ships no client graph. So the node existed and never executed."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Disconnect Reason tells you which: Timeout, Closed By Remote, Connection Close, Max Connection Attempts, Approval Failure, Protocol Error."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Nerve draws one more distinction worth stealing: a disconnect is voluntary only if it is Connection Close and you had already entered the game. Quitting looks different from being kicked at the door, and the UI should say different things."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Trap, connection events live for one tick. If you poll them from a system that does not run every tick, you will miss disconnects intermittently. Latch them into durable state the moment you see them, which is precisely what the tracker node does."
+    }
+  ],
+  "nodes": {}
+}

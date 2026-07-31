@@ -1,0 +1,117 @@
+{
+  "id": "book-17-prediction",
+  "title": "17 · Prediction and rollback",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "This is the heart of the machine, and you have built it before, in silicon."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "Hardware analogy, a branch predictor with speculative execution and a pipeline flush. The client speculates forward on predicted input. The server is the branch resolution unit. On a mispredict, you flush and replay from the checkpoint. Same structure, same costs, same failure modes."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Round trip is 50 milliseconds. If the client waited for the server to confirm every step, pressing W would move your capsule 50 milliseconds later. Unplayable."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "So the client does not wait. It applies your input immediately, assuming the server will agree. Usually it does."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Every step of that replay runs your systems, with the input from the command ring buffer for that exact tick. Which is why chapter 16's stage 5 exists."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Simulate: the one bit that makes it work"
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Simulate is an enableable tag component. Before each tick of the prediction loop, Net Code enables it on exactly the ghosts that should simulate that tick and disables it on the rest."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "THE TRAP, omit With All<Simulate>() and your system integrates every predicted entity on every iteration of the rollback loop. Replaying 10 ticks moves the capsule 10× too far. It looks fine on a perfect connection and disintegrates the moment a packet drops. This is the single most common Net Code bug, and it only appears under exactly the conditions that are hardest to reproduce."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Think of Simulate as the clock-enable line on a register. The clock is running; the enable decides who latches this edge."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Why our movement system is written the way it is"
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "There is no client version and no server version. One rule, executed twice. That is what \"server-authoritative with client prediction\" actually means in code."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Anything inside the prediction group can run many times for the same tick. Therefore:"
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Every predicted ghost carries Predicted Ghost { Applied Tick, Prediction Start Tick }. It tells you which server tick the current state was last corrected from. Useful for debugging: if Applied Tick is far behind Server Tick, this ghost has not been corrected in a while."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Quantization. The server's float, quantized and dequantized, is not bit-identical. Input timing. A command arriving one tick late changes the server's simulation. Other players. You cannot predict what someone else pressed. Their capsule affects yours; your prediction of the shared world was wrong. Server-only events. A pickup despawning, a door opening."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "Small rollbacks every few seconds are normal and healthy. Continuous large rollbacks mean your prediction is genuinely diverging, look at floating-point non-determinism, at uninitialised state, and at systems missing Simulate."
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "Rollback cost = (ticks to replay) × (cost of your predicted systems). A 200 milliseconds spike at 60 hertz is 12 replayed ticks in one frame. If your predicted simulation costs 2 milliseconds, that frame costs 24 milliseconds and you drop it."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "Hardware analogy, deeper pipeline, more expensive flush. Same engineering answer: keep the predicted set small, keep predicted systems cheap, and do not predict what does not need to feel instant."
+    },
+    {
+      "id": "b28",
+      "title": "b28",
+      "focus": null,
+      "text": "Probe, Play Mode Tools then prediction stats shows ticks-per-frame. Sustained values above 1 mean you are replaying constantly."
+    }
+  ],
+  "nodes": {}
+}
