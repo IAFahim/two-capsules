@@ -1,0 +1,60 @@
+{
+  "id": "03",
+  "title": "Connection Lifecycle",
+  "map": "diagrams/03-connect.html",
+  "blurb": "Socket to spawned capsule, and the two places it silently stops.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "The connection is an entity",
+      "focus": null,
+      "text": "There is no connection class anywhere in this system. A connection is an entity, and the set of components on it is its state machine. Each step of joining adds one more component. If you learn that chain, you can diagnose any join failure by asking a single question: which component is missing?"
+    },
+    {
+      "id": "connect",
+      "title": "Getting a network id",
+      "focus": "client",
+      "text": "First the socket opens and a network stream connection component appears. Then the handshake runs, and this is where a protocol version mismatch will reject you, because the ghost schemas on both sides must agree exactly. If the handshake passes, the server assigns a network id. Only now do you have an identity that anything else can reason about."
+    },
+    {
+      "id": "admit",
+      "title": "Admission",
+      "focus": "session",
+      "text": "Next the connection must be approved. Approval adds two components: connection approved, and an account identity. The spawn path requires both. Here is the first silent gap. Approval is off by default, and when it is off both approval systems disable themselves in their own on create. So nothing ever adds those components, no player ever spawns, and absolutely nothing is logged."
+    },
+    {
+      "id": "ingame",
+      "title": "Arming the snapshot system",
+      "focus": "graph",
+      "text": "Now the client graph acts. It adds network stream in game to the connection and sends a go in game request. That one flag is what arms the entire snapshot system. Without it the server sends zero ghosts, not fewer. This is the second silent gap: the node that does this ships with the framework, but it only runs inside a client graph, and the sample never authored one."
+    },
+    {
+      "id": "spawn",
+      "title": "Spawn and replicate",
+      "focus": "server",
+      "text": "With the connection approved and in game, the session system spawns two entities per player: a controller, which is the persistent identity, and a controlled pawn, which is the current body. Snapshots begin, and the ghosts materialise on the client without the client ever calling instantiate. Two players should therefore show four ghosts. If you see three, two connections adopted the same controller."
+    }
+  ],
+  "nodes": {
+    "client": {
+      "short": "The connection entity. Watch its component set grow.",
+      "deep": "Connection, then network id, then approved and account identity, then in game, then command target. There is no connection class anywhere. The component set is the state machine, and a missing component is always the answer to why a join stopped."
+    },
+    "graph": {
+      "short": "The client state graph. It tracks the connection and holds a gate until we are in game.",
+      "deep": "It reads this tick's connection facts, latches them into durable graph state, and sends the go in game request exactly once per connection identity. Keying on identity rather than a boolean means a reconnect resends correctly while a retry does not spam."
+    },
+    "wire": {
+      "short": "Inter process communication in one process, UDP otherwise.",
+      "deep": "Snapshots and commands ride unreliable channels because a retransmit would arrive after the data was already stale. Remote procedure calls ride a reliable ordered channel, because a lost go in game request would strand the player forever."
+    },
+    "server": {
+      "short": "Admits the connection, approves it, and spawns for it.",
+      "deep": "Its approval path only skips real token validation when the world is not a netcode server world. A separate server world in one process is still a server world, so turning approval on here really does mean a network call to Unity Authentication."
+    },
+    "session": {
+      "short": "Its query is the specification for who is allowed to spawn.",
+      "deep": "Approved, account identity, network id, and command target must all be present. That is why the connection ladder is really just asking which of those four is missing. It then spawns two entities per player and links them."
+    }
+  }
+}

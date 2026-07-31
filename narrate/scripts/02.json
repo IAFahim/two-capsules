@@ -1,0 +1,74 @@
+{
+  "id": "02",
+  "title": "Keypress to Pixel",
+  "map": "diagrams/02-keypress.html",
+  "blurb": "One float two of intent, and every consequence it causes.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Eight bytes cross the wire",
+      "focus": null,
+      "text": "Follow one key press. The only thing that will actually leave this machine is a direction: two floats, saying which way the player wants to go. Everything else on this map is a local consequence of those eight bytes. Hold on to that, because it is the whole security model in one sentence."
+    },
+    {
+      "id": "intent",
+      "title": "Intent, never results",
+      "focus": "gather",
+      "text": "The gather system reads the keyboard and writes a move direction onto your capsule, and only yours. It filters on ghost owner is local, so it cannot accidentally drive another player. Notice what it does not write. It does not write a position, a velocity, or a final answer. A direction is bounded; the server applies its own speed and its own delta to it, so a modified client gains nothing."
+    },
+    {
+      "id": "buffer",
+      "title": "The ring buffer",
+      "focus": "ring",
+      "text": "The input does not go straight onto the wire. It goes into a ring buffer, and every slot is stamped with the tick it belongs to. This is a circular buffer with a timestamp per slot, and the consumer reads by timestamp rather than by position. That single design choice is what makes rollback possible later."
+    },
+    {
+      "id": "predict",
+      "title": "The instant local answer",
+      "focus": "predict",
+      "text": "In the same frame, before the server has seen anything, the client reads that tick's input back out of the ring and runs the movement rule. Your capsule has already moved. Perceived input latency is zero. The price is that you may be wrong, and the map's snapshot arrow is where being wrong gets fixed."
+    },
+    {
+      "id": "authority",
+      "title": "The same code, twice",
+      "focus": "srvmove",
+      "text": "On the server, the very same movement system runs. Not a server version. The same system, with one world filter naming both sides. Two implementations would mean two behaviours, and two behaviours mean permanent disagreement. One rule, executed twice, is what server authoritative with client prediction actually means in code."
+    },
+    {
+      "id": "replicate",
+      "title": "Snapshots, and three different nows",
+      "focus": "ghostsend",
+      "text": "The server delta compresses its truth against what each client last acknowledged, fills a packet up to the maximum size, and sends it unreliably. When it arrives, either it agrees with your prediction and nothing happens, or it disagrees and the client restores and replays. Meanwhile the other player sees your capsule interpolated, about a hundred milliseconds in the past. Nobody on either screen is seeing now."
+    }
+  ],
+  "nodes": {
+    "gather": {
+      "short": "Reads the keyboard and writes a direction onto the capsule you own.",
+      "deep": "It filters on ghost owner is local, a tag NetCode adds to ghosts whose owner id matches yours. Without that filter you would write your input into every player's capsule in your world. It is also not Burst compiled, because the keyboard is managed."
+    },
+    "ring": {
+      "short": "A ring of about sixty four ticks, each slot stamped with its tick.",
+      "deep": "History, not a single value. The server needs several ticks to tolerate loss, and rollback needs to replay the exact input of each replayed tick. A circular buffer with a timestamp per slot, where the consumer reads by timestamp rather than position."
+    },
+    "send": {
+      "short": "Sends the last several ticks in one unreliable packet.",
+      "deep": "The redundancy lives in the payload rather than the protocol, which is why input feels solid on a lossy link while positions still visibly hitch. A retransmit would arrive too late to matter, so nothing is retransmitted."
+    },
+    "predict": {
+      "short": "The client's copy of the movement rule, running inside prediction.",
+      "deep": "It only touches entities whose simulate bit is enabled for the tick being simulated. Simulate is a clock enable line: the clock is running, and that bit decides who latches this edge. Omit it and a ten tick replay moves your capsule ten times too far."
+    },
+    "srvmove": {
+      "short": "The server's copy of that same system. Same code, same constants.",
+      "deep": "One world filter names both client and server simulation, so there is literally one implementation. Two would mean two behaviours, and two behaviours mean permanent disagreement. This is what server authoritative with client prediction means in practice."
+    },
+    "ghostsend": {
+      "short": "Delta compresses truth against each connection's acknowledged baseline.",
+      "deep": "Every client has acknowledged a different tick, so the server remembers what each one knows and encodes against that. It then sorts by importance and fills a packet until the maximum size. A snapshot is not the world; it is as much of the world as fits, prioritised."
+    },
+    "gpu": {
+      "short": "Your capsule is drawn ahead of the server; everyone else's, behind it.",
+      "deep": "That is not a bug, it is the entire trade made explicit. You need your own capsule to answer instantly, and you need theirs to be smooth. Prediction buys the first, interpolation buys the second, and nobody renders the server's actual present."
+    }
+  }
+}

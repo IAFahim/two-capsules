@@ -1,0 +1,56 @@
+{
+  "id": "04",
+  "title": "The Client Graph",
+  "map": "diagrams/04-clientgraph.html",
+  "blurb": "A state machine whose only job is to arm replication, and to notice when it stops.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "States that contain states",
+      "focus": null,
+      "text": "This is a hierarchical state machine. The key idea is that a state can contain other states, and at any moment the machine has an active path from the root down to a leaf, not a single active state. Both root and the current child are running. That sounds academic until you see what it buys, which is the next chapter."
+    },
+    {
+      "id": "root",
+      "title": "Why the tracker lives on root",
+      "focus": "root",
+      "text": "The connection tracker is attached to root, and blocks on root run every tick in every child state. Attach it to connecting instead and you would stop detecting disconnects the moment you successfully entered the game, which is the worst possible time to find that bug. Put shared watchdogs at the top of the hierarchy, always."
+    },
+    {
+      "id": "gate",
+      "title": "The gate that cannot be skipped",
+      "focus": "connecting",
+      "text": "Connecting holds an initialize block, which drives a startup gate, which holds the go in game node. That chain looks like ceremony, but the types force it. The go in game node operates on an initialize state, only a startup gate supplies one, and only the initialize block can drive a gate from a state. It is pin compatibility, enforced at author time. You cannot wire it wrong."
+    },
+    {
+      "id": "hold",
+      "title": "The gate is the retry loop",
+      "focus": "gameplay",
+      "text": "Every block inside the gate reports whether it is completed, and the gate advances only when all of them say yes. So while the connection has no network id, the gate simply holds. When the request has been sent but the server has not confirmed, it holds. No timers, no coroutines, no retry counters. The barrier is the retry loop, and reaching gameplay is proof the whole chain worked."
+    },
+    {
+      "id": "loss",
+      "title": "Losing the connection",
+      "focus": "disconnected",
+      "text": "Connection events live for exactly one tick. If you poll them from something that does not run every tick, you will miss disconnects intermittently, which is a miserable bug. So the tracker latches them immediately into durable graph state, along with the reason, and jumps to disconnected. Because disconnected has a real path back to connecting, it is a recoverable failure and not a dead end."
+    }
+  ],
+  "nodes": {
+    "root": {
+      "short": "Always on the active path. Anything here runs in every child state.",
+      "deep": "That is the whole reason the connection tracker lives here. Attach a watchdog to a child state and it stops watching the moment you leave that state, which for a disconnect detector is exactly the wrong time. Shared watchdogs go at the top of the hierarchy."
+    },
+    "connecting": {
+      "short": "The default child. It holds the block that drives the startup gate.",
+      "deep": "Every composite state must declare exactly one default child, and the validator proves that at author time rather than letting you find it at runtime. It also proves your state ids do not collide after hashing, which is a lovely thing to catch offline."
+    },
+    "gameplay": {
+      "short": "The destination, and only reachable through the gate.",
+      "deep": "That is what makes it a falsifiable check. Delete the old workaround, run, and read the state id. If it says gameplay, the graph sent the request, because no other code path can set it. An outcome can have many causes; a mechanism has one."
+    },
+    "disconnected": {
+      "short": "A recoverable failure. The reason is latched into graph state.",
+      "deep": "Connection events survive exactly one tick, so the tracker copies them immediately into durable state along with the disconnect reason. It also distinguishes voluntary from involuntary: quitting looks different from being kicked at the door, and the interface should say different things."
+    }
+  }
+}

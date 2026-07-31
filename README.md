@@ -14,6 +14,17 @@ The goal is not "can you use this". The goal is **could you write it**.
 
 ---
 
+## Explore mode — hover and it talks
+
+**[🔊 iafahim.github.io/two-capsules/explore.html](https://iafahim.github.io/two-capsules/explore.html)**
+
+Point at any box on a map and it explains itself out loud. Click it for the reasoning behind
+the design. A guided tour is there if you want the story in order, but the default is
+exploration: you steer, it talks. It tracks which boxes you have already lit up, so you can
+see when a map is done rather than guessing.
+
+69 narrated clips, 3 MB total, no CDN. Mute it and everything is still text.
+
 ## The interactive maps
 
 Standalone HTML — dark/light, pan/zoom, search, focus, guided views, PNG/SVG export.

@@ -1,0 +1,337 @@
+{
+  "version": 1,
+  "voice": "ReadAloud Inflect",
+  "lessons": [
+    {
+      "id": "01",
+      "title": "The Machine",
+      "blurb": "Six worlds in one process, and the one thin channel between them.",
+      "map": "diagrams/01-machine.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "One process, many machines",
+          "focus": null,
+          "text": "Everything you are looking at runs inside a single Unity process, in a single frame, one world after another. A world is an entity manager plus a list of systems. Two worlds share nothing. Same silicon, same frame, zero shared memory. Think separate address spaces, not threads.",
+          "audio": "audio/01/ch-intro.opus"
+        },
+        {
+          "id": "wire",
+          "title": "The only thing that crosses",
+          "focus": "client",
+          "text": "Between the client world and the server world there is exactly one channel, and only two kinds of traffic on it. Going right: commands, which are intent. Going left: snapshots, which are truth. The client never sends a position. If it could, it could teleport, and no amount of server code downstream would save you.",
+          "audio": "audio/01/ch-wire.opus"
+        },
+        {
+          "id": "authority",
+          "title": "Where truth lives",
+          "focus": "server",
+          "text": "The server world is inside its own boundary on this map for a reason. It is the only world allowed to write authoritative state. Every other world either asks for something, or observes the result. When you are deciding where a new rule belongs, ask who owns the outcome. If the answer is the server, the rule lives in a system that runs on both sides but is only believed on one.",
+          "audio": "audio/01/ch-authority.opus"
+        },
+        {
+          "id": "lifecycle",
+          "title": "Who builds the worlds",
+          "focus": "bootstrap",
+          "text": "Nothing here is automatic. The service world never dies, and it owns the application state graph. When that graph reaches the game state, it calls a node that asks the bootstrap to create the client and server worlds. The menu world is destroyed at the same moment. World creation is a decision the graph makes, not a side effect of pressing play.",
+          "audio": "audio/01/ch-lifecycle.opus"
+        },
+        {
+          "id": "content",
+          "title": "How content reaches a world",
+          "focus": "subscenes",
+          "text": "This is the path people lose entities in. A settings asset sits on a settings authoring prefab. That prefab is instantiated in a scene. That scene is listed in a sub scene set carrying a world flag. Only then does baking put the entity in the world you expected. Four hops, and every one of them fails silently.",
+          "audio": "audio/01/ch-content.opus"
+        }
+      ],
+      "nodes": {
+        "input": {
+          "short": "The Input System, holding managed keyboard state.",
+          "deep": "Managed memory means Burst cannot touch it. That is why the system reading it is deliberately not Burst compiled \u2014 and that is a correct decision, not a compromise. Read devices on the managed side, write a plain struct, and let every downstream system be fast.",
+          "audio": "audio/01/node-input-short.opus",
+          "audioDeep": "audio/01/node-input-deep.opus"
+        },
+        "client": {
+          "short": "The client world. It predicts your capsule, renders everything, and owns nothing.",
+          "deep": "It runs ahead of the server by roughly half the round trip, so its commands land just in time. It draws your capsule at that predicted tick and everyone else's at an interpolated tick in the past. Two different clocks, on one screen, deliberately.",
+          "audio": "audio/01/node-client-short.opus",
+          "audioDeep": "audio/01/node-client-deep.opus"
+        },
+        "server": {
+          "short": "The server world. It holds the truth and decides what each client may know.",
+          "deep": "It is inside its own boundary on this map because it is the only world allowed to write authoritative state. It also decides relevancy, which is a security boundary as much as a bandwidth one: information you never send cannot be extracted by a modified client.",
+          "audio": "audio/01/node-server-short.opus",
+          "audioDeep": "audio/01/node-server-deep.opus"
+        },
+        "service": {
+          "short": "The service world outlives everything and owns the application state graph.",
+          "deep": "It is created at startup and never destroyed. Because it survives world transitions, it is the right home for anything that must outlive a match: authentication, analytics, and the state machine that decides whether you are in the menu or in a game.",
+          "audio": "audio/01/node-service-short.opus",
+          "audioDeep": "audio/01/node-service-deep.opus"
+        },
+        "bootstrap": {
+          "short": "The bootstrap decides which worlds exist and what they are called.",
+          "deep": "It implements Unity's custom bootstrap hook. The important consequence is that world creation is an explicit decision made by a graph node, not a side effect of entering play mode. That is also why a virtual player with the wrong play type will build a second server world and fail to bind the port.",
+          "audio": "audio/01/node-bootstrap-short.opus",
+          "audioDeep": "audio/01/node-bootstrap-deep.opus"
+        },
+        "gpu": {
+          "short": "Entities Graphics uploads matrices to the GPU and issues batched draws.",
+          "deep": "The rule worth carrying: presentation reads simulation and never the reverse. If you ever feed a smoothed or interpolated visual value back into simulation, you have built a feedback loop between what is true and what is drawn, and it will diverge.",
+          "audio": "audio/01/node-gpu-short.opus",
+          "audioDeep": "audio/01/node-gpu-deep.opus"
+        },
+        "settings": {
+          "short": "A settings asset is a scriptable object that bakes into an entity.",
+          "deep": "It is the bridge between a designer's number in the inspector and blittable data in a chunk. The world it lands in is decided by an attribute on the class, which a utility reads to insert the asset into the right authoring prefab. Never hand edit that array.",
+          "audio": "audio/01/node-settings-short.opus",
+          "audioDeep": "audio/01/node-settings-deep.opus"
+        },
+        "subscenes": {
+          "short": "A sub scene set maps scenes to worlds using load flags.",
+          "deep": "This is the routing table. A scene listed with the client flag loads into client worlds; the server flag, server worlds. When an entity you expected is missing from a world, walk this path backwards \u2014 asset, prefab, scene, set, flag \u2014 and you will find the broken link.",
+          "audio": "audio/01/node-subscenes-short.opus",
+          "audioDeep": "audio/01/node-subscenes-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "02",
+      "title": "Keypress to Pixel",
+      "blurb": "One float two of intent, and every consequence it causes.",
+      "map": "diagrams/02-keypress.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "Eight bytes cross the wire",
+          "focus": null,
+          "text": "Follow one key press. The only thing that will actually leave this machine is a direction: two floats, saying which way the player wants to go. Everything else on this map is a local consequence of those eight bytes. Hold on to that, because it is the whole security model in one sentence.",
+          "audio": "audio/02/ch-intro.opus"
+        },
+        {
+          "id": "intent",
+          "title": "Intent, never results",
+          "focus": "gather",
+          "text": "The gather system reads the keyboard and writes a move direction onto your capsule, and only yours. It filters on ghost owner is local, so it cannot accidentally drive another player. Notice what it does not write. It does not write a position, a velocity, or a final answer. A direction is bounded; the server applies its own speed and its own delta to it, so a modified client gains nothing.",
+          "audio": "audio/02/ch-intent.opus"
+        },
+        {
+          "id": "buffer",
+          "title": "The ring buffer",
+          "focus": "ring",
+          "text": "The input does not go straight onto the wire. It goes into a ring buffer, and every slot is stamped with the tick it belongs to. This is a circular buffer with a timestamp per slot, and the consumer reads by timestamp rather than by position. That single design choice is what makes rollback possible later.",
+          "audio": "audio/02/ch-buffer.opus"
+        },
+        {
+          "id": "predict",
+          "title": "The instant local answer",
+          "focus": "predict",
+          "text": "In the same frame, before the server has seen anything, the client reads that tick's input back out of the ring and runs the movement rule. Your capsule has already moved. Perceived input latency is zero. The price is that you may be wrong, and the map's snapshot arrow is where being wrong gets fixed.",
+          "audio": "audio/02/ch-predict.opus"
+        },
+        {
+          "id": "authority",
+          "title": "The same code, twice",
+          "focus": "srvmove",
+          "text": "On the server, the very same movement system runs. Not a server version. The same system, with one world filter naming both sides. Two implementations would mean two behaviours, and two behaviours mean permanent disagreement. One rule, executed twice, is what server authoritative with client prediction actually means in code.",
+          "audio": "audio/02/ch-authority.opus"
+        },
+        {
+          "id": "replicate",
+          "title": "Snapshots, and three different nows",
+          "focus": "ghostsend",
+          "text": "The server delta compresses its truth against what each client last acknowledged, fills a packet up to the maximum size, and sends it unreliably. When it arrives, either it agrees with your prediction and nothing happens, or it disagrees and the client restores and replays. Meanwhile the other player sees your capsule interpolated, about a hundred milliseconds in the past. Nobody on either screen is seeing now.",
+          "audio": "audio/02/ch-replicate.opus"
+        }
+      ],
+      "nodes": {
+        "gather": {
+          "short": "Reads the keyboard and writes a direction onto the capsule you own.",
+          "deep": "It filters on ghost owner is local, a tag NetCode adds to ghosts whose owner id matches yours. Without that filter you would write your input into every player's capsule in your world. It is also not Burst compiled, because the keyboard is managed.",
+          "audio": "audio/02/node-gather-short.opus",
+          "audioDeep": "audio/02/node-gather-deep.opus"
+        },
+        "ring": {
+          "short": "A ring of about sixty four ticks, each slot stamped with its tick.",
+          "deep": "History, not a single value. The server needs several ticks to tolerate loss, and rollback needs to replay the exact input of each replayed tick. A circular buffer with a timestamp per slot, where the consumer reads by timestamp rather than position.",
+          "audio": "audio/02/node-ring-short.opus",
+          "audioDeep": "audio/02/node-ring-deep.opus"
+        },
+        "send": {
+          "short": "Sends the last several ticks in one unreliable packet.",
+          "deep": "The redundancy lives in the payload rather than the protocol, which is why input feels solid on a lossy link while positions still visibly hitch. A retransmit would arrive too late to matter, so nothing is retransmitted.",
+          "audio": "audio/02/node-send-short.opus",
+          "audioDeep": "audio/02/node-send-deep.opus"
+        },
+        "predict": {
+          "short": "The client's copy of the movement rule, running inside prediction.",
+          "deep": "It only touches entities whose simulate bit is enabled for the tick being simulated. Simulate is a clock enable line: the clock is running, and that bit decides who latches this edge. Omit it and a ten tick replay moves your capsule ten times too far.",
+          "audio": "audio/02/node-predict-short.opus",
+          "audioDeep": "audio/02/node-predict-deep.opus"
+        },
+        "srvmove": {
+          "short": "The server's copy of that same system. Same code, same constants.",
+          "deep": "One world filter names both client and server simulation, so there is literally one implementation. Two would mean two behaviours, and two behaviours mean permanent disagreement. This is what server authoritative with client prediction means in practice.",
+          "audio": "audio/02/node-srvmove-short.opus",
+          "audioDeep": "audio/02/node-srvmove-deep.opus"
+        },
+        "ghostsend": {
+          "short": "Delta compresses truth against each connection's acknowledged baseline.",
+          "deep": "Every client has acknowledged a different tick, so the server remembers what each one knows and encodes against that. It then sorts by importance and fills a packet until the maximum size. A snapshot is not the world; it is as much of the world as fits, prioritised.",
+          "audio": "audio/02/node-ghostsend-short.opus",
+          "audioDeep": "audio/02/node-ghostsend-deep.opus"
+        },
+        "gpu": {
+          "short": "Your capsule is drawn ahead of the server; everyone else's, behind it.",
+          "deep": "That is not a bug, it is the entire trade made explicit. You need your own capsule to answer instantly, and you need theirs to be smooth. Prediction buys the first, interpolation buys the second, and nobody renders the server's actual present.",
+          "audio": "audio/02/node-gpu-short.opus",
+          "audioDeep": "audio/02/node-gpu-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "03",
+      "title": "Connection Lifecycle",
+      "blurb": "Socket to spawned capsule, and the two places it silently stops.",
+      "map": "diagrams/03-connect.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "The connection is an entity",
+          "focus": null,
+          "text": "There is no connection class anywhere in this system. A connection is an entity, and the set of components on it is its state machine. Each step of joining adds one more component. If you learn that chain, you can diagnose any join failure by asking a single question: which component is missing?",
+          "audio": "audio/03/ch-intro.opus"
+        },
+        {
+          "id": "connect",
+          "title": "Getting a network id",
+          "focus": "client",
+          "text": "First the socket opens and a network stream connection component appears. Then the handshake runs, and this is where a protocol version mismatch will reject you, because the ghost schemas on both sides must agree exactly. If the handshake passes, the server assigns a network id. Only now do you have an identity that anything else can reason about.",
+          "audio": "audio/03/ch-connect.opus"
+        },
+        {
+          "id": "admit",
+          "title": "Admission",
+          "focus": "session",
+          "text": "Next the connection must be approved. Approval adds two components: connection approved, and an account identity. The spawn path requires both. Here is the first silent gap. Approval is off by default, and when it is off both approval systems disable themselves in their own on create. So nothing ever adds those components, no player ever spawns, and absolutely nothing is logged.",
+          "audio": "audio/03/ch-admit.opus"
+        },
+        {
+          "id": "ingame",
+          "title": "Arming the snapshot system",
+          "focus": "graph",
+          "text": "Now the client graph acts. It adds network stream in game to the connection and sends a go in game request. That one flag is what arms the entire snapshot system. Without it the server sends zero ghosts, not fewer. This is the second silent gap: the node that does this ships with the framework, but it only runs inside a client graph, and the sample never authored one.",
+          "audio": "audio/03/ch-ingame.opus"
+        },
+        {
+          "id": "spawn",
+          "title": "Spawn and replicate",
+          "focus": "server",
+          "text": "With the connection approved and in game, the session system spawns two entities per player: a controller, which is the persistent identity, and a controlled pawn, which is the current body. Snapshots begin, and the ghosts materialise on the client without the client ever calling instantiate. Two players should therefore show four ghosts. If you see three, two connections adopted the same controller.",
+          "audio": "audio/03/ch-spawn.opus"
+        }
+      ],
+      "nodes": {
+        "client": {
+          "short": "The connection entity. Watch its component set grow.",
+          "deep": "Connection, then network id, then approved and account identity, then in game, then command target. There is no connection class anywhere. The component set is the state machine, and a missing component is always the answer to why a join stopped.",
+          "audio": "audio/03/node-client-short.opus",
+          "audioDeep": "audio/03/node-client-deep.opus"
+        },
+        "graph": {
+          "short": "The client state graph. It tracks the connection and holds a gate until we are in game.",
+          "deep": "It reads this tick's connection facts, latches them into durable graph state, and sends the go in game request exactly once per connection identity. Keying on identity rather than a boolean means a reconnect resends correctly while a retry does not spam.",
+          "audio": "audio/03/node-graph-short.opus",
+          "audioDeep": "audio/03/node-graph-deep.opus"
+        },
+        "wire": {
+          "short": "Inter process communication in one process, UDP otherwise.",
+          "deep": "Snapshots and commands ride unreliable channels because a retransmit would arrive after the data was already stale. Remote procedure calls ride a reliable ordered channel, because a lost go in game request would strand the player forever.",
+          "audio": "audio/03/node-wire-short.opus",
+          "audioDeep": "audio/03/node-wire-deep.opus"
+        },
+        "server": {
+          "short": "Admits the connection, approves it, and spawns for it.",
+          "deep": "Its approval path only skips real token validation when the world is not a netcode server world. A separate server world in one process is still a server world, so turning approval on here really does mean a network call to Unity Authentication.",
+          "audio": "audio/03/node-server-short.opus",
+          "audioDeep": "audio/03/node-server-deep.opus"
+        },
+        "session": {
+          "short": "Its query is the specification for who is allowed to spawn.",
+          "deep": "Approved, account identity, network id, and command target must all be present. That is why the connection ladder is really just asking which of those four is missing. It then spawns two entities per player and links them.",
+          "audio": "audio/03/node-session-short.opus",
+          "audioDeep": "audio/03/node-session-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "04",
+      "title": "The Client Graph",
+      "blurb": "A state machine whose only job is to arm replication, and to notice when it stops.",
+      "map": "diagrams/04-clientgraph.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "States that contain states",
+          "focus": null,
+          "text": "This is a hierarchical state machine. The key idea is that a state can contain other states, and at any moment the machine has an active path from the root down to a leaf, not a single active state. Both root and the current child are running. That sounds academic until you see what it buys, which is the next chapter.",
+          "audio": "audio/04/ch-intro.opus"
+        },
+        {
+          "id": "root",
+          "title": "Why the tracker lives on root",
+          "focus": "root",
+          "text": "The connection tracker is attached to root, and blocks on root run every tick in every child state. Attach it to connecting instead and you would stop detecting disconnects the moment you successfully entered the game, which is the worst possible time to find that bug. Put shared watchdogs at the top of the hierarchy, always.",
+          "audio": "audio/04/ch-root.opus"
+        },
+        {
+          "id": "gate",
+          "title": "The gate that cannot be skipped",
+          "focus": "connecting",
+          "text": "Connecting holds an initialize block, which drives a startup gate, which holds the go in game node. That chain looks like ceremony, but the types force it. The go in game node operates on an initialize state, only a startup gate supplies one, and only the initialize block can drive a gate from a state. It is pin compatibility, enforced at author time. You cannot wire it wrong.",
+          "audio": "audio/04/ch-gate.opus"
+        },
+        {
+          "id": "hold",
+          "title": "The gate is the retry loop",
+          "focus": "gameplay",
+          "text": "Every block inside the gate reports whether it is completed, and the gate advances only when all of them say yes. So while the connection has no network id, the gate simply holds. When the request has been sent but the server has not confirmed, it holds. No timers, no coroutines, no retry counters. The barrier is the retry loop, and reaching gameplay is proof the whole chain worked.",
+          "audio": "audio/04/ch-hold.opus"
+        },
+        {
+          "id": "loss",
+          "title": "Losing the connection",
+          "focus": "disconnected",
+          "text": "Connection events live for exactly one tick. If you poll them from something that does not run every tick, you will miss disconnects intermittently, which is a miserable bug. So the tracker latches them immediately into durable graph state, along with the reason, and jumps to disconnected. Because disconnected has a real path back to connecting, it is a recoverable failure and not a dead end.",
+          "audio": "audio/04/ch-loss.opus"
+        }
+      ],
+      "nodes": {
+        "root": {
+          "short": "Always on the active path. Anything here runs in every child state.",
+          "deep": "That is the whole reason the connection tracker lives here. Attach a watchdog to a child state and it stops watching the moment you leave that state, which for a disconnect detector is exactly the wrong time. Shared watchdogs go at the top of the hierarchy.",
+          "audio": "audio/04/node-root-short.opus",
+          "audioDeep": "audio/04/node-root-deep.opus"
+        },
+        "connecting": {
+          "short": "The default child. It holds the block that drives the startup gate.",
+          "deep": "Every composite state must declare exactly one default child, and the validator proves that at author time rather than letting you find it at runtime. It also proves your state ids do not collide after hashing, which is a lovely thing to catch offline.",
+          "audio": "audio/04/node-connecting-short.opus",
+          "audioDeep": "audio/04/node-connecting-deep.opus"
+        },
+        "gameplay": {
+          "short": "The destination, and only reachable through the gate.",
+          "deep": "That is what makes it a falsifiable check. Delete the old workaround, run, and read the state id. If it says gameplay, the graph sent the request, because no other code path can set it. An outcome can have many causes; a mechanism has one.",
+          "audio": "audio/04/node-gameplay-short.opus",
+          "audioDeep": "audio/04/node-gameplay-deep.opus"
+        },
+        "disconnected": {
+          "short": "A recoverable failure. The reason is latched into graph state.",
+          "deep": "Connection events survive exactly one tick, so the tracker copies them immediately into durable state along with the disconnect reason. It also distinguishes voluntary from involuntary: quitting looks different from being kicked at the door, and the interface should say different things.",
+          "audio": "audio/04/node-disconnected-short.opus",
+          "audioDeep": "audio/04/node-disconnected-deep.opus"
+        }
+      }
+    }
+  ]
+}
