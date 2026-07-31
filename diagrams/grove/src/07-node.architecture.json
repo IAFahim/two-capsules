@@ -1,0 +1,325 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Grove \u00b7 One Custom Node, Four Pieces",
+    "subtitle": "Data \u00b7 Auth \u00b7 Editor \u00b7 Runtime method",
+    "output": "07-node.architecture.html",
+    "quality_profile": "standard",
+    "views": [
+      {
+        "id": "request-path",
+        "label": "Four pieces",
+        "focus": [
+          "users",
+          "cdn",
+          "lb",
+          "api",
+          "db"
+        ],
+        "note": "Data \u2192 Auth \u2192 Importer \u2192 Blob \u2192 Execute."
+      },
+      {
+        "id": "identity-and-cache",
+        "label": "Editor scope",
+        "focus": [
+          "auth",
+          "api",
+          "cache"
+        ],
+        "note": "UseWithGraph scopes the Toolkit node."
+      },
+      {
+        "id": "async-work",
+        "label": "Overrides",
+        "focus": [
+          "cdn",
+          "s3",
+          "api",
+          "queue",
+          "worker"
+        ],
+        "note": "Instance overrides patch fields before bake."
+      }
+    ],
+    "visual_preset": "editorial"
+  },
+  "components": [
+    {
+      "id": "users",
+      "type": "external",
+      "label": "Data struct",
+      "sublabel": "Speed etc",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        120,
+        60
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "UseWithGraph",
+      "sublabel": "scope graph",
+      "pos": [
+        40,
+        110
+      ],
+      "size": [
+        120,
+        64
+      ],
+      "tag": "JWT + PKCE"
+    },
+    {
+      "id": "cdn",
+      "type": "cloud",
+      "label": "Editor node",
+      "sublabel": "Toolkit",
+      "pos": [
+        250,
+        300
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "lb",
+      "type": "cloud",
+      "label": "Importer",
+      "sublabel": "Init auth",
+      "pos": [
+        460,
+        300
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Auth asset",
+      "sublabel": "serializable",
+      "pos": [
+        670,
+        300
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "cache",
+      "type": "database",
+      "label": "Type id",
+      "sublabel": "enum",
+      "pos": [
+        670,
+        150
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "Header+payload",
+      "sublabel": "baked blob",
+      "pos": [
+        880,
+        300
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "s3",
+      "type": "cloud",
+      "label": "Overrides",
+      "sublabel": "per entity",
+      "pos": [
+        250,
+        440
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "tag": "OAI protected"
+    },
+    {
+      "id": "queue",
+      "type": "messagebus",
+      "label": "Source-gen",
+      "sublabel": "case Type",
+      "pos": [
+        670,
+        440
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Execute method",
+      "sublabel": "static",
+      "pos": [
+        880,
+        440
+      ],
+      "size": [
+        130,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "You write",
+      "wraps": [
+        "users",
+        "cdn",
+        "api",
+        "cache",
+        "worker"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "Grove bake/run",
+      "wraps": [
+        "lb",
+        "api",
+        "db",
+        "queue"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "users-to-cdn",
+      "from": "users",
+      "to": "cdn",
+      "label": "define",
+      "variant": "emphasis"
+    },
+    {
+      "id": "jwt-verification",
+      "from": "auth",
+      "to": "api",
+      "label": "scope",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "top",
+      "via": [
+        [
+          620,
+          142
+        ],
+        [
+          620,
+          246
+        ],
+        [
+          735,
+          246
+        ]
+      ]
+    },
+    {
+      "id": "cdn-to-lb",
+      "from": "cdn",
+      "to": "lb"
+    },
+    {
+      "id": "static-assets",
+      "from": "cdn",
+      "to": "s3",
+      "label": "override",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 58
+    },
+    {
+      "id": "lb-to-api",
+      "from": "lb",
+      "to": "api"
+    },
+    {
+      "id": "cache-read-through",
+      "from": "api",
+      "to": "cache",
+      "label": "Type id",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -68
+    },
+    {
+      "id": "api-sql",
+      "from": "api",
+      "to": "db",
+      "label": "bake"
+    },
+    {
+      "id": "enqueue-job",
+      "from": "api",
+      "to": "queue",
+      "label": "dispatch",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 58
+    },
+    {
+      "id": "queue-to-worker",
+      "from": "queue",
+      "to": "worker"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Signature",
+      "items": [
+        "Execute(in data, in GroveContext, ref Ctx)",
+        "generic IContext for built-ins",
+        "typed input for block nodes"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Access",
+      "items": [
+        "ComponentContainer.GetRW(i)",
+        "GetState for variables",
+        "DeltaTime / Entity / GraphId"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Don't",
+      "items": [
+        "generic outer types",
+        "context by value",
+        "managed payload"
+      ]
+    }
+  ]
+}

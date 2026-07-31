@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Connection Lifecycle",
+    "subtitle": "Socket to spawned capsule \u2014 every component that must exist, in the order it appears",
+    "output": "diagrams/03-connect.html",
+    "viewBox": [
+      900,
+      820
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "connect",
+        "label": "Getting a NetworkId",
+        "focus": [
+          "client",
+          "wire",
+          "server"
+        ],
+        "note": "Until the server assigns a NetworkId there is no identity to approve."
+      },
+      {
+        "id": "admit",
+        "label": "Admission",
+        "focus": [
+          "server",
+          "session"
+        ],
+        "note": "ConnectionApproved and AccountIdentity are the two components the spawn path requires."
+      },
+      {
+        "id": "ingame",
+        "label": "Arming the snapshot system",
+        "focus": [
+          "graph",
+          "client",
+          "wire",
+          "server"
+        ],
+        "note": "NetworkStreamInGame is the flag. Without it, zero ghosts are sent."
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "client",
+      "type": "frontend",
+      "label": "ClientWorld",
+      "sublabel": "connection entity"
+    },
+    {
+      "id": "graph",
+      "type": "backend",
+      "label": "Client graph",
+      "sublabel": "Grove + Canopy"
+    },
+    {
+      "id": "wire",
+      "type": "messagebus",
+      "label": "Transport",
+      "sublabel": "IPC / UDP :7979"
+    },
+    {
+      "id": "server",
+      "type": "backend",
+      "label": "ServerWorld",
+      "sublabel": "authority"
+    },
+    {
+      "id": "session",
+      "type": "security",
+      "label": "Nerve session",
+      "sublabel": "approval + spawn"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 300,
+      "label": "1 \u00b7 connect"
+    },
+    {
+      "from": 320,
+      "to": 420,
+      "label": "2 \u00b7 admit"
+    },
+    {
+      "from": 440,
+      "to": 600,
+      "label": "3 \u00b7 go in game"
+    },
+    {
+      "from": 620,
+      "to": 720,
+      "label": "4 \u00b7 replicate"
+    }
+  ],
+  "messages": [
+    {
+      "id": "connect",
+      "from": "client",
+      "to": "wire",
+      "y": 185,
+      "label": "Connect() \u2192 NetworkStreamConnection",
+      "variant": "emphasis"
+    },
+    {
+      "id": "handshake",
+      "from": "wire",
+      "to": "server",
+      "y": 228,
+      "label": "handshake + protocol version",
+      "variant": "emphasis"
+    },
+    {
+      "id": "netid",
+      "from": "server",
+      "to": "client",
+      "y": 272,
+      "label": "NetworkId assigned",
+      "variant": "return"
+    },
+    {
+      "id": "approve",
+      "from": "server",
+      "to": "session",
+      "y": 350,
+      "label": "ConnectionApproved + AccountIdentity",
+      "variant": "security"
+    },
+    {
+      "id": "facts",
+      "from": "client",
+      "to": "graph",
+      "y": 400,
+      "label": "connection facts for this tick",
+      "variant": "dashed"
+    },
+    {
+      "id": "arm",
+      "from": "graph",
+      "to": "client",
+      "y": 470,
+      "label": "+ NetworkStreamInGame",
+      "variant": "emphasis"
+    },
+    {
+      "id": "rpc",
+      "from": "graph",
+      "to": "wire",
+      "y": 512,
+      "label": "GoInGameRequest RPC",
+      "variant": "emphasis"
+    },
+    {
+      "id": "rpcserver",
+      "from": "wire",
+      "to": "server",
+      "y": 554,
+      "label": "reliable, ordered",
+      "variant": "emphasis"
+    },
+    {
+      "id": "spawn",
+      "from": "server",
+      "to": "session",
+      "y": 596,
+      "label": "spawn controller + capsule",
+      "variant": "security"
+    },
+    {
+      "id": "snapshot",
+      "from": "server",
+      "to": "wire",
+      "y": 655,
+      "label": "snapshot stream begins",
+      "variant": "return"
+    },
+    {
+      "id": "ghosts",
+      "from": "wire",
+      "to": "client",
+      "y": 698,
+      "label": "ghosts materialise",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "client",
+      "from": 180,
+      "to": 704,
+      "type": "frontend"
+    },
+    {
+      "participant": "wire",
+      "from": 180,
+      "to": 704,
+      "type": "messagebus"
+    },
+    {
+      "participant": "server",
+      "from": 223,
+      "to": 662,
+      "type": "backend"
+    },
+    {
+      "participant": "graph",
+      "from": 395,
+      "to": 518,
+      "type": "backend"
+    },
+    {
+      "participant": "session",
+      "from": 345,
+      "to": 602,
+      "type": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The component checklist",
+      "items": [
+        "NetworkStreamConnection \u2014 the socket exists",
+        "NetworkId \u2014 the server admitted us to the session",
+        "ConnectionApproved + AccountIdentity \u2014 we are allowed to play",
+        "NetworkStreamInGame \u2014 snapshots are armed",
+        "CommandTarget \u2014 our input has somewhere to go"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Two silent gaps",
+      "items": [
+        "Approval off by default: both approval systems disable themselves, so nothing ever adds ConnectionApproved and no player spawns",
+        "No client graph: the GoInGame node ships with Nerve but never executes, so NetworkStreamInGame is never added"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Reading a failure",
+      "items": [
+        "conns=1 inGame=0 \u2192 stopped at step 3",
+        "inGame=1 ghosts=0 \u2192 stopped at the spawn query",
+        "ghosts=2 per player \u2192 controller plus capsule, which is correct"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "The Client Graph",
+    "subtitle": "A Canopy state machine whose only job is to arm the snapshot system, and to notice when it stops",
+    "output": "diagrams/04-clientgraph.html",
+    "viewBox": [
+      1000,
+      680
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "path",
+        "label": "The happy path",
+        "focus": [
+          "root",
+          "connecting",
+          "gameplay"
+        ],
+        "note": "root is always active; connecting is its default child; gameplay is the destination."
+      },
+      {
+        "id": "gate",
+        "label": "What holds the gate",
+        "focus": [
+          "connecting",
+          "gameplay"
+        ],
+        "note": "The Startup Gate advances only when every block reports completed."
+      },
+      {
+        "id": "loss",
+        "label": "Losing the connection",
+        "focus": [
+          "root",
+          "gameplay",
+          "disconnected",
+          "connecting"
+        ],
+        "note": "The tracker block on root runs in every child state, so a drop is caught anywhere."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "Canopy states"
+    },
+    {
+      "id": "terminal",
+      "label": "Connection lost"
+    }
+  ],
+  "states": [
+    {
+      "id": "root",
+      "type": "start",
+      "label": "root",
+      "sublabel": "always on the active path",
+      "lane": "main",
+      "col": 0,
+      "step": "01",
+      "tag": "composite"
+    },
+    {
+      "id": "connecting",
+      "type": "active",
+      "label": "connecting",
+      "sublabel": "default child",
+      "lane": "main",
+      "col": 1,
+      "step": "02",
+      "tag": "Initialize"
+    },
+    {
+      "id": "gameplay",
+      "type": "success",
+      "label": "gameplay",
+      "sublabel": "in game, snapshots flowing",
+      "lane": "main",
+      "col": 2,
+      "step": "03",
+      "tag": "target"
+    },
+    {
+      "id": "disconnected",
+      "type": "failure",
+      "label": "disconnected",
+      "sublabel": "reason latched in GroveState",
+      "lane": "terminal",
+      "col": 0,
+      "tag": "recoverable"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "default-child",
+      "from": "root",
+      "to": "connecting",
+      "variant": "emphasis",
+      "label": "default child",
+      "labelDy": 56
+    },
+    {
+      "id": "opens",
+      "from": "connecting",
+      "to": "gameplay",
+      "variant": "emphasis",
+      "label": "gate completes",
+      "labelDy": -56
+    },
+    {
+      "id": "lost",
+      "from": "gameplay",
+      "to": "disconnected",
+      "variant": "security",
+      "route": "drop",
+      "label": "terminal event"
+    },
+    {
+      "id": "reconnect",
+      "from": "disconnected",
+      "to": "connecting",
+      "variant": "emphasis",
+      "route": "bottom-channel",
+      "label": "reconnect"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Why the gate cannot be skipped",
+      "items": [
+        "Client Go In Game operates on InitializeState",
+        "Only a Startup Gate supplies InitializeState",
+        "Only the Initialize block can drive a gate from a state",
+        "The type system enforces the chain \u2014 you cannot wire it wrong"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Idempotence without a flag",
+      "items": [
+        "The node keys the sent RPC on the connection identity, in GroveState",
+        "Same connection, retry: no resend",
+        "New connection entity after a reconnect: resend, correctly",
+        "The gate itself is the retry loop \u2014 no timers, no coroutines"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Why the tracker lives on root",
+      "items": [
+        "Blocks on root run every tick in every child state",
+        "Put it on connecting and disconnects stop being detected once in game",
+        "Connection events survive one tick \u2014 the tracker latches them into a snapshot"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The falsifiable check",
+      "items": [
+        "Delete the workaround system, run, read the machine's state id",
+        "state = gameplay is reachable only through the gate",
+        "So the reading proves the graph sent the RPC, not leftover code"
+      ]
+    }
+  ]
+}

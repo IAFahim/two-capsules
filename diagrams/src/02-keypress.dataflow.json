@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Keypress to Pixel",
+    "subtitle": "One float2 of intent crosses the wire; everything else is local consequence",
+    "output": "diagrams/02-keypress.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "intent",
+        "label": "Intent leaves the client",
+        "focus": [
+          "gather",
+          "ring",
+          "send"
+        ],
+        "note": "A direction, never a position. This is the whole security model."
+      },
+      {
+        "id": "predict",
+        "label": "The instant local answer",
+        "focus": [
+          "ring",
+          "predict",
+          "gpu"
+        ],
+        "note": "The client applies input the same frame, before the server has seen it."
+      },
+      {
+        "id": "authority",
+        "label": "The server decides",
+        "focus": [
+          "send",
+          "srvmove",
+          "ghostsend"
+        ],
+        "note": "The same movement system runs here. One rule, executed twice."
+      }
+    ],
+    "viewBox": [
+      1120,
+      640
+    ]
+  },
+  "stages": [
+    {
+      "label": "client \u00b7 intent"
+    },
+    {
+      "label": "client \u00b7 buffer"
+    },
+    {
+      "label": "dispatch"
+    },
+    {
+      "label": "server \u00b7 authority"
+    },
+    {
+      "label": "replicate + present"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "gather",
+      "type": "frontend",
+      "label": "GatherInput",
+      "sublabel": "keys \u2192 PlayerMoveInput",
+      "tag": "OwnerIsLocal",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "ring",
+      "type": "database",
+      "label": "InputBuffer",
+      "sublabel": "ring, stamped per tick",
+      "tag": "ICommandData",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "send",
+      "type": "messagebus",
+      "label": "CommandSend",
+      "sublabel": "unreliable, redundant",
+      "tag": "last N ticks",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "predict",
+      "type": "frontend",
+      "label": "MoveSystem",
+      "sublabel": "predicted copy",
+      "tag": "Simulate",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "srvmove",
+      "type": "backend",
+      "label": "MoveSystem",
+      "sublabel": "same code, same delta",
+      "tag": "authority",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "ghostsend",
+      "type": "messagebus",
+      "label": "GhostSend",
+      "sublabel": "delta vs ACK baseline",
+      "tag": "MTU-bound",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "gpu",
+      "type": "external",
+      "label": "Presentation",
+      "sublabel": "LocalToWorld \u2192 GPU",
+      "tag": "two clients",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "gather",
+      "to": "ring",
+      "label": "float2 intent",
+      "classification": "intent",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ring",
+      "to": "send",
+      "label": "serialize",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "send",
+      "to": "srvmove",
+      "label": "UDP / IPC",
+      "classification": "wire",
+      "variant": "emphasis"
+    },
+    {
+      "from": "srvmove",
+      "to": "ghostsend",
+      "label": "truth",
+      "classification": "authoritative",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ring",
+      "to": "predict",
+      "label": "replay input",
+      "classification": "replayable"
+    },
+    {
+      "from": "predict",
+      "to": "gpu",
+      "label": "zero-frame response",
+      "classification": "speculative"
+    },
+    {
+      "from": "ghostsend",
+      "to": "gpu",
+      "label": "snapshot",
+      "classification": "wire",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Why intent and not position",
+      "items": [
+        "A position from the client is a position the server must trust",
+        "A direction is bounded: the server applies its own speed and its own delta",
+        "Same movement code both sides means a lying client changes nothing"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The two groups nobody expects",
+      "items": [
+        "CopyInputToCommandBuffer \u2014 OrderLast, component to the ring slot for this tick",
+        "CopyCommandBufferToInput \u2014 OrderFirst inside prediction, slot back to component",
+        "The second is why a replay re-feeds the exact input of every replayed tick"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What the snapshot arrow really does",
+      "items": [
+        "Agrees with the prediction: nothing happens, the frame is already correct",
+        "Disagrees: restore every predicted ghost to the server tick, replay to now",
+        "On the other player's machine the same snapshot is interpolated, not predicted"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Three nows on one screen",
+      "items": [
+        "Your capsule: predicted tick, roughly RTT/2 ahead of the server",
+        "Their capsule: interpolated tick, roughly two snapshots behind",
+        "The server's truth: rendered by nobody, ever"
+      ]
+    }
+  ]
+}

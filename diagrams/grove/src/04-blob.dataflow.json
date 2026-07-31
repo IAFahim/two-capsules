@@ -1,0 +1,396 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Grove \u00b7 Blob Anatomy + Dispatch",
+    "subtitle": "GraphData bytes \u00b7 header+payload \u00b7 Type switch \u00b7 ECS effect",
+    "output": "04-blob.dataflow.html",
+    "viewBox": [
+      1080,
+      760
+    ],
+    "animation": "trace",
+    "quality_profile": "standard",
+    "views": [
+      {
+        "id": "collection-path",
+        "label": "Blob layout",
+        "focus": [
+          "web",
+          "mobile",
+          "edge",
+          "stream"
+        ],
+        "note": "GraphId, Root, Inputs/Outputs feed the node body."
+      },
+      {
+        "id": "consent-boundary",
+        "label": "Node body",
+        "focus": [
+          "edge",
+          "consent",
+          "pii"
+        ],
+        "note": "Header Type+NodeId, payload inline, BlobPtrs as edges."
+      },
+      {
+        "id": "analytics-consumers",
+        "label": "Dispatch",
+        "focus": [
+          "stream",
+          "warehouse",
+          "dashboard",
+          "features",
+          "model"
+        ],
+        "note": "switch(Type) \u2192 static method \u2192 recurse or ECS write."
+      }
+    ]
+  },
+  "stages": [
+    {
+      "label": "GraphData"
+    },
+    {
+      "label": "Node"
+    },
+    {
+      "label": "Dispatch"
+    },
+    {
+      "label": "Run"
+    },
+    {
+      "label": "Effect"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Root",
+      "sublabel": "Exec*",
+      "stage": 0,
+      "row": 0,
+      "tag": "events"
+    },
+    {
+      "id": "mobile",
+      "type": "frontend",
+      "label": "Inputs",
+      "sublabel": "Key+hash",
+      "stage": 0,
+      "row": 2,
+      "tag": "events"
+    },
+    {
+      "id": "edge",
+      "type": "cloud",
+      "label": "Header",
+      "sublabel": "Type+id",
+      "stage": 1,
+      "row": 1,
+      "tag": "TLS"
+    },
+    {
+      "id": "consent",
+      "type": "security",
+      "label": "Payload",
+      "sublabel": "inline",
+      "stage": 2,
+      "row": 0,
+      "tag": "PII guard"
+    },
+    {
+      "id": "stream",
+      "type": "messagebus",
+      "label": "Switch",
+      "sublabel": "generated",
+      "stage": 2,
+      "row": 2,
+      "tag": "ordered"
+    },
+    {
+      "id": "pii",
+      "type": "security",
+      "label": "BlobPtrs",
+      "sublabel": "children",
+      "stage": 3,
+      "row": 0,
+      "tag": "restricted"
+    },
+    {
+      "id": "warehouse",
+      "type": "database",
+      "label": "Method",
+      "sublabel": "static",
+      "stage": 3,
+      "row": 2,
+      "tag": "curated"
+    },
+    {
+      "id": "features",
+      "type": "database",
+      "label": "Recurse",
+      "sublabel": "child call",
+      "stage": 3,
+      "row": 4,
+      "tag": "derived"
+    },
+    {
+      "id": "dashboard",
+      "type": "backend",
+      "label": "ECS write",
+      "sublabel": "side effect",
+      "stage": 4,
+      "row": 1,
+      "tag": "SQL"
+    },
+    {
+      "id": "model",
+      "type": "backend",
+      "label": "GroveState",
+      "sublabel": "vars",
+      "stage": 4,
+      "row": 4,
+      "tag": "features"
+    }
+  ],
+  "flows": [
+    {
+      "id": "web-clickstream",
+      "from": "web",
+      "to": "edge",
+      "label": "kick",
+      "classification": "user events",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          205,
+          157
+        ],
+        [
+          205,
+          271
+        ]
+      ],
+      "labelAt": [
+        204,
+        190
+      ]
+    },
+    {
+      "id": "mobile-events",
+      "from": "mobile",
+      "to": "edge",
+      "label": "I/O",
+      "classification": "device events",
+      "variant": "default",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          222,
+          385
+        ],
+        [
+          222,
+          271
+        ]
+      ],
+      "labelAt": [
+        220,
+        342
+      ]
+    },
+    {
+      "id": "consent-enrichment",
+      "from": "edge",
+      "to": "consent",
+      "label": "pack",
+      "classification": "PII touch",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "left",
+      "via": [
+        [
+          315,
+          112
+        ],
+        [
+          450,
+          112
+        ],
+        [
+          450,
+          157
+        ]
+      ],
+      "labelAt": [
+        382,
+        100
+      ]
+    },
+    {
+      "id": "accepted-events",
+      "from": "edge",
+      "to": "stream",
+      "label": "Type",
+      "classification": "append-only",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          420,
+          271
+        ],
+        [
+          420,
+          385
+        ]
+      ],
+      "labelAt": [
+        438,
+        324
+      ]
+    },
+    {
+      "id": "identity-map",
+      "from": "consent",
+      "to": "pii",
+      "label": "ptrs",
+      "classification": "encrypted PII",
+      "variant": "security",
+      "route": "straight",
+      "labelAt": [
+        638,
+        144
+      ]
+    },
+    {
+      "id": "normalized-facts",
+      "from": "stream",
+      "to": "warehouse",
+      "label": "case",
+      "classification": "non-PII",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelAt": [
+        638,
+        372
+      ]
+    },
+    {
+      "id": "daily-aggregates",
+      "from": "warehouse",
+      "to": "features",
+      "label": "walk",
+      "classification": "batch",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "straight",
+      "labelAt": [
+        745,
+        496
+      ]
+    },
+    {
+      "id": "metrics-query",
+      "from": "warehouse",
+      "to": "dashboard",
+      "label": "mutate",
+      "classification": "read-only",
+      "variant": "default",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          852,
+          385
+        ],
+        [
+          852,
+          271
+        ]
+      ],
+      "labelAt": [
+        830,
+        326
+      ]
+    },
+    {
+      "id": "feature-vectors",
+      "from": "features",
+      "to": "model",
+      "label": "state",
+      "classification": "derived",
+      "variant": "dashed",
+      "route": "straight",
+      "labelAt": [
+        852,
+        598
+      ]
+    },
+    {
+      "id": "restricted-join",
+      "from": "pii",
+      "to": "dashboard",
+      "label": "scope",
+      "classification": "approved only",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "top",
+      "via": [
+        [
+          878,
+          157
+        ],
+        [
+          878,
+          212
+        ],
+        [
+          960,
+          212
+        ]
+      ],
+      "labelAt": [
+        880,
+        198
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Header+payload",
+      "items": [
+        "Type+NodeId at offset 0",
+        "Payload after sizeof(header)",
+        "No vtables \u2014 ints + pointers"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Two entries",
+      "items": [
+        "Execute pushes from Root",
+        "Calculate pulls Outputs",
+        "Constant/Variable special-cased"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Type ids",
+      "items": [
+        "0 Default, negatives built-in",
+        "Your positive enums",
+        "Collision = wrong method"
+      ]
+    }
+  ]
+}

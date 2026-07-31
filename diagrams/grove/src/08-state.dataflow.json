@@ -1,0 +1,396 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Grove \u00b7 GroveState Memory Model",
+    "subtitle": "Writers \u00b7 keys \u00b7 one map \u00b7 readers \u00b7 teardown",
+    "output": "08-state.dataflow.html",
+    "viewBox": [
+      1080,
+      760
+    ],
+    "animation": "trace",
+    "quality_profile": "standard",
+    "views": [
+      {
+        "id": "collection-path",
+        "label": "Writers",
+        "focus": [
+          "web",
+          "mobile",
+          "edge",
+          "stream"
+        ],
+        "note": "SetInput, VariableSet, StateSet write keys."
+      },
+      {
+        "id": "consent-boundary",
+        "label": "Keying",
+        "focus": [
+          "edge",
+          "consent",
+          "pii"
+        ],
+        "note": "GraphId prefixes GroveStateKey."
+      },
+      {
+        "id": "analytics-consumers",
+        "label": "Readers",
+        "focus": [
+          "stream",
+          "warehouse",
+          "dashboard",
+          "features",
+          "model"
+        ],
+        "note": "VarGet, StateIf, custom GetOrAdd; Remove by GraphId."
+      }
+    ]
+  },
+  "stages": [
+    {
+      "label": "Write"
+    },
+    {
+      "label": "Key"
+    },
+    {
+      "label": "Store"
+    },
+    {
+      "label": "Read"
+    },
+    {
+      "label": "End"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "SetInput",
+      "sublabel": "boundary",
+      "stage": 0,
+      "row": 0,
+      "tag": "events"
+    },
+    {
+      "id": "mobile",
+      "type": "frontend",
+      "label": "VarSet",
+      "sublabel": "local",
+      "stage": 0,
+      "row": 2,
+      "tag": "events"
+    },
+    {
+      "id": "edge",
+      "type": "cloud",
+      "label": "StateKey",
+      "sublabel": "composite",
+      "stage": 1,
+      "row": 1,
+      "tag": "TLS"
+    },
+    {
+      "id": "consent",
+      "type": "security",
+      "label": "GraphId",
+      "sublabel": "scope",
+      "stage": 2,
+      "row": 0,
+      "tag": "PII guard"
+    },
+    {
+      "id": "stream",
+      "type": "messagebus",
+      "label": "GroveState",
+      "sublabel": "map",
+      "stage": 2,
+      "row": 2,
+      "tag": "ordered"
+    },
+    {
+      "id": "pii",
+      "type": "security",
+      "label": "StateSet",
+      "sublabel": "enum",
+      "stage": 3,
+      "row": 0,
+      "tag": "restricted"
+    },
+    {
+      "id": "warehouse",
+      "type": "database",
+      "label": "VarGet",
+      "sublabel": "read",
+      "stage": 3,
+      "row": 2,
+      "tag": "curated"
+    },
+    {
+      "id": "features",
+      "type": "database",
+      "label": "Custom",
+      "sublabel": "GetOrAdd",
+      "stage": 3,
+      "row": 4,
+      "tag": "derived"
+    },
+    {
+      "id": "dashboard",
+      "type": "backend",
+      "label": "StateIf",
+      "sublabel": "branch",
+      "stage": 4,
+      "row": 1,
+      "tag": "SQL"
+    },
+    {
+      "id": "model",
+      "type": "backend",
+      "label": "Remove",
+      "sublabel": "by GraphId",
+      "stage": 4,
+      "row": 4,
+      "tag": "features"
+    }
+  ],
+  "flows": [
+    {
+      "id": "web-clickstream",
+      "from": "web",
+      "to": "edge",
+      "label": "write",
+      "classification": "user events",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          205,
+          157
+        ],
+        [
+          205,
+          271
+        ]
+      ],
+      "labelAt": [
+        204,
+        190
+      ]
+    },
+    {
+      "id": "mobile-events",
+      "from": "mobile",
+      "to": "edge",
+      "label": "write",
+      "classification": "device events",
+      "variant": "default",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          222,
+          385
+        ],
+        [
+          222,
+          271
+        ]
+      ],
+      "labelAt": [
+        220,
+        342
+      ]
+    },
+    {
+      "id": "consent-enrichment",
+      "from": "edge",
+      "to": "consent",
+      "label": "prefix",
+      "classification": "PII touch",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "left",
+      "via": [
+        [
+          315,
+          112
+        ],
+        [
+          450,
+          112
+        ],
+        [
+          450,
+          157
+        ]
+      ],
+      "labelAt": [
+        382,
+        100
+      ]
+    },
+    {
+      "id": "accepted-events",
+      "from": "edge",
+      "to": "stream",
+      "label": "set",
+      "classification": "append-only",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          420,
+          271
+        ],
+        [
+          420,
+          385
+        ]
+      ],
+      "labelAt": [
+        438,
+        324
+      ]
+    },
+    {
+      "id": "identity-map",
+      "from": "consent",
+      "to": "pii",
+      "label": "state",
+      "classification": "encrypted PII",
+      "variant": "security",
+      "route": "straight",
+      "labelAt": [
+        638,
+        144
+      ]
+    },
+    {
+      "id": "normalized-facts",
+      "from": "stream",
+      "to": "warehouse",
+      "label": "get",
+      "classification": "non-PII",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelAt": [
+        638,
+        372
+      ]
+    },
+    {
+      "id": "daily-aggregates",
+      "from": "warehouse",
+      "to": "features",
+      "label": "add",
+      "classification": "batch",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "straight",
+      "labelAt": [
+        745,
+        496
+      ]
+    },
+    {
+      "id": "metrics-query",
+      "from": "warehouse",
+      "to": "dashboard",
+      "label": "if",
+      "classification": "read-only",
+      "variant": "default",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          852,
+          385
+        ],
+        [
+          852,
+          271
+        ]
+      ],
+      "labelAt": [
+        830,
+        326
+      ]
+    },
+    {
+      "id": "feature-vectors",
+      "from": "features",
+      "to": "model",
+      "label": "drop",
+      "classification": "derived",
+      "variant": "dashed",
+      "route": "straight",
+      "labelAt": [
+        852,
+        598
+      ]
+    },
+    {
+      "id": "restricted-join",
+      "from": "pii",
+      "to": "dashboard",
+      "label": "scope",
+      "classification": "approved only",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "top",
+      "via": [
+        [
+          878,
+          157
+        ],
+        [
+          878,
+          212
+        ],
+        [
+          960,
+          212
+        ]
+      ],
+      "labelAt": [
+        880,
+        198
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "One map",
+      "items": [
+        "Inputs are variables",
+        "Locals demand-driven",
+        "State ints under keys"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Access",
+      "items": [
+        "GetState(entity index)",
+        "GraphStateUtil.GetKey",
+        "Don't clear sibling graphs"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "VarSet",
+      "items": [
+        "Eval \u2192 write \u2192 return",
+        "Re-runs each Calculate",
+        "Not free once-per-frame"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "The Machine",
+    "subtitle": "ECS worlds in one process \u2014 who owns what, and what is allowed to cross",
+    "output": "diagrams/01-machine.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "wire",
+        "label": "The wire",
+        "focus": [
+          "input",
+          "client",
+          "server"
+        ],
+        "note": "Intent travels right, truth travels left. Nothing else crosses."
+      },
+      {
+        "id": "lifecycle",
+        "label": "Who creates the worlds",
+        "focus": [
+          "service",
+          "bootstrap",
+          "client",
+          "server"
+        ],
+        "note": "ServiceWorld outlives everything and drives world creation through the bootstrap."
+      },
+      {
+        "id": "content",
+        "label": "How content reaches a world",
+        "focus": [
+          "settings",
+          "subscenes",
+          "client",
+          "server"
+        ],
+        "note": "Settings bake to entities; SubSceneSet flags decide which world receives them."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "input",
+      "type": "external",
+      "label": "Input System",
+      "sublabel": "Keyboard.current \u00b7 managed",
+      "tag": "not bursted",
+      "pos": [
+        60,
+        340
+      ],
+      "size": [
+        160,
+        66
+      ]
+    },
+    {
+      "id": "client",
+      "type": "frontend",
+      "label": "ClientWorld",
+      "sublabel": "predict \u00b7 render \u00b7 own capsule",
+      "tag": "GameClient",
+      "pos": [
+        330,
+        340
+      ],
+      "size": [
+        172,
+        66
+      ]
+    },
+    {
+      "id": "server",
+      "type": "backend",
+      "label": "ServerWorld",
+      "sublabel": "authority \u00b7 spawn \u00b7 ghost send",
+      "tag": "GameServer",
+      "pos": [
+        880,
+        340
+      ],
+      "size": [
+        172,
+        66
+      ]
+    },
+    {
+      "id": "service",
+      "type": "backend",
+      "label": "ServiceWorld",
+      "sublabel": "never dies \u00b7 owns app state",
+      "tag": "Worlds.Service",
+      "pos": [
+        330,
+        100
+      ],
+      "size": [
+        172,
+        66
+      ]
+    },
+    {
+      "id": "bootstrap",
+      "type": "cloud",
+      "label": "BovineLabsBootstrap",
+      "sublabel": "ICustomBootstrap",
+      "tag": "Nerve",
+      "pos": [
+        640,
+        100
+      ],
+      "size": [
+        176,
+        66
+      ]
+    },
+    {
+      "id": "gpu",
+      "type": "external",
+      "label": "Entities.Graphics",
+      "sublabel": "LocalToWorld \u2192 GPU",
+      "tag": "presentation",
+      "pos": [
+        60,
+        600
+      ],
+      "size": [
+        160,
+        66
+      ]
+    },
+    {
+      "id": "settings",
+      "type": "database",
+      "label": "Settings assets",
+      "sublabel": "SettingsBase \u2192 entity",
+      "tag": "Core",
+      "pos": [
+        330,
+        600
+      ],
+      "size": [
+        172,
+        66
+      ]
+    },
+    {
+      "id": "subscenes",
+      "type": "database",
+      "label": "SubSceneSet",
+      "sublabel": "flags \u2192 world routing",
+      "tag": "Nerve",
+      "pos": [
+        640,
+        600
+      ],
+      "size": [
+        176,
+        66
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one Unity process \u00b7 one frame \u00b7 worlds tick in sequence",
+      "wraps": [
+        "input",
+        "client",
+        "server",
+        "service",
+        "bootstrap",
+        "gpu",
+        "settings",
+        "subscenes"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "authority \u2014 only this world writes truth",
+      "wraps": [
+        "server"
+      ],
+      "pad": 16
+    }
+  ],
+  "connections": [
+    {
+      "from": "input",
+      "to": "client",
+      "label": "raw keys",
+      "variant": "emphasis"
+    },
+    {
+      "from": "client",
+      "to": "server",
+      "label": "commands \u00b7 intent",
+      "variant": "emphasis"
+    },
+    {
+      "from": "server",
+      "to": "client",
+      "label": "snapshots \u00b7 truth",
+      "variant": "security",
+      "labelDy": 34
+    },
+    {
+      "from": "client",
+      "to": "gpu"
+    },
+    {
+      "from": "service",
+      "to": "bootstrap",
+      "label": "CreateWorld node",
+      "variant": "dashed",
+      "labelDx": 48
+    },
+    {
+      "from": "bootstrap",
+      "to": "client",
+      "variant": "dashed"
+    },
+    {
+      "from": "bootstrap",
+      "to": "server",
+      "variant": "dashed"
+    },
+    {
+      "from": "settings",
+      "to": "subscenes"
+    },
+    {
+      "from": "subscenes",
+      "to": "client",
+      "label": "RequiredClient"
+    },
+    {
+      "from": "subscenes",
+      "to": "server",
+      "label": "RequiredServer"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What crosses the wire",
+      "items": [
+        "Client to server: PlayerMoveInput, a float2 of intent",
+        "Server to client: ghost snapshots, delta-compressed per connection",
+        "Carried by NetworkStreamDriver over IPC in-process, UDP otherwise",
+        "Nothing else. The client never sends a position."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Isolation rules",
+      "items": [
+        "Worlds share no entities, no IDs, no memory",
+        "Same frame, sequential \u2014 a server stall stalls the client",
+        "WorldSystemFilter decides which world a system exists in at all",
+        "MenuWorld lives beside these and is destroyed when the game starts"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Where a missing entity went",
+      "items": [
+        "Settings asset not on that world's SettingsAuthoring prefab",
+        "Prefab not instantiated in that world's scene",
+        "Scene not listed in a SubSceneSet carrying that world's flag",
+        "Or the assembly holding it failed its defineConstraints"
+      ]
+    }
+  ]
+}
