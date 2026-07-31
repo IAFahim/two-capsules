@@ -26,9 +26,10 @@ Open them directly, or serve the folder and browse from [`index.html`](index.htm
 | [`03-connect`](diagrams/03-connect.html) | sequence | socket → NetworkId → approval → in game → spawn |
 | [`04-clientgraph`](diagrams/04-clientgraph.html) | lifecycle | the Canopy state machine that arms replication |
 
-Plus eight deeper **Grove** maps in [`diagrams/grove/`](diagrams/grove/) — the graph VM's
-assemblies, import pipeline, per-frame execution, blob layout, source-gen contract,
-selectors, custom-node kit, and `GroveState` memory model.
+**Companion repo** — [`grove-archify`](https://github.com/IAFahim/grove-archify)
+([live](https://iafahim.github.io/grove-archify/)) holds a separate, narrated Grove learning
+track with its own maps and audio. It is deliberately not vendored here: it is live and
+evolving. Chapters 08, 12 and 28 are the written counterpart to it.
 
 ---
 
