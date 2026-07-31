@@ -53,17 +53,25 @@ At bake time the whole graph is flattened into **one `BlobAssetReference<GraphDa
 a single contiguous allocation, relocatable, with internal offsets instead of pointers.
 
 ```
-GraphData
+GraphData                                    BovineLabs.Grove/GraphData.cs:17
 ├─ GraphId       : ulong
 ├─ Root          : BlobPtr<ExecutionHeader>
-├─ Nodes[]       : BlobArray<NodeHeader>
+├─ RootNodes     : BlobHashMap<ulong, NodeUnion>   <- entry points
+├─ Nodes         : BlobHashMap<ulong, NodeUnion>   <- every node, keyed by id
 ├─ Inputs[]      : BlobArray<GraphInputData>
-└─ Outputs[]     : BlobArray<GraphOutputData>
+├─ Outputs[]     : BlobArray<GraphOutputData>
+└─ DebugNames / DebugData / DebugExecution
 
-NodeHeader
-├─ Type          : NodeType (Execution | Data | Unknown)
-└─ payload       : the node's Data struct, inline
+NodeUnion                                    GraphData.cs:72
+├─ Type          : NodeType
+└─ Ptr           : BlobPtr<Header>           <- a tagged pointer
+
+ExecutionHeader                              Grove/Core/ExecutionHeader.cs:10
+└─ Type          : int                       <- the opcode the switch dispatches on
 ```
+
+**`Nodes` is a hash map, not an array**, and that detail earns its keep: a runtime lookup by
+name is a *scan*, not an index. It is why Canopy resolves a named jump the way it does.
 
 `BlobPtr<T>` is a **relative offset**, not an address. That is what makes the whole image
 memcpy-able, cache-friendly, and shareable read-only across every entity running the graph.
@@ -121,7 +129,11 @@ The context is how a node reaches the world.
 
 The blob is **read-only and shared**. Anything a node needs to remember goes in
 `DynamicBuffer<GroveState>` on the entity — a hash map keyed by
-`GraphStateUtil.GetKey(groveContext, nodeId, localKey)`.
+`GraphStateUtil.GetKey`, which has three overloads —
+`(context, key)`, `(context, scopeId, key)` and `(context, Hash128)`
+(`Grove/Core/GraphStateUtil.cs:20`, `:31`, `:41`). The middle parameter is a **scope**, not a
+node id — a node id is merely the most common scope. The key itself is
+`GroveStateKey { graphId, scopeId, key0, key1 }`, so two graphs and two scopes never collide.
 
 ```csharp
 graphState.AddOrSet(requestedConnectionKey, connection.Identity);

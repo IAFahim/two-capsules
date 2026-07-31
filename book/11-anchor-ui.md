@@ -16,6 +16,14 @@ flowchart TB
 
 - **App UI** gives you the widget set and a navigation stack (`AnchorSettings.StartDestination`
   is `"splash"` in our sample).
+> **⚡ There is no change-detection system.** The thing most people assume exists here does
+> not. Detection is an inline `field.Equals(newValue)` inside the *generated setter*
+> (`Binding/BindingObjectNotifyDataExtensions.cs:34`), and the notification crosses the Burst
+> boundary **synchronously at the write site** through a function-pointer trampoline. The
+> view model's data is pinned in a `DataBox` so its address is stable, `UIHelper` holds a raw
+> `TD*` to it (`Utility/UIHelper.cs:23`), and that address is the dictionary key. No system
+> polls anything. Map `29-anchor-ui` draws it.
+
 - **Anchor** gives you `ViewModel` objects that a UXML binding can read and an ECS system can
   write, plus the `UXMLService` that resolves types at import.
 

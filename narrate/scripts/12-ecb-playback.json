@@ -1,0 +1,110 @@
+{
+  "id": "12-ecb-playback",
+  "title": "Record Now, Merge Later",
+  "map": "diagrams/12-ecb-playback.html",
+  "blurb": "Every worker writes its own lock free chain, and playback merges them with a heap keyed on a number you chose.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Why there is no lock",
+      "focus": null,
+      "text": "The trick is embarrassingly simple and it is the right kind of simple. There is one chain per worker thread, plus one for the main thread. A parallel writer picks its chain from the thread index and nothing else. Two threads therefore never touch the same bytes while recording, so there is no lock, no atomic, no contention. Each chain is a linked list of four kilobyte blocks, and appending a command is bumping an offset inside the current block."
+    },
+    {
+      "id": "merge",
+      "title": "Playback is a k-way merge",
+      "focus": "heap",
+      "text": "At playback, every non-empty chain becomes one entry in a min heap keyed on the sort key of its next command. Pop the smallest, run that chain until it would pass the next smallest key, push it back with its new head key, repeat. That is a k-way merge of already-sorted sequences, exactly the algorithm you would use to merge sorted files. Which means the order commands are applied in depends only on the keys, and not at all on which thread recorded them or in what order the threads ran."
+    },
+    {
+      "id": "key",
+      "title": "The key is the whole contract",
+      "focus": "key",
+      "text": "So the sort key is not a hint, it is the total order. The documentation names the value to pass: the chunk index within the query. That index is stable for a given world state, which is what makes playback repeatable across runs and across machines. Pass a constant and every command ties, and the tie is not defined. Pass the entity index and you have coupled your ordering to an allocation pattern. This is the one parameter in the whole API where getting it wrong shows up as a bug you cannot reproduce."
+    },
+    {
+      "id": "last",
+      "title": "The main thread always goes last",
+      "focus": "last",
+      "text": "Here is a detail with real consequences. Commands recorded on the main thread are stamped with the largest possible integer. Since the merge always takes the smallest key next, that means everything you record outside a job is applied after everything recorded inside one, no matter what order you wrote the code in. If you have ever had a main thread destroy apparently happen after a job's add, that is why, and it is deliberate rather than accidental."
+    },
+    {
+      "id": "ids",
+      "title": "The handles were never placeholders",
+      "focus": "real",
+      "text": "This is the one that overturned something I thought I knew. Folklore says a command buffer create hands you a fake entity with a negative index that gets patched during playback. Read the code and that is not what happens any more. Recording a create allocates real entity identifiers on the spot, from the same global table everything else uses, from inside the job. The documentation says it plainly: the entity is valid immediately, it simply has no chunk until playback puts it in one. There is even a source comment worrying about the atomic contention that costs on some processors."
+    }
+  ],
+  "nodes": {
+    "key": {
+      "short": "A number you choose, and it is the entire ordering contract.",
+      "deep": "The documentation names the chunk index within the query as the value to pass, and there is a reason. It is stable for a given world state, it is unique per chunk, and it is available for free inside the loop. Anything else you pass is either not stable, in which case playback is not repeatable, or not unique, in which case the ties are undefined.",
+      "types": [
+        "ChunkIndexInQuery",
+        "IJobEntity",
+        "IJobChunk"
+      ],
+      "goto": "diagrams/09-job-graph.html",
+      "gotoLabel": "The job this runs inside"
+    },
+    "chain": {
+      "short": "One chain per worker thread, four kilobyte blocks, no synchronisation at all.",
+      "deep": "A parallel writer resolves its chain purely from the thread index, so two threads recording at the same instant are writing into different allocations. Each block records the smallest key it contains, which is what lets playback seed the heap without scanning. When a block fills, another is linked on.",
+      "types": [
+        "EntityCommandBuffer",
+        "ParallelWriter",
+        "ECBChunk"
+      ]
+    },
+    "flush": {
+      "short": "The system completes its producers, then plays everything back.",
+      "deep": "This is the moment the deferred work becomes a real barrier, and it is the point of the whole exercise: one barrier at a system whose position in the update order you picked, rather than one wherever the change was requested. Playback failures are caught per buffer and reported with the name of the system that recorded them, which is unusually kind.",
+      "types": [
+        "EntityCommandBufferSystem",
+        "BeginSimulationEntityCommandBufferSystem",
+        "EndSimulationEntityCommandBufferSystem"
+      ],
+      "goto": "diagrams/11-sync-points.html",
+      "gotoLabel": "The barrier it replaces"
+    },
+    "heap": {
+      "short": "A min heap over the chains, always taking the smallest key next.",
+      "deep": "Each chain contributes one heap entry holding its next key. The loop pops the smallest, runs that chain forward until it would overtake the current second smallest, then pushes the chain back with its updated key. Chains that run out are simply popped. The whole thing is the classic merge of sorted runs, and it is why the number of threads never affects the result.",
+      "types": [
+        "ECBChainPriorityQueue",
+        "ECBChainHeapElement",
+        "EntityCommandBuffer"
+      ]
+    },
+    "apply": {
+      "short": "One command at a time, on the main thread, with the world stopped.",
+      "deep": "Every structural change here is a real structural change with everything the barrier implies, they are just all happening in one place. Chains that recorded nothing managed are walked by compiled code; chains that touched a managed component fall back to the interpreted walker, chosen from a flag stored on the chain itself.",
+      "types": [
+        "EntityManager",
+        "EntityDataAccess",
+        "ECBInterop"
+      ],
+      "goto": "diagrams/06-archetype-graph.html",
+      "gotoLabel": "What applying one actually costs"
+    },
+    "last": {
+      "short": "Main thread commands carry the largest possible key, so they play last.",
+      "deep": "Not a convention, a constant in the source. Since the merge takes the smallest key next, the largest key sorts to the end of everything. So a create you record on the main thread lands after every create recorded in a job, regardless of when either line of code ran. Worth knowing before you debug the ordering for an hour.",
+      "types": [
+        "EntityCommandBuffer",
+        "ParallelWriter"
+      ]
+    },
+    "real": {
+      "short": "Recording a create mints a real entity identifier, right then, inside the job.",
+      "deep": "The identifier comes from the same global slot table every other entity uses, allocated with atomics so a worker thread can do it without a lock. What playback adds is not the identity but the storage: the entity gets a chunk and a slot. This is also why the source carries a comment worrying about atomic contention on processors where that is expensive.",
+      "types": [
+        "Entity",
+        "EntityComponentStore",
+        "EntityCommandBuffer"
+      ],
+      "goto": "diagrams/07-entity-identity.html",
+      "gotoLabel": "Where those identifiers come from"
+    }
+  }
+}

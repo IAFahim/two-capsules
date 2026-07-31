@@ -22,10 +22,16 @@ Rules the validator enforces (`CanopyGraphValidation`):
 |---|---|
 | Exactly one state has no parent | `Graph must define exactly one root state.` |
 | Every composite state has exactly one default child | `Composite state 'X' must define exactly one default child.` |
-| State ids are unique **after FixedString64 hashing** | `State id 'a' collides with state id 'b' after FixedString64 hash.` |
+| State ids are unique after hashing | `State id 'a' collides with state id 'b' after FixedString64 hash.` |
+| No cycle in the parent chain | `CanopyGraphValidation.cs:261` |
+| A leaf state cannot enable history | `CanopyGraphValidation.cs:212` |
+| A composite cannot declare *multiple* defaults | `:173` — a different error from `:205` above |
 
-That third one is delightful and worth pausing on. `CanopyStateId` is a hash of a
-`FixedString64Bytes`, so two different names can collide. The validator brute-forces the
+That third one is delightful and worth pausing on. `CanopyStateId` is a **single 32-bit int**
+(`Canopy.Data/CanopyStateId.cs:12`) hashed from the **lowercased** string (`:26`). Two
+consequences the name does not advertise: state ids are **case-insensitive** — `Gameplay` and
+`gameplay` are the same state — and 32 bits is a small enough space that collisions are worth
+brute-forcing for. The validator brute-forces the
 check at author time rather than letting you ship a 1-in-2^n heisenbug.
 
 > **⚡ Hardware analogy** — a **CAM with collision detection at programming time**. Same
@@ -86,6 +92,11 @@ it, exits the old path bottom-up, enters the new path top-down.
 
 This is deliberate. Edges in a visual graph get unreadable fast; a named jump is a `goto` and
 is honest about it. The validator still checks that every `CanopyGoTo` target exists.
+
+> **💀 Re-entrancy.** Every transition bumps a version counter in grove state, and the enter
+> and update loops recheck it to abandon a stale walk. A jump fired from inside `Exit`
+> **throws** (`CanopyStateMachine.cs:461`). So "check for Exit and bail" is necessary but not
+> sufficient — you must not start a transition from a teardown path at all.
 
 ## History
 

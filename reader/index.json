@@ -42,12 +42,12 @@
   {
     "slug": "08-grove",
     "title": "08 \u00b7 Grove: a virtual machine for gameplay logic",
-    "blocks": 20
+    "blocks": 21
   },
   {
     "slug": "09-canopy",
     "title": "09 \u00b7 Canopy: hierarchical states",
-    "blocks": 19
+    "blocks": 20
   },
   {
     "slug": "10-nerve",
@@ -57,7 +57,7 @@
   {
     "slug": "11-anchor-ui",
     "title": "11 \u00b7 Anchor and the UI layer",
-    "blocks": 14
+    "blocks": 16
   },
   {
     "slug": "12-authoring-to-blob",
