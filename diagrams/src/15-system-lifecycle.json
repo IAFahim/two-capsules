@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "One System, One Frame",
+    "subtitle": "Two switches ANDed in a single if, and a one-bit latch that turns the result into edges",
+    "output": "diagrams/15-system-lifecycle.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1020,
+      700
+    ],
+    "views": [
+      {
+        "id": "once",
+        "label": "What happens exactly once",
+        "focus": [
+          "create",
+          "destroy"
+        ],
+        "note": "Creation and destruction are not part of the frame. They bracket every frame the system will ever see."
+      },
+      {
+        "id": "gate",
+        "label": "The gate is one if statement",
+        "focus": [
+          "gate",
+          "run",
+          "skip"
+        ],
+        "note": "A bit you own, ANDed with a query emptiness test. Either being false skips your update and nothing else."
+      },
+      {
+        "id": "edges",
+        "label": "The latch that makes edges",
+        "focus": [
+          "skip",
+          "stop",
+          "gate"
+        ],
+        "note": "A single stored bit remembers last frame's answer, so the stop callback fires on the falling edge only."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "the system's own life"
+    },
+    {
+      "id": "idle",
+      "label": "the frames it sits out"
+    }
+  ],
+  "states": [
+    {
+      "id": "create",
+      "type": "start",
+      "label": "OnCreate",
+      "sublabel": "once, before any update",
+      "lane": "main",
+      "col": 0,
+      "step": "01",
+      "tag": "queries declared here"
+    },
+    {
+      "id": "gate",
+      "type": "decision",
+      "label": "Enabled and required",
+      "sublabel": "one if, every frame",
+      "lane": "main",
+      "col": 1,
+      "step": "02",
+      "tag": "two switches, ANDed"
+    },
+    {
+      "id": "run",
+      "type": "active",
+      "label": "OnUpdate",
+      "sublabel": "the only place work happens",
+      "lane": "main",
+      "col": 2,
+      "step": "03",
+      "tag": "rising edge starts it"
+    },
+    {
+      "id": "destroy",
+      "type": "neutral",
+      "label": "OnDestroy",
+      "sublabel": "when the world goes away",
+      "lane": "main",
+      "col": 3,
+      "step": "04",
+      "tag": "always, even if it never ran"
+    },
+    {
+      "id": "skip",
+      "type": "waiting",
+      "label": "Skipped",
+      "sublabel": "still sorted, still visited",
+      "lane": "idle",
+      "col": 0,
+      "tag": "costs a branch",
+      "width": 110
+    },
+    {
+      "id": "stop",
+      "type": "failure",
+      "label": "OnStopRunning",
+      "sublabel": "falling edge only",
+      "lane": "idle",
+      "col": 1,
+      "tag": "recoverable",
+      "width": 110
+    }
+  ],
+  "transitions": [
+    {
+      "id": "first",
+      "from": "create",
+      "to": "gate",
+      "variant": "emphasis"
+    },
+    {
+      "id": "open",
+      "from": "gate",
+      "to": "run",
+      "label": "both true",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": 58,
+      "labelDx": 44
+    },
+    {
+      "id": "shut",
+      "from": "gate",
+      "to": "skip",
+      "label": "either false",
+      "route": "drop",
+      "labelDx": -74
+    },
+    {
+      "id": "fall",
+      "from": "skip",
+      "to": "stop",
+      "route": "straight"
+    },
+    {
+      "id": "back",
+      "from": "stop",
+      "to": "gate",
+      "variant": "emphasis"
+    },
+    {
+      "id": "teardown",
+      "from": "run",
+      "to": "destroy",
+      "variant": "security",
+      "route": "straight"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The gate, literally",
+      "items": [
+        "One condition decides everything: the enabled bit AND the requirement test · SystemBase.cs:187",
+        "An unmanaged system uses the identical condition · WorldUnmanaged.cs:892",
+        "Enabled is a single bit in the system's flag word · SystemState.cs:179",
+        "The requirement test returns true immediately when nothing was required · SystemState.cs:698"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What the gate does not do",
+      "items": [
+        "It does not remove the system from its group; the group still walks it every frame",
+        "It does not undo the sort, so turning it back on costs nothing",
+        "It does not skip OnCreate, which already ran at world construction",
+        "A disabled system is a branch not taken, not a system that is gone"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The latch is an edge detector",
+      "items": [
+        "One stored bit remembers whether the system ran last frame",
+        "Rising edge: the bit is set and the start callback fires once · SystemBase.cs:202",
+        "Falling edge: pending jobs are completed and the stop callback fires once · SystemBase.cs:227, :233",
+        "So the two running callbacks are edges, and OnUpdate is the level"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The requirement test ignores filters",
+      "items": [
+        "Every required query is checked with an ignore-filter emptiness test · SystemState.cs:673",
+        "So enableable components and shared component filters cannot close the gate",
+        "A system can pass the gate and then process zero entities, correctly and every frame",
+        "Requiring a component that exists but is disabled everywhere still lets the system run"
+      ]
+    }
+  ]
+}

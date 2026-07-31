@@ -1,0 +1,120 @@
+{
+  "id": "06-archetype-graph",
+  "title": "The Archetype Is a Set",
+  "map": "diagrams/06-archetype-graph.html",
+  "blurb": "Adding a component never edits an entity. It hashes a different set, finds a different chunk, and copies the entity there.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "A set, not an object",
+      "focus": null,
+      "text": "The word archetype sounds like a class, and that is the wrong instinct. An archetype is a sorted array of component type numbers. That array is not a description of the archetype, it is the archetype. Two archetypes are the same thing exactly when their arrays are byte for byte identical, and there is code that literally does that memory comparison to decide."
+    },
+    {
+      "id": "edge",
+      "title": "The edge you cannot find",
+      "focus": "lookup",
+      "text": "Here is the part I did not expect. There is no graph. Nothing stores an edge saying from this archetype, adding a transform gets you to that one. What happens instead is that the runtime copies the sorted array onto the stack, inserts one element in its sorted position, hashes the whole thing, and probes an open addressed table. Hit means an archetype with that exact set already exists. Miss means one gets created on the spot. The set is the key, and that is the entire data structure."
+    },
+    {
+      "id": "why",
+      "title": "Why that is the right call",
+      "focus": "insert",
+      "text": "Think about how many edges you would have to store. An archetype with twenty component types has twenty ways to remove one, and thousands of plausible ways to add one, and every one of those would need a slot. So they do not cache the edges. They recompute the key every time, because the key is one hash over a few hundred bytes and one probe. It is cheaper to redo the lookup than to remember the answer. That trade shows up all over this codebase once you start looking for it."
+    },
+    {
+      "id": "move",
+      "title": "What the entity actually pays",
+      "focus": "convert",
+      "text": "Now the entity has to move, because its data lives in a chunk and a chunk belongs to exactly one archetype. The copy is nicer than you would guess. Both type arrays are sorted, so the copy walks them together like a merge, from the back. A type present in both gets one memory copy of count times stride. A type present only in the destination gets zeroed, and if it is one of the switchable ones its bit is set to enabled. A type present only in the source is simply dropped. So it is not one big block copy, it is one small copy per surviving component."
+    },
+    {
+      "id": "bills",
+      "title": "Two bills you did not ask for",
+      "focus": "queries",
+      "text": "Then two things happen that nobody warns you about. The new archetype recomputes its own chunk capacity from the sum of the strides, so a chunk that held a hundred and twenty eight entities might now hold ninety, and the ceiling is a hundred and twenty eight no matter how small your components are. And every archetype keeps a list of back pointers to the queries that match it, so touching its chunk list drops the cached chunk list of every one of those queries. That second bill is not paid here. It is paid by whichever system iterates next."
+    }
+  ],
+  "nodes": {
+    "srcset": {
+      "short": "The exact set of component types the entity has right now.",
+      "deep": "Not a name, not an object, not a class. A sorted array of type numbers, plus the layout that follows from it: which arrays exist, at what offsets, with what strides, and how many entities fit. Every chunk carrying that archetype has a byte identical layout, which is the whole reason one set of offsets can drive iteration over thousands of chunks.",
+      "types": [
+        "EntityArchetype",
+        "Archetype",
+        "ComponentTypeInArchetype"
+      ],
+      "goto": "diagrams/05-chunk-layout.html",
+      "gotoLabel": "What one chunk of it looks like"
+    },
+    "insert": {
+      "short": "Copy the sorted array, slide one element in, keep it sorted.",
+      "deep": "This happens on the stack, so there is no allocation and no garbage. The insertion point is found by walking the array until the existing type is no longer smaller than the new one. If the type is already there the function returns nothing at all, which is how adding a component you already have becomes free rather than an error.",
+      "types": [
+        "ComponentTypeInArchetype",
+        "ComponentTypeSet",
+        "TypeIndex"
+      ]
+    },
+    "lookup": {
+      "short": "Hash the whole array, probe an open addressed table, confirm with a memory compare.",
+      "deep": "The hash covers every byte of the type array, so it is a hash of the set itself rather than of any one type. Collisions are handled by walking forward one slot at a time, and a candidate is only accepted after its type count matches and a memory comparison of the whole array comes back equal. Two sentinel hash values are reserved so that empty and deleted slots can be told apart from real ones.",
+      "types": [
+        "ArchetypeListMap",
+        "ChunkListMap",
+        "TypeHash"
+      ]
+    },
+    "dst": {
+      "short": "The archetype the entity is about to belong to, found or freshly built.",
+      "deep": "Creating one is more work than it sounds. It computes memory ordering for the types, offsets, strides, a stable hash for serialisation, a bloom filter mask for query matching, and two derived archetypes: one for instantiating, which strips prefab and cleanup components, and one for copying, which strips only cleanup. All of that is done once, at creation, and never again.",
+      "types": [
+        "Archetype",
+        "EntityArchetype",
+        "ArchetypeFlags"
+      ]
+    },
+    "capacity": {
+      "short": "How many entities fit, recomputed for the new set of strides.",
+      "deep": "Capacity is the usable part of the block divided by the sum of every component's stride, then reduced until the per array alignment padding also fits. On top of that there is a hard ceiling of a hundred and twenty eight entities per chunk, which exists because the position inside a chunk is stored in a single byte in the entity slot table.",
+      "types": [
+        "Chunk",
+        "TypeManager",
+        "MaximumChunkCapacityAttribute"
+      ],
+      "goto": "diagrams/05-chunk-layout.html",
+      "gotoLabel": "Where the strides come from"
+    },
+    "convert": {
+      "short": "Two sorted type arrays walked in step, one memory copy per shared type.",
+      "deep": "Because both arrays are sorted by type number, the copy is a two pointer merge walked backwards. Types in both get copied. Types only in the destination get cleared to zero, and if they are switchable their enabled bit is set true, because a component you just added should be on. Types only in the source are noted for deallocation, which matters when one of them owned a buffer.",
+      "types": [
+        "ChunkDataUtility",
+        "ArchetypeChunk",
+        "EntityBatchInChunk"
+      ]
+    },
+    "dstchunk": {
+      "short": "A different allocation, a different slot number, and every old pointer now lies.",
+      "deep": "This is why a structural change is not something you can do while jobs are running. Anything holding a raw pointer into the old chunk is now pointing at memory that has been reused or moved. The handle you hold is still valid, because a handle is an index plus a version rather than an address, but every array pointer derived from it is stale.",
+      "types": [
+        "ArchetypeChunk",
+        "ChunkIndex",
+        "EntityInChunk"
+      ],
+      "goto": "diagrams/11-sync-points.html",
+      "gotoLabel": "Why this move stalls everything"
+    },
+    "queries": {
+      "short": "Every query that matches this archetype loses its cached chunk list.",
+      "deep": "An archetype carries back pointers to the query data of every query that ever matched it. When its chunk list changes, the runtime walks a linked list of archetypes touched during this batch and clears a valid flag on each of their queries. Nothing is rebuilt right then. The rebuild happens lazily, the next time somebody iterates, which is why the cost shows up in a system that did nothing wrong.",
+      "types": [
+        "EntityQuery",
+        "EntityQueryData",
+        "UnsafeCachedChunkList"
+      ],
+      "goto": "diagrams/08-query-matching.html",
+      "gotoLabel": "What a query does with that list"
+    }
+  }
+}

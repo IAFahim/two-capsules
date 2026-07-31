@@ -1,0 +1,269 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "How a Session Gets Built",
+    "subtitle": "Worlds are created by a state graph, not by the bootstrap; scenes are routed by a bit mask; and a player is two entities, only one of which is disposable",
+    "output": "diagrams/28-nerve-session.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "deferred",
+        "label": "Worlds are deferred",
+        "focus": [
+          "boot",
+          "graph"
+        ],
+        "note": "Startup creates one world. Everything else is created by a node in a graph, and destroyed when that state exits."
+      },
+      {
+        "id": "routing",
+        "label": "Which scene, which world",
+        "focus": [
+          "sets",
+          "loader"
+        ],
+        "note": "A set carries a world mask. The loader ands it against the flags of the world it is running in."
+      },
+      {
+        "id": "approval",
+        "label": "The gate that is off",
+        "focus": [
+          "approve",
+          "spawn"
+        ],
+        "note": "Approval is off by default, and nothing else grants the identity the spawner requires."
+      },
+      {
+        "id": "player",
+        "label": "Two entities per player",
+        "focus": [
+          "ctrl",
+          "pawn"
+        ],
+        "note": "The controller is the account. The controlled entity is the body. Disconnecting disables, it does not destroy."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "boot",
+      "type": "cloud",
+      "label": "Bootstrap",
+      "sublabel": "creates exactly one world",
+      "tag": "the service world",
+      "pos": [
+        60,
+        60
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "graph",
+      "type": "backend",
+      "label": "The service graph",
+      "sublabel": "a node opens and closes worlds",
+      "tag": "world life = state life",
+      "pos": [
+        60,
+        300
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "sets",
+      "type": "database",
+      "label": "Scene sets",
+      "sublabel": "each carries a target world mask",
+      "tag": "baked, one entity per set",
+      "pos": [
+        60,
+        540
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "loader",
+      "type": "backend",
+      "label": "The routing test",
+      "sublabel": "mask and this world's flags",
+      "tag": "non-zero, or skip",
+      "pos": [
+        420,
+        420
+      ],
+      "size": [
+        240,
+        68
+      ]
+    },
+    {
+      "id": "approve",
+      "type": "security",
+      "label": "Approval",
+      "sublabel": "a token, before any network id",
+      "tag": "off by default",
+      "pos": [
+        420,
+        60
+      ],
+      "size": [
+        240,
+        68
+      ]
+    },
+    {
+      "id": "spawn",
+      "type": "backend",
+      "label": "Connection to player",
+      "sublabel": "same account, same controller",
+      "tag": "server world only",
+      "pos": [
+        780,
+        180
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "ctrl",
+      "type": "frontend",
+      "label": "Controller",
+      "sublabel": "the account, kept across a drop",
+      "tag": "disabled, not destroyed",
+      "pos": [
+        1120,
+        60
+      ],
+      "size": [
+        240,
+        68
+      ]
+    },
+    {
+      "id": "pawn",
+      "type": "frontend",
+      "label": "Controlled entity",
+      "sublabel": "what input is pointed at",
+      "tag": "the command target",
+      "pos": [
+        1120,
+        300
+      ],
+      "size": [
+        240,
+        68
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one player · two entities · one of them is the identity",
+      "wraps": [
+        "ctrl",
+        "pawn"
+      ],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    {
+      "from": "boot",
+      "to": "graph",
+      "label": "runs inside it",
+      "variant": "emphasis",
+      "labelDy": 90
+    },
+    {
+      "from": "graph",
+      "to": "loader",
+      "label": "a world appears",
+      "variant": "emphasis"
+    },
+    {
+      "from": "sets",
+      "to": "loader",
+      "label": "mask",
+      "variant": "dashed"
+    },
+    {
+      "from": "loader",
+      "to": "approve",
+      "label": "populated",
+      "variant": "emphasis"
+    },
+    {
+      "from": "approve",
+      "to": "spawn",
+      "label": "account identity",
+      "variant": "security"
+    },
+    {
+      "from": "spawn",
+      "to": "ctrl",
+      "label": "reattach or create",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ctrl",
+      "to": "pawn",
+      "label": "points at its body",
+      "labelDy": 90
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The bootstrap does almost nothing",
+      "items": [
+        "It creates one world and stops · Nerve BovineLabs.Nerve/Utility/BovineLabsBootstrap.cs:207",
+        "It is the standard custom bootstrap hook, nothing more · same file:22",
+        "A graph node opens the rest · Nerve BovineLabs.Nerve.State/States/Service/CreateWorld.cs:16",
+        "Play type decides which · Nerve BovineLabs.Nerve/Utility/BovineLabsBootstrap.NetCode.cs:45"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "How a scene finds its world",
+      "items": [
+        "A settings asset holds the sets · Nerve BovineLabs.Nerve.Authoring/SubScenes/SceneSettings.cs:14",
+        "Each set's mask is converted at bake · Nerve BovineLabs.Nerve/SubScenes/SubSceneLoadUtil.cs:12",
+        "At runtime it is anded with the world's flags · Nerve BovineLabs.Nerve/SubScenes/SubSceneLoadingSystem.cs:199",
+        "Our client settings ride the same rail: attribute, prefab, scene, set, world"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The default that spawns nobody",
+      "items": [
+        "Approval defaults to off · Nerve BovineLabs.Nerve/Utility/BovineLabsBootstrap.NetCode.cs:35",
+        "Off means both approval systems disable themselves in create",
+        "So no identity is granted · Nerve BovineLabs.Nerve.State/Authentication/ConnectionApprovalServerSystem.cs:102",
+        "And the spawner only acts on approved connections · Nerve BovineLabs.Nerve.State/Session/PlayerConnectionSystem.cs:23"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Two entities, and why",
+      "items": [
+        "The controller carries the account · Nerve BovineLabs.Nerve.State/Session/AccountIdentity.cs:11",
+        "It points at the body it drives · Nerve BovineLabs.Nerve.State/Session/PrimaryControlledEntity.cs:12",
+        "A drop disables rather than destroys · Nerve BovineLabs.Nerve.State/Session/ControllerActive.cs:10",
+        "Reconnect re-points ownership · Nerve BovineLabs.Nerve.State/Session/ControllerOwnership.cs:13"
+      ]
+    }
+  ]
+}

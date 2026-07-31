@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Where Your World Comes From",
+    "subtitle": "Nobody calls new World. A reflection scan picks one owner, and everything after that is a census",
+    "output": "diagrams/13-bootstrap.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "owner",
+        "label": "Who owns creation",
+        "focus": [
+          "scan",
+          "custom",
+          "fallback"
+        ],
+        "note": "One reflection scan, most-derived type wins, and returning true means Unity builds nothing of its own."
+      },
+      {
+        "id": "census",
+        "label": "A world is a census result",
+        "focus": [
+          "census",
+          "place"
+        ],
+        "note": "Every world asks the same question with different flags and gets a different list of systems back."
+      },
+      {
+        "id": "layer",
+        "label": "What Nerve adds",
+        "focus": [
+          "custom",
+          "nerve"
+        ],
+        "note": "Netcode decides whether client and server worlds exist. Nerve decides when."
+      },
+      {
+        "id": "frame",
+        "label": "Becoming a frame",
+        "focus": [
+          "place",
+          "loop"
+        ],
+        "note": "Three groups are spliced into three player loop phases. That is the only reason a system ever runs."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "engine",
+      "label": "engine startup"
+    },
+    {
+      "id": "own",
+      "label": "who owns creation"
+    },
+    {
+      "id": "build",
+      "label": "populating a world"
+    },
+    {
+      "id": "sort",
+      "label": "ordering"
+    },
+    {
+      "id": "frame",
+      "label": "the frame"
+    },
+    {
+      "id": "layer",
+      "label": "layered on top"
+    },
+    {
+      "id": "none",
+      "label": "nobody claimed it",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "p1",
+      "label": "discovery",
+      "fromCol": 0,
+      "toCol": 0
+    },
+    {
+      "id": "p2",
+      "label": "ownership",
+      "fromCol": 1,
+      "toCol": 1,
+      "variant": "emphasis"
+    },
+    {
+      "id": "p3",
+      "label": "population",
+      "fromCol": 2,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "scan",
+    "custom",
+    "census",
+    "place",
+    "loop"
+  ],
+  "nodes": [
+    {
+      "id": "scan",
+      "lane": "engine",
+      "col": 0,
+      "type": "security",
+      "label": "Type scan",
+      "sublabel": "before any scene",
+      "tag": "most derived wins"
+    },
+    {
+      "id": "custom",
+      "lane": "own",
+      "col": 1,
+      "type": "backend",
+      "label": "You own it",
+      "sublabel": "you returned true",
+      "tag": "Unity builds none"
+    },
+    {
+      "id": "fallback",
+      "lane": "none",
+      "col": 0,
+      "type": "cloud",
+      "label": "Default world",
+      "sublabel": "nobody claimed it",
+      "tag": "local plus render"
+    },
+    {
+      "id": "nerve",
+      "lane": "layer",
+      "col": 5,
+      "type": "messagebus",
+      "label": "Nerve layer",
+      "sublabel": "again, on demand",
+      "tag": "one world never dies"
+    },
+    {
+      "id": "census",
+      "lane": "build",
+      "col": 2,
+      "type": "database",
+      "label": "System census",
+      "sublabel": "asked by filter",
+      "tag": "a list per world"
+    },
+    {
+      "id": "place",
+      "lane": "sort",
+      "col": 3,
+      "type": "backend",
+      "label": "Placement",
+      "sublabel": "attribute, then sort",
+      "tag": "silent default"
+    },
+    {
+      "id": "loop",
+      "lane": "frame",
+      "col": 4,
+      "type": "frontend",
+      "label": "Player loop",
+      "sublabel": "three phases",
+      "tag": "now it ticks"
+    }
+  ],
+  "edges": [
+    {
+      "from": "scan",
+      "to": "custom",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "claimed"
+    },
+    {
+      "from": "scan",
+      "to": "fallback",
+      "role": "branch",
+      "variant": "dashed",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "unclaimed"
+    },
+    {
+      "from": "custom",
+      "to": "census",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "once per world",
+      "labelDy": 11
+    },
+    {
+      "from": "fallback",
+      "to": "census",
+      "role": "branch",
+      "variant": "dashed",
+      "label": "same call"
+    },
+    {
+      "from": "census",
+      "to": "place",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "place",
+      "to": "loop",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "loop",
+      "to": "nerve",
+      "role": "branch",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "again, later",
+      "labelDy": 11
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Default means two different things",
+      "items": [
+        "Populating a world, it expands to LocalSimulation plus Presentation · Types/TypeManagerSystems.cs:817",
+        "Classifying a system, it walks up the UpdateInGroup chain instead",
+        "A chain ending at a group with no parent falls back to local, server and client · Types/TypeManagerSystems.cs:1386",
+        "SimulationSystemGroup carries no filter at all · DefaultWorld.cs:683, so most chains end there"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "The ownership contract",
+      "items": [
+        "The scan collects every type deriving from the bootstrap interface · DefaultWorldInitialization.cs:424",
+        "The most derived candidate wins; an unrelated tie is an error, not a merge · :447",
+        "Return true and Unity returns your world immediately · :161",
+        "Return false, or do not exist, and it builds one plain world instead · :170"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What a world actually is",
+      "items": [
+        "The three root groups are created unconditionally, before any of your systems · :314",
+        "A system with no group attribute lands in simulation, not nowhere · :294",
+        "Each root group is sorted once, after the whole list has been placed · :321",
+        "The world only becomes a frame when its groups are appended to the player loop · :176"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The layer above netcode",
+      "items": [
+        "Netcode decides whether client and server worlds exist at all",
+        "Nerve decides when they are built and when they are thrown away",
+        "Its service world is constructed once with a filter bit of its own · BovineLabs.Nerve/Utility/BovineLabsBootstrap.cs:214",
+        "It then hand-picks the Unity scene and entity systems it wants alongside · :227"
+      ]
+    }
+  ]
+}

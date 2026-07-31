@@ -1,0 +1,107 @@
+{
+  "id": "27-canopy-hsm",
+  "title": "The Active Path",
+  "map": "diagrams/27-canopy-hsm.html",
+  "blurb": "One stored number, a path rebuilt from it every tick, and a jump by name that only touches the part that changed.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Not one active state. A path.",
+      "focus": null,
+      "text": "The first thing to unlearn is that a hierarchical state machine has an active state. It has an active path, running from the root down to a leaf, and every state on that path is active at once. Blocks attached to the root run in every child state, every tick. That single sentence explains why a connection watcher belongs on the root and stops working the moment somebody moves it onto a child, and it explains why the bug only ever appears after a successful connection."
+    },
+    {
+      "id": "cursor",
+      "title": "One number, and the rest is recomputed",
+      "focus": "leaf",
+      "text": "Here is what genuinely surprised me. The machine stores the leaf, and only the leaf. A single number in graph state. Every tick it takes that number, walks up the parent pointers in the image, and reverses the list. That is the path. Nothing else is persisted, so there is no path to get out of sync, no invariant to maintain, and no repair code. A cursor, and a chain you can always chase back to the root."
+    },
+    {
+      "id": "jump",
+      "title": "A named jump, and the common ancestor",
+      "focus": "split",
+      "text": "There are no transition edges in the graph at all. A node simply names a state. The machine resolves the name, builds the path that name implies, and then walks both paths together until they diverge. Everything above that divergence is shared, so it is never exited and never re-entered. Which means a jump between two siblings deep in the tree leaves every parent untouched, and a jump to your own current state is a no operation for free. The arithmetic is the mechanism."
+    },
+    {
+      "id": "order",
+      "title": "Up, then down",
+      "focus": "exit",
+      "text": "Everything below the divergence exits, deepest first. Then everything on the new branch enters, shallowest first. On the way up, any parent that remembers history records the child it just lost, which is what makes a pause menu return you where you were. On the way down, the stored leaf number advances state by state, so if something throws halfway the machine is left pointing at somewhere real rather than at nothing."
+    },
+    {
+      "id": "guard",
+      "title": "The version counter",
+      "focus": "goto",
+      "text": "A block can jump while the machine is in the middle of walking. So every transition bumps a version number, and the enter and update loops recheck it after each state and abandon the walk if it moved. A jump fired from inside enter therefore wins, and the older walk stops quietly rather than fighting it. A jump fired from inside exit is a different matter: that one throws, because unwinding while unwinding has no sensible answer."
+    },
+    {
+      "id": "reject",
+      "title": "The check that runs at author time",
+      "focus": "reject",
+      "text": "The validator refuses more than one parentless state, a composite with no default child or with two, and a cycle in the parent chain. And then the good one. State names are hashed down to a single thirty-two bit integer, and two different names can land on the same integer. So the validator brute forces the comparison at author time and refuses the graph. That is a content addressable memory with collision checking done at programming time, for the same reason you do it there: because the lookup has to be fast and correct, and a one in four billion failure found in production is not a bug you can debug."
+    }
+  ],
+  "nodes": {
+    "leaf": {
+      "short": "One number, held in graph state. That is the entire persisted machine.",
+      "deep": "It identifies the deepest active state. Nothing above it is stored, because everything above it can be recovered by following parent pointers. A machine whose whole persisted form is one integer is also a machine you can inspect from a debugger in one read.",
+      "types": [
+        "CanopyStateStorage",
+        "GroveState"
+      ],
+      "goto": "diagrams/26-grove-state.html",
+      "gotoLabel": "The map that number lives in"
+    },
+    "path": {
+      "short": "Root down to leaf, rebuilt from that number on every single tick.",
+      "deep": "The rebuild walks up the parent chain into a small pooled list and then reverses it, so the root runs first and the leaf runs last. Every state on the path gets its blocks executed, which is the definition of a state being active. It is cheap enough to redo every tick because the depth of a real graph is three or four.",
+      "types": [
+        "CanopyStateData",
+        "CanopyStateMachine",
+        "PooledNativeList"
+      ]
+    },
+    "goto": {
+      "short": "A node names a state. There are no transition edges anywhere in the graph.",
+      "deep": "This is a deliberate trade. Edges in a visual graph become unreadable spaghetti at about fifteen nodes, so canopy makes the jump a named one and is honest that it is a goto. The target name is hashed to an integer at author time and resolved back to a node by scanning the graph at runtime, which is why the uniqueness check matters so much.",
+      "types": [
+        "CanopyGoTo",
+        "CanopyGoToAuth",
+        "CanopyStateId"
+      ]
+    },
+    "split": {
+      "short": "Walk the old path and the new one together until they differ.",
+      "deep": "Everything before the divergence is common to both, so those states stay active and never see an exit or an enter. This is what makes deep jumps cheap and what makes a jump to the state you are already in cost nothing. The comparison is a simple loop over two small lists.",
+      "types": [
+        "CanopyStateMachine"
+      ]
+    },
+    "exit": {
+      "short": "Everything below the split exits, deepest first, and history is written here.",
+      "deep": "Each state's blocks are called with the exit signal, and every block is expected to check for it and bail out of its normal work. Forget that check and your block runs while its own state is being torn down, usually just after the data it depends on has gone. Jumping again from inside exit throws, deliberately.",
+      "types": [
+        "CanopyUpdateState",
+        "CanopyBlockAuth"
+      ]
+    },
+    "enter": {
+      "short": "Then down the new branch, shallowest first, with the stored leaf moving along.",
+      "deep": "A composite that has been entered chooses its next child either from history, if it remembers, or from its single default child. That is the ordinary shallow history of a classic state chart, and it costs one extra entry in graph state per remembering parent.",
+      "types": [
+        "CanopyUpdateState",
+        "CanopyStateAuth"
+      ],
+      "goto": "diagrams/04-clientgraph.html",
+      "gotoLabel": "One of these machines, doing a real job"
+    },
+    "reject": {
+      "short": "Two roots, a missing default child, a cycle, or two names that hash alike.",
+      "deep": "The last one is the interesting one. State names collapse to a single integer, so two different names can collide, and the validator checks every pair at author time rather than shipping a one in four billion mystery. It is the same instinct as validating a perfect hash offline: if the lookup must be constant time and correct, prove the key set is clean before you build it.",
+      "types": [
+        "CanopyGraphValidation",
+        "CanopyStateId"
+      ]
+    }
+  }
+}

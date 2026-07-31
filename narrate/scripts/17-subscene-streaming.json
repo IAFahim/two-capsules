@@ -1,0 +1,78 @@
+{
+  "id": "17-subscene-streaming",
+  "title": "What Is Resident, and When",
+  "map": "diagrams/17-subscene-streaming.html",
+  "blurb": "One component is the whole switch. A section loads in a private world nobody can see, then arrives all at once.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "One component is the entire interface",
+      "focus": null,
+      "text": "There is no load function you call and no handle you keep. There is a component. Add it to a scene entity and the section streams in. Remove it and the section streams out. That is the whole public interface, and it means loading is a piece of data rather than a piece of control flow, which in turn means the load state of your world is something a system can query, save and replicate like anything else."
+    },
+    {
+      "id": "resolve",
+      "title": "Two entities you never authored",
+      "focus": "resolve",
+      "text": "Before anything loads, a resolve step reads the section header and creates one meta entity per section, hanging them off the scene entity in a buffer. At that moment the world knows how many sections exist and where they are, and holds none of their contents. The request then propagates from the scene entity down to the section entities unless you asked it not to. So the granularity you are really controlling is not scenes; it is sections, and there is an entity per section sitting there waiting to be switched on individually."
+    },
+    {
+      "id": "elsewhere",
+      "title": "It is deserialized somewhere else on purpose",
+      "focus": "stream",
+      "text": "This is the part that surprises people. A section is not deserialized into your world. It is deserialized into a separate world flagged as streaming, one per section in flight, four in flight by default. That world is populated only with systems carrying a process after load filter, so almost nothing you wrote exists there. Your world never sees a half constructed section, and a system running in your world genuinely cannot observe the intermediate state, because the intermediate state is in a different address space."
+    },
+    {
+      "id": "arrival",
+      "title": "Arrival is a move, not a copy",
+      "focus": "live",
+      "text": "When the streaming world is finished, the entire section is moved across in one bulk operation, and by default only one world is moved per update. Two consequences follow and both are visible in a profile. The section appears all at once, in a single frame, rather than trickling in over several. And the frame it arrives on is the expensive one, because that is where the chunks are relocated and the references are remapped. If your loading hitch has a sharp single frame spike rather than a broad hump, this is where to look."
+    },
+    {
+      "id": "leaving",
+      "title": "Unloading is a query, not a list",
+      "focus": "gone",
+      "text": "Every entity that came from a section carries a shared component naming its section entity. Unloading sets that as a filter and destroys the matching query. Nothing walks a list of loaded entities, because nothing keeps one. The archetype structure does the walking, and the cost scales with matching chunks rather than with entity count. Which is why unloading a big section can be cheaper than you expect, and why an entity that lost its tag becomes a leak nothing will ever collect."
+    }
+  ],
+  "nodes": {
+    "ask": {
+      "short": "Adding one component to the scene entity is the entire load request.",
+      "deep": "It carries a small set of flags: block until imported, block until streamed, do not auto load the sections, load a fresh instance. Everything else about the load is decided by the file. Removing this component is the unload request, so the load state of the world is data, which means it can be inspected, saved and replicated like any other component.",
+      "types": ["RequestSceneLoaded", "SceneLoadFlags", "SceneSystem"]
+    },
+    "resolve": {
+      "short": "Reads the header, then creates one meta entity per section.",
+      "deep": "The header is a small blob listing the sections and their bounding volumes. Resolving it costs a file read and produces a buffer of section entities on the scene entity, with no section contents in memory. From that point the sections are individually switchable, which is the granularity people usually mean when they say streaming.",
+      "types": ["ResolveSceneReferenceSystem", "ResolvedSectionEntity", "SceneSectionData"]
+    },
+    "stream": {
+      "short": "A separate world, flagged as streaming, that your systems do not live in.",
+      "deep": "Four sections can be in flight at once by default, each in its own world. That world is populated only with systems carrying the process after load filter, and the code explicitly refuses to let system entities exist inside it. So your world never observes a partially built section, not because anyone is careful, but because it is not in your address space yet.",
+      "types": ["SceneSectionStreamingSystem", "WorldFlags", "World"],
+      "goto": "diagrams/42-which-world.html",
+      "gotoLabel": "The other worlds in this process"
+    },
+    "after": {
+      "short": "Systems that exist only in the streaming world, given their own filter flag.",
+      "deep": "This is the hook for anything that must happen to a section's data before the rest of the game can see it: fixing up references, building runtime caches, converting a baked representation into a live one. Write one and it will never appear in your game world, because the flag it carries is only ever asked for when a streaming world is being populated.",
+      "types": ["ProcessAfterLoadGroup", "WorldSystemFilterFlags", "ComponentSystemGroup"],
+      "goto": "diagrams/13-bootstrap.html",
+      "gotoLabel": "How a world gets its system list"
+    },
+    "live": {
+      "short": "The whole section moved across in one operation, tagged and queryable.",
+      "deep": "One bulk move, and by default one world moved per update, which serialises arrivals rather than interleaving them. That is why a section appears in a single frame and why that frame costs more than its neighbours. Everything that arrives carries a shared tag naming the section it came from, which is what makes the reverse operation cheap.",
+      "types": ["EntityManager", "SceneTag", "ArchetypeChunk"],
+      "goto": "diagrams/05-chunk-layout.html",
+      "gotoLabel": "What just landed in memory"
+    },
+    "gone": {
+      "short": "Remove the request, and a filtered destroy takes the section out.",
+      "deep": "The shared tag is set as a query filter and the matching entities are destroyed. There is no list, no reference count on individual entities, and no traversal of anything you spawned. The consequence worth remembering is the other direction: an entity you created at runtime and gave no scene tag will never be removed by an unload, which is usually right and occasionally the leak you are hunting.",
+      "types": ["SceneTag", "EntityQuery", "ISharedComponentData"],
+      "goto": "diagrams/08-query-matching.html",
+      "gotoLabel": "How the filtered destroy finds them"
+    }
+  }
+}

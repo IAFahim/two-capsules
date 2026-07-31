@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Two Compilers, One Assembly",
+    "subtitle": "Burst does not speed your code up — it compiles a different language that happens to be spelled like C#, and the way back is a function pointer",
+    "output": "diagrams/10-burst-pipeline.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "pair",
+        "label": "The attribute has to be on both",
+        "focus": [
+          "attrs",
+          "src"
+        ],
+        "note": "On the method and on the containing type. An analyzer warns when you miss the type — and deliberately stays quiet for system structs."
+      },
+      {
+        "id": "compile",
+        "label": "Ahead of time, not just in time",
+        "focus": [
+          "burst",
+          "native"
+        ],
+        "note": "One intermediate form, two compilers. One emits managed code with a collector under it; the other emits machine code with none."
+      },
+      {
+        "id": "door",
+        "label": "The only doorway back",
+        "focus": [
+          "bridge",
+          "managed"
+        ],
+        "note": "Native code cannot call a managed method. It calls an address, parked in a static that both worlds agree on, that happens to point at one."
+      },
+      {
+        "id": "cost",
+        "label": "What crossing costs",
+        "focus": [
+          "native",
+          "managed"
+        ],
+        "note": "Every crossing is an indirect call plus a marshalling boundary, and everything on the far side runs at interpreted-plus-jit speed."
+      }
+    ],
+    "viewBox": [
+      1160,
+      620
+    ]
+  },
+  "stages": [
+    {
+      "label": "what you wrote"
+    },
+    {
+      "label": "one intermediate form"
+    },
+    {
+      "label": "the compiler"
+    },
+    {
+      "label": "the doorway"
+    },
+    {
+      "label": "the far side"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "attrs",
+      "type": "security",
+      "label": "Two attributes",
+      "sublabel": "the type and the method",
+      "tag": "both, or neither",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "src",
+      "type": "cloud",
+      "label": "Your struct",
+      "sublabel": "the code you actually wrote",
+      "tag": "system structs are exempt",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "il",
+      "type": "backend",
+      "label": "Intermediate form",
+      "sublabel": "what the C# compiler emits",
+      "tag": "still managed here",
+      "stage": 1,
+      "row": 1
+    },
+    {
+      "id": "burst",
+      "type": "backend",
+      "label": "Burst",
+      "sublabel": "intermediate form to machine code",
+      "tag": "ahead of time",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "native",
+      "type": "frontend",
+      "label": "Native code",
+      "sublabel": "no collector, no virtual call",
+      "tag": "vectorised",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "bridge",
+      "type": "security",
+      "label": "A shared static",
+      "sublabel": "one address, agreed once",
+      "tag": "the only doorway",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "managed",
+      "type": "external",
+      "label": "Back in managed",
+      "sublabel": "where the deleted bodies live",
+      "tag": "not automatic",
+      "stage": 4,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "attrs",
+      "to": "src",
+      "label": "both, or neither",
+      "classification": "source",
+      "variant": "emphasis"
+    },
+    {
+      "from": "src",
+      "to": "il",
+      "label": "compile",
+      "classification": "source",
+      "variant": "emphasis"
+    },
+    {
+      "from": "il",
+      "to": "burst",
+      "label": "marked methods",
+      "classification": "compile",
+      "variant": "emphasis"
+    },
+    {
+      "from": "burst",
+      "to": "native",
+      "label": "optimise",
+      "classification": "compile",
+      "variant": "emphasis"
+    },
+    {
+      "from": "native",
+      "to": "bridge",
+      "label": "needs managed work",
+      "classification": "cross",
+      "variant": "emphasis"
+    },
+    {
+      "from": "bridge",
+      "to": "managed",
+      "label": "one indirect call",
+      "classification": "cross",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The package is a shim now",
+      "items": [
+        "The Burst package is version 2.0.0 · Burst package, package.json:4",
+        "Its entire runtime folder is one file of type forwarders · Burst package, Runtime/TypeForwarders.cs",
+        "The compiler, the attribute, and the intrinsics all live in the editor now",
+        "So there is no Burst source to read in the project — only what calls it"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The attribute pair, and the exemption",
+      "items": [
+        "Marking the method but not the containing type raises warning EA0010 · Diagnostics.cs:72",
+        "The message names the fix: add the attribute to the type as well · Diagnostics.cs:73",
+        "The analyzer returns without warning for anything implementing the system interface · BurstCompilerAnalyzer.cs:56",
+        "So the one case the handbook warns you about is exactly the case that stays silent"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "How the doorway is actually built",
+      "items": [
+        "A method marked discard has no body in the native build · ECBInterop.interop.gen.cs:26",
+        "Calling it and seeing nothing happen is how the code detects it is native",
+        "The managed address is parked in a shared static both worlds read · ECBInterop.interop.gen.cs:53",
+        "And handed over by marshalling a delegate to a function pointer · ECBInterop.interop.gen.cs:69"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Where this shows up in real code",
+      "items": [
+        "Every managed command handler in the command buffer is marked discard · ECBInterop.cs:50",
+        "The reverse direction compiles a managed delegate into native · ECBInterop.interop.gen.cs:67",
+        "Playback checks a per-chain flag and picks the native or managed walker · EntityCommandBufferPlayback.cs:321",
+        "The entity id table itself is a shared static for the same reason · EntityComponentStoreEntities.cs:22"
+      ]
+    }
+  ]
+}

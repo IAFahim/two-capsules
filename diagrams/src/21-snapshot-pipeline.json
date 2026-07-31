@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "As Much World As Fits",
+    "subtitle": "A snapshot is not the world — it is a prioritised prefix of the world, cut off wherever the packet ends",
+    "output": "diagrams/21-snapshot-pipeline.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "order",
+        "label": "Order first, then encode",
+        "focus": [
+          "sort",
+          "encode"
+        ],
+        "note": "The chunk list is sorted before a single bit is written, so the packet fills in priority order."
+      },
+      {
+        "id": "delta",
+        "label": "The delta is per connection",
+        "focus": [
+          "baselines",
+          "encode"
+        ],
+        "note": "Every client has acknowledged a different tick, so the server keeps a different baseline set for each one."
+      },
+      {
+        "id": "cut",
+        "label": "Where the world gets cut",
+        "focus": [
+          "packet",
+          "cut"
+        ],
+        "note": "Writing stops when the bits run out. Everything below the line simply waits, with its priority rising."
+      },
+      {
+        "id": "land",
+        "label": "Landing on the client",
+        "focus": [
+          "recv",
+          "apply"
+        ],
+        "note": "Bytes go into a per-ghost ring. A separate system decides which tick to read them at."
+      }
+    ],
+    "viewBox": [
+      1200,
+      660
+    ]
+  },
+  "stages": [
+    {
+      "label": "choose"
+    },
+    {
+      "label": "encode"
+    },
+    {
+      "label": "one packet"
+    },
+    {
+      "label": "receive"
+    },
+    {
+      "label": "apply"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "sort",
+      "type": "backend",
+      "label": "Importance sort",
+      "sublabel": "chunks, highest priority first",
+      "tag": "per connection",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "baselines",
+      "type": "database",
+      "label": "Acked baselines",
+      "sublabel": "up to three per entity",
+      "tag": "32-slot history",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "encode",
+      "type": "backend",
+      "label": "Chunk serializer",
+      "sublabel": "change mask, delta, entropy code",
+      "tag": "writes until full",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "packet",
+      "type": "messagebus",
+      "label": "Snapshot packet",
+      "sublabel": "payload minus pipeline header",
+      "tag": "unreliable",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "cut",
+      "type": "external",
+      "label": "Below the cut",
+      "sublabel": "not lost, just not this tick",
+      "tag": "priority keeps rising",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "recv",
+      "type": "database",
+      "label": "Ghost receive",
+      "sublabel": "decode against our baseline",
+      "tag": "ring slot per ghost",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "apply",
+      "type": "frontend",
+      "label": "Ghost update",
+      "sublabel": "read the ring at this ghost's tick",
+      "tag": "two timelines",
+      "stage": 4,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "sort",
+      "to": "encode",
+      "label": "sorted chunks",
+      "classification": "priority",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "baselines",
+      "to": "encode",
+      "label": "what was acked",
+      "classification": "baseline",
+      "toSide": "bottom"
+    },
+    {
+      "from": "encode",
+      "to": "packet",
+      "label": "bits until full",
+      "classification": "wire",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "encode",
+      "to": "cut",
+      "label": "no room left",
+      "classification": "dropped",
+      "variant": "dashed",
+      "fromSide": "bottom"
+    },
+    {
+      "from": "packet",
+      "to": "recv",
+      "label": "may not arrive",
+      "classification": "wire",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "recv",
+      "to": "apply",
+      "label": "tick-stamped",
+      "classification": "state",
+      "variant": "emphasis",
+      "route": "straight"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The five steps, in the order they run",
+      "items": [
+        "Sort the ghost chunks for this one connection by priority",
+        "For each entity pick up to three acknowledged baselines and delta against them",
+        "Write entropy coded bits into the packet until the budget is gone",
+        "The client decodes against the same baselines and writes into a per-ghost ring",
+        "A separate system reads that ring at whichever tick the ghost's timeline names"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Why the cut is a feature",
+      "items": [
+        "There is one packet per connection per network tick and it has a hard ceiling",
+        "Whatever did not fit keeps ageing, so its priority climbs and it goes next time",
+        "Starvation is prevented by the age term, not by a queue",
+        "This is bus arbitration: everyone wants the bus, priority and age decide who gets it"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The baseline is what makes it small",
+      "items": [
+        "The server remembers what each connection last acknowledged, separately",
+        "Three baselines let it extrapolate a prediction and send only the residual",
+        "A near-zero residual costs a handful of bits, so constant velocity is almost free",
+        "The history is thirty two slots, sized for about half a second of round trip"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What it looks like when it goes wrong",
+      "items": [
+        "Cannot fit even one ghost: the packet size doubles and the whole thing is re-serialised",
+        "Acks stop arriving: baselines age out, deltas get large, bandwidth climbs",
+        "Too few chunks examined per tick: the packet goes out half empty",
+        "A ghost that vanishes and reappears usually left the relevant set, it did not despawn"
+      ]
+    }
+  ]
+}

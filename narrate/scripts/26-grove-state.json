@@ -1,0 +1,112 @@
+{
+  "id": "26-grove-state",
+  "title": "Grove State Is the RAM",
+  "map": "diagrams/26-grove-state.html",
+  "blurb": "The image is read only and shared, so everything a node remembers lives in a hash map inside a buffer on the entity.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "A constraint, and its consequence",
+      "focus": null,
+      "text": "Start from a single fact and the rest of this map is forced. The graph image is one blob, shared read only by every entity running that graph. There is exactly one copy of a node's data. So if a node wants to remember something about this entity, there is nowhere in the image it could possibly put it. Read only program store on one side, writable per instance memory on the other. That is a Harvard architecture, and grove state is the memory half."
+    },
+    {
+      "id": "where",
+      "title": "The memory is a buffer on the entity",
+      "focus": "buffer",
+      "text": "It is a dynamic buffer, which means it is entity data like any other. It travels in the chunk, it gets copied when the entity is instantiated, it saves and loads, and it is deleted when the entity is. Nothing had to be written to make any of that work. Choosing entity storage instead of a side table is the whole reason this design has no lifetime problems."
+    },
+    {
+      "id": "untyped",
+      "title": "Untyped, and what that really means",
+      "focus": "arena",
+      "text": "The buffer is declared as an untyped hash map, and that word is doing real work. Inside one buffer there is a header, a bucket array, a key array, a per entry size array, and a data region. Values are bump allocated into that data region and the size of each one is stored beside it as a small integer. So a boolean can sit next to a connection snapshot next to a node identifier, in the same map, and everything is still one allocation. It is a tiny arena allocator living inside a component."
+    },
+    {
+      "id": "key",
+      "title": "Why the key is four words wide",
+      "focus": "key",
+      "text": "The key starts with the graph identifier, then an owner scope, then the local key itself. Graph first, because one entity can be running more than one graph and their memory must not alias. Scope next, because the same node can appear in several places and each copy deserves its own memory. And because the graph identifier leads, tearing one graph down is a scan for entries whose first word matches, and a remove. Deallocation by prefix."
+    },
+    {
+      "id": "canopy",
+      "title": "The state machine is just another tenant",
+      "focus": "canopy",
+      "text": "This is the part that surprised me. The hierarchical state machine on top of grove does not get its own storage. It keeps its active leaf, its per parent history, and its transition version in the same map, under keys taken from the very top of the number space and counting down. Which means the executor's entire query is: entities that have this buffer. There is no state machine component to look for. The machine is a handful of entries in the memory of the machine it runs on."
+    }
+  ],
+  "nodes": {
+    "blob": {
+      "short": "The graph image: structure, constants and wiring, identical for everyone.",
+      "deep": "It is a blob, so it is relocatable bytes with no addresses inside. That is exactly what makes it shareable, and exactly what makes it useless as storage. Anything in here is the same for the ten thousandth entity as it was for the first.",
+      "types": [
+        "GraphData",
+        "BlobAssetReference"
+      ],
+      "goto": "diagrams/25-grove-vm.html",
+      "gotoLabel": "How that image gets built in the first place"
+    },
+    "node": {
+      "short": "A node's method: static, and holding nothing at all between calls.",
+      "deep": "Because there is one copy of the method and one copy of its data, a field on either would be a field shared by every entity in the world. So nodes read and write the map instead. Once you see that, the slightly ceremonial look of node code stops being ceremony and starts being the only option.",
+      "types": [
+        "ExecuteNodeAttribute",
+        "ExecutionHeader"
+      ]
+    },
+    "ctx": {
+      "short": "The context's handle on the buffers for the chunk being processed.",
+      "deep": "It is refreshed once per chunk rather than once per entity, and then indexed by the entity's slot inside that chunk. So getting at an entity's memory is an array index, not a lookup. This is the same trick every other system in this codebase uses, applied to a container that happens to be a hash map.",
+      "types": [
+        "BufferContainer",
+        "GroveContext",
+        "IContext"
+      ]
+    },
+    "key": {
+      "short": "Graph, then owner scope, then the local key. Built fresh on every access.",
+      "deep": "It is never stored, only computed, which is why it can be four words wide without costing anything in the buffer. The ordering matters more than the width: graph first means an entire graph's memory can be found and removed by matching one field.",
+      "types": [
+        "GroveStateKey",
+        "GraphStateUtil"
+      ]
+    },
+    "buffer": {
+      "short": "A dynamic buffer on the entity, which is where all of it actually lives.",
+      "deep": "Entity data, so it moves with the entity through chunks, survives instantiate, and serialises for free. Its declared element is a single byte, because the element type is a formality: the real layout is a hash map header and everything that follows it.",
+      "types": [
+        "GroveState",
+        "IDynamicUntypedHashMap",
+        "DynamicBuffer"
+      ]
+    },
+    "map": {
+      "short": "Buckets, keys and a next array, all addressed as offsets from the header.",
+      "deep": "Because every internal reference is an offset rather than a pointer, the whole structure survives being moved when the buffer grows or when the entity changes chunk. It is the same discipline the blob uses, applied to writable memory instead of read only memory.",
+      "types": [
+        "DynamicUntypedHashMap",
+        "DynamicUntypedHashMapHelper",
+        "DynamicHashMap"
+      ],
+      "goto": "diagrams/30-core-containers.html",
+      "gotoLabel": "The container library this comes from"
+    },
+    "arena": {
+      "short": "Values are bump allocated into a data region, with each size stored beside it.",
+      "deep": "That is what lets one map hold values of different types and different sizes. The price is that nothing checks your type on the way back out: read an entry as the wrong struct and you get bytes, not an exception. In practice a node always uses its own key with its own type, so the risk is theoretical until someone gets clever.",
+      "types": [
+        "DynamicUntypedHashMapHelper"
+      ]
+    },
+    "canopy": {
+      "short": "The state machine's cursor and history, kept as ordinary entries in the same map.",
+      "deep": "The active leaf, one history entry per remembering parent, and a transition version counter. Their keys are carved out of the top of the number space, counting downward, so they cannot collide with anything a node would ever choose. The machine has no storage of its own at all.",
+      "types": [
+        "CanopyStateStorage",
+        "CanopyStateMachine"
+      ],
+      "goto": "diagrams/27-canopy-hsm.html",
+      "gotoLabel": "What that one number is actually doing"
+    }
+  }
+}

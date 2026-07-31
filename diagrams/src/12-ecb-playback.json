@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Record Now, Merge Later",
+    "subtitle": "Every worker writes its own lock-free chain; playback merges them with a heap keyed on a number you chose",
+    "output": "diagrams/12-ecb-playback.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "lockfree",
+        "label": "Why there is no lock",
+        "focus": [
+          "key",
+          "chain"
+        ],
+        "note": "Each worker thread owns its own chain of blocks. Two threads never touch the same bytes, so recording needs no synchronisation at all."
+      },
+      {
+        "id": "order",
+        "label": "The number you choose is the order",
+        "focus": [
+          "chain",
+          "heap"
+        ],
+        "note": "Playback is a k-way merge of the chains, always taking the smallest key next. Pass the same key twice and the tie is not defined."
+      },
+      {
+        "id": "serial",
+        "label": "The merge is the barrier",
+        "focus": [
+          "flush",
+          "apply"
+        ],
+        "note": "Playback completes the producer jobs, then applies every recorded change on the main thread. One barrier instead of hundreds."
+      },
+      {
+        "id": "ids",
+        "label": "The handles were never fake",
+        "focus": [
+          "real",
+          "last"
+        ],
+        "note": "Recording a create allocates a real entity id on the spot. It simply has no chunk until playback puts it in one."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "job",
+      "label": "inside a parallel job"
+    },
+    {
+      "id": "chains",
+      "label": "one chain per thread"
+    },
+    {
+      "id": "sys",
+      "label": "the playback system"
+    },
+    {
+      "id": "merge",
+      "label": "the merge"
+    },
+    {
+      "id": "world",
+      "label": "the world changes"
+    },
+    {
+      "id": "odd",
+      "label": "the two surprises",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "ph1",
+      "label": "record",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "ph2",
+      "label": "flush and merge",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "ph3",
+      "label": "apply",
+      "fromCol": 4,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "key",
+    "chain",
+    "flush",
+    "heap",
+    "apply"
+  ],
+  "nodes": [
+    {
+      "id": "key",
+      "lane": "job",
+      "col": 0,
+      "type": "cloud",
+      "label": "Sort key",
+      "sublabel": "you pick the order",
+      "tag": "chunk index in query"
+    },
+    {
+      "id": "chain",
+      "lane": "chains",
+      "col": 1,
+      "type": "database",
+      "label": "Your chain",
+      "sublabel": "4 KiB blocks, no lock",
+      "tag": "one per worker"
+    },
+    {
+      "id": "flush",
+      "lane": "sys",
+      "col": 2,
+      "type": "security",
+      "label": "Barrier",
+      "sublabel": "producers completed",
+      "tag": "a known system"
+    },
+    {
+      "id": "heap",
+      "lane": "merge",
+      "col": 3,
+      "type": "backend",
+      "label": "Min heap",
+      "sublabel": "smallest key first",
+      "tag": "a k-way merge"
+    },
+    {
+      "id": "apply",
+      "lane": "world",
+      "col": 4,
+      "type": "frontend",
+      "label": "Applied",
+      "sublabel": "one at a time, main",
+      "tag": "structural"
+    },
+    {
+      "id": "last",
+      "lane": "odd",
+      "col": 5,
+      "type": "external",
+      "label": "Main thread",
+      "sublabel": "its key is int max",
+      "tag": "so it plays last"
+    },
+    {
+      "id": "real",
+      "lane": "odd",
+      "col": 1,
+      "type": "external",
+      "label": "Real ids",
+      "sublabel": "minted when recorded",
+      "tag": "not placeholders"
+    }
+  ],
+  "edges": [
+    {
+      "from": "key",
+      "to": "chain",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "chain",
+      "to": "flush",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "flush",
+      "to": "heap",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "heap",
+      "to": "apply",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "chain",
+      "to": "real",
+      "role": "branch",
+      "variant": "dashed"
+    },
+    {
+      "from": "apply",
+      "to": "last",
+      "role": "branch",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Why recording needs no lock",
+      "items": [
+        "There is one chain per worker thread, plus one for the main thread · EntityCommandBuffer.cs:288",
+        "A parallel writer picks its chain from the thread index alone · EntityCommandBufferParallelWriter.cs:82",
+        "Each chain is a linked list of blocks, four kibibytes by default · EntityCommandBuffer.cs:93",
+        "Commands are appended by bumping an offset inside the current block"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Playback is a k-way merge",
+      "items": [
+        "Every non-empty chain becomes one entry in a priority queue · EntityCommandBufferPlayback.cs:303",
+        "Pop the smallest key, run that chain until it passes the next-smallest · line 306",
+        "Then push the chain back with its new head key and repeat · line 340",
+        "The heap orders strictly on the key, so the thread that recorded it is irrelevant"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The key is the whole contract",
+      "items": [
+        "The documentation names the chunk index in the query as the value to pass · EntityCommandBufferParallelWriter.cs:87",
+        "That index is stable for a given world state, which is what makes playback repeatable",
+        "Main-thread commands are stamped with the largest possible integer · EntityCommandBuffer.cs:437",
+        "So anything you record outside a job is applied after everything recorded inside one"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The handles were never placeholders",
+      "items": [
+        "Recording a create allocates real entity ids immediately · EntityCommandBuffer.cs:499",
+        "The parallel writer does exactly the same from inside a job · EntityCommandBufferParallelWriter.cs:156",
+        "The documentation says it plainly: valid at once, no chunk until playback · EntityCommandBuffer.cs:485",
+        "There is even a source comment worrying about the atomic contention this costs · line 153 of the parallel writer"
+      ]
+    }
+  ]
+}

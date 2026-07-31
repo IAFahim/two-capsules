@@ -1,0 +1,131 @@
+{
+  "id": "23-interpolation",
+  "title": "The Delay Line",
+  "map": "diagrams/23-interpolation.html",
+  "blurb": "An irregular write pointer, a servo-driven read pointer, and the guess it makes when the waypoints run out.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Only the buffer, this time",
+      "focus": null,
+      "text": "The decision about which entities are interpolated at all belongs elsewhere. This map assumes that decision is made and opens the box. Inside is a queue with two pointers moving at different rhythms, a depth that is not the depth you configured, a clock that slews rather than steps, and an extrapolation path that most people are told does not exist. If you have ever tuned an elastic buffer between two clock domains, you will recognise every single part of this, including which knob you will reach for first and why it will be the wrong one."
+    },
+    {
+      "id": "write",
+      "title": "The write side is irregular",
+      "focus": "ring",
+      "text": "Packets land whenever the network delivers them, which is not a rhythm. Each one is decoded and dropped into a slot in a ring, and the slot is stamped with the tick it describes. Thirty two slots per ghost by default, and an index recording which slot is newest. That is the whole write side. It is a circular buffer with a timestamp per entry, and the consumer reads by timestamp rather than by position, which is the design choice that makes everything else possible."
+    },
+    {
+      "id": "depth",
+      "title": "The depth is not what you set",
+      "focus": "delay",
+      "text": "Here is the first surprise. You configure a window of two network ticks. That is a floor, not a value. Alongside it netcode measures the actual gap between arriving snapshots, keeps a mean and an approximate deviation, and computes a competing depth as mean plus one and a quarter deviations. The larger of the two wins, clamped at six network intervals. So a jittery link deepens your buffer on its own, without telling you, and the latency you measured on a clean connection is not the latency your players get."
+    },
+    {
+      "id": "servo",
+      "title": "The read pointer is a servo",
+      "focus": "read",
+      "text": "The read pointer does not jump to where it should be. It corrects a tenth of the remaining error per frame, with its rate clamped between eighty five hundredths and one and a tenth of normal speed. Only an error above ten ticks makes it give up and snap outright. So the read pointer is a phase locked loop with a bounded slew rate and a fallback to a hard resync. Every visible smoothness property of interpolated motion comes from those three numbers, and all three are on the same settings struct."
+    },
+    {
+      "id": "bracket",
+      "title": "Finding the two waypoints",
+      "focus": "bracket",
+      "text": "To produce a value, the lookup walks the ring from newest backwards. Anything newer than the target becomes the after waypoint, overwritten each time it finds something closer. The first slot at or older than the target becomes the before waypoint. Then the factor is the distance from before to target divided by the distance from before to after, plus the fractional part of the tick if we are mid tick. Two known good points and a position between them. Late, but never invented."
+    },
+    {
+      "id": "extrap",
+      "title": "Except when it is invented",
+      "focus": "extrap",
+      "text": "And here is where the usual teaching is wrong, including this book's own interpolation chapter. If there is no slot newer than the target, and the ghost is dynamic rather than static, the lookup does not hold the last value. It takes the before waypoint and the one behind it, runs that pair forward, and inverts the factor. That is extrapolation, and it is on by default. It is clamped at twenty simulation ticks, after which it holds. A static ghost never takes that path, and a ghost with exactly one slot has its factor pinned to zero and does not move at all."
+    },
+    {
+      "id": "tuning",
+      "title": "What each failure looks like",
+      "focus": "jitter",
+      "text": "Now you can read the symptoms directly off the mechanism. Visible teleporting means the read pointer outran the write pointer and extrapolation ran past its clamp. Smooth but noticeably late means the measured depth won over your configured one, which means the link is worse than you think. A brief freeze followed by a jump means a ghost fell out of the relevant set and came back with a gap in its ring. And motion that is smooth on a clean link and jerky under loss usually means the depth is oscillating, which is the correction fraction being too aggressive."
+    }
+  ],
+  "nodes": {
+    "arrive": {
+      "short": "A packet lands. Irregular by nature, and that irregularity is the whole problem.",
+      "deep": "The gap between arrivals is measured every time, in both wall clock milliseconds and in simulation ticks. Those two measurements feed different things: the tick delta feeds the depth calculation, the wall clock delta feeds the perceived send rate. Neither is the number the server thinks it is sending at.",
+      "types": [
+        "GhostReceiveSystem",
+        "NetworkSnapshotAck",
+        "NetworkTick"
+      ],
+      "goto": "diagrams/21-snapshot-pipeline.html",
+      "gotoLabel": "What produced this packet"
+    },
+    "ring": {
+      "short": "Thirty two tick-stamped slots per ghost, with an index naming the newest.",
+      "deep": "It is a circular buffer where the consumer reads by timestamp rather than by position. The default of thirty two is sized for about half a second of round trip at sixty hertz. Two smaller sizes exist behind compile symbols, and shrinking it trades memory against the server's ability to delta compress, because unacknowledged slots stop being usable as baselines.",
+      "types": [
+        "SnapshotData",
+        "SnapshotDataBuffer",
+        "GhostSystemConstants",
+        "SnapshotDynamicDataBuffer"
+      ],
+      "goto": "diagrams/05-chunk-layout.html",
+      "gotoLabel": "Where this buffer actually lives in memory"
+    },
+    "jitter": {
+      "short": "The measured gap between arrivals: a mean and an approximate deviation.",
+      "deep": "Both are exponential moving averages, and the deviation reacts faster than the mean deliberately, so that a burst of loss widens the buffer quickly and a return to normal narrows it slowly. The deviation is multiplied by a jitter scale of one and a quarter before it is used, which is a safety margin you can tune.",
+      "types": [
+        "NetworkTimeSystemData",
+        "ClientTickRate",
+        "NetworkTimeSystem"
+      ]
+    },
+    "delay": {
+      "short": "The larger of your configured window and the jitter derived estimate.",
+      "deep": "Your setting is a floor expressed in network ticks, converted into simulation ticks by the ratio between the two rates. The competing estimate is the measured arrival gap plus jitter, clamped at six network intervals. Whichever is larger wins, and it moves toward its target no faster than a tenth of the frame's ticks, so the depth itself is rate limited.",
+      "types": [
+        "ClientTickRate",
+        "ClientServerTickRate",
+        "NetworkTimeSystemData"
+      ],
+      "goto": "diagrams/20-tick-timeline.html",
+      "gotoLabel": "How this depth positions the whole timeline"
+    },
+    "read": {
+      "short": "The interpolation tick: the arrival estimate minus the depth, slewed not stepped.",
+      "deep": "It corrects a tenth of its remaining error per frame with its rate clamped between eighty five hundredths and one and a tenth. Only an error above ten ticks causes an outright snap. That is a phase locked loop with a bounded slew and a hard resync fallback, and those three numbers are the entire smoothness budget.",
+      "types": [
+        "NetworkTime",
+        "NetworkTimeSystemData",
+        "ClientTickRate",
+        "NetworkTick"
+      ],
+      "goto": "diagrams/20-tick-timeline.html",
+      "gotoLabel": "This pointer as one of four timelines"
+    },
+    "bracket": {
+      "short": "The two slots straddling the read pointer, and a factor between zero and one.",
+      "deep": "The lookup walks the ring from newest backwards, keeping the closest slot newer than the target and taking the first slot at or older than it. The factor is how far the target sits between them, plus the fractional part of the tick. With only one usable slot the factor is pinned to zero, which is why a ghost that has just appeared sits still for a moment.",
+      "types": [
+        "DataAtTick",
+        "SnapshotData",
+        "GhostUpdateSystem",
+        "SmoothingAction"
+      ],
+      "goto": "diagrams/41-clock-domains.html",
+      "gotoLabel": "Why this entity is on this timeline at all"
+    },
+    "extrap": {
+      "short": "No slot newer than the target, so the last known pair is run forward.",
+      "deep": "It takes the before waypoint and the one behind it, extends that segment past the target, and inverts the interpolation factor. The clamp is twenty simulation ticks by default, after which it holds. Static ghosts never take this path. This is the part most explanations of interpolation leave out, including the interpolation chapter in this book.",
+      "types": [
+        "ClientTickRate",
+        "DataAtTick",
+        "SnapshotData",
+        "GhostUpdateSystem"
+      ],
+      "goto": "diagrams/38-profiling.html",
+      "gotoLabel": "Reading this failing, in the counters"
+    }
+  }
+}

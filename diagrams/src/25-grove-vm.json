@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Grove Is a Bytecode VM",
+    "subtitle": "A graph you drew becomes an instruction image, and a switch statement written by a compiler decodes it",
+    "output": "diagrams/25-grove-vm.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "compile",
+        "label": "The compile half",
+        "focus": [
+          "graph",
+          "auth",
+          "blob"
+        ],
+        "note": "Editor object, then one object file per node, then one linked image. Nothing designer-shaped survives."
+      },
+      {
+        "id": "opcode",
+        "label": "Where the opcode comes from",
+        "focus": [
+          "auth",
+          "attr",
+          "swi"
+        ],
+        "note": "The same integer is written by the authoring side and claimed by the code side. They must agree."
+      },
+      {
+        "id": "dispatch",
+        "label": "The decode step",
+        "focus": [
+          "header",
+          "swi",
+          "exec"
+        ],
+        "note": "Read an int out of the image, jump. No delegate, no virtual call, nothing a blob could not hold."
+      },
+      {
+        "id": "reach",
+        "label": "How a node touches the world",
+        "focus": [
+          "ctx",
+          "exec"
+        ],
+        "note": "The instruction is pure. Everything it can see arrives by reference, in the context struct."
+      }
+    ],
+    "viewBox": [
+      1260,
+      700
+    ]
+  },
+  "stages": [
+    {
+      "label": "author"
+    },
+    {
+      "label": "import"
+    },
+    {
+      "label": "bake"
+    },
+    {
+      "label": "decode"
+    },
+    {
+      "label": "dispatch"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "graph",
+      "type": "frontend",
+      "label": "Graph asset",
+      "sublabel": "nodes and wires, one text file",
+      "tag": "editor only",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "auth",
+      "type": "cloud",
+      "label": "Node objects",
+      "sublabel": "one each, opcode included",
+      "tag": "object file",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "blob",
+      "type": "database",
+      "label": "Graph blob",
+      "sublabel": "offsets, never addresses",
+      "tag": "read-only",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "header",
+      "type": "database",
+      "label": "Header",
+      "sublabel": "int, id, payload behind",
+      "tag": "one instruction",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "attr",
+      "type": "security",
+      "label": "Opcode claim",
+      "sublabel": "attribute on a method",
+      "tag": "compile time",
+      "stage": 3,
+      "row": 1
+    },
+    {
+      "id": "ctx",
+      "type": "cloud",
+      "label": "Context",
+      "sublabel": "buffers and lookups",
+      "tag": "yours to define",
+      "stage": 3,
+      "row": 2
+    },
+    {
+      "id": "swi",
+      "type": "backend",
+      "label": "Generated switch",
+      "sublabel": "one per context type",
+      "tag": "jump table",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "exec",
+      "type": "backend",
+      "label": "The method",
+      "sublabel": "static, Burst, no fields",
+      "tag": "instruction set",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "graph",
+      "to": "auth",
+      "label": "import",
+      "classification": "asset",
+      "variant": "emphasis"
+    },
+    {
+      "from": "auth",
+      "to": "blob",
+      "label": "bake",
+      "classification": "bake",
+      "variant": "emphasis"
+    },
+    {
+      "from": "blob",
+      "to": "header",
+      "label": "root first",
+      "classification": "runtime",
+      "variant": "emphasis"
+    },
+    {
+      "from": "header",
+      "to": "swi",
+      "label": "int type",
+      "classification": "opcode",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -26
+    },
+    {
+      "from": "swi",
+      "to": "exec",
+      "label": "case",
+      "classification": "runtime",
+      "variant": "emphasis"
+    },
+    {
+      "from": "attr",
+      "to": "swi",
+      "label": "opcode claim",
+      "classification": "codegen",
+      "variant": "dashed"
+    },
+    {
+      "from": "ctx",
+      "to": "exec",
+      "label": "by reference",
+      "classification": "runtime"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "One node, four shapes",
+      "items": [
+        "In the editor it is a box you can drag — source code",
+        "After import it is a settings object holding its own opcode — the object file",
+        "After bake it is a run of bytes inside one blob — the image",
+        "At runtime it is a static method the switch jumps to — the instruction set"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The opcode, from both ends",
+      "items": [
+        "Authoring declares it · Grove BovineLabs.Grove.Authoring/Nodes/GroveAuth.cs:21",
+        "Code claims it · Grove BovineLabs.Grove/Attributes/ExecuteNodeAttribute.cs:13",
+        "The generator matches on the attribute name · Grove SourceGenerator~/NodeFilter.cs:20",
+        "Canopy takes a negative range · Canopy BovineLabs.Canopy.Data/CanopyExecutionTypes.cs:10"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Why a switch and not a delegate",
+      "items": [
+        "A blob is relocatable bytes, so it cannot hold a function pointer",
+        "So the instruction stores an int, and the decode has to live in code",
+        "The generator emits that decode · Grove SourceGenerator~/ContextGenerator.cs:294",
+        "Burst turns a dense int switch into a jump table, and can inline through it"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Reading the pipeline in source",
+      "items": [
+        "Importer · Grove BovineLabs.Grove.Editor/GroveImporter.cs:19",
+        "Blob layout · Grove BovineLabs.Grove/GraphData.cs:17, root pointer at :23",
+        "Instruction · Grove BovineLabs.Grove/Core/ExecutionHeader.cs:13",
+        "Entry point · Grove BovineLabs.Grove/Core/ExecutionHeaderExtensions.cs:15"
+      ]
+    }
+  ]
+}

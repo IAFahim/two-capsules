@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "The Barrier You Paid For",
+    "subtitle": "A structural change cannot start until every tracked job everywhere in the world has finished — and the bill arrives twice",
+    "output": "diagrams/11-sync-points.html",
+    "viewBox": [
+      1180,
+      720
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "why",
+        "label": "Why it has to stop",
+        "focus": [
+          "ask",
+          "wait"
+        ],
+        "note": "Moving an entity invalidates raw pointers into chunks. Any job still holding one would be reading freed memory."
+      },
+      {
+        "id": "scope",
+        "label": "It is not selective",
+        "focus": [
+          "wait",
+          "idle"
+        ],
+        "note": "Not the jobs that touch this archetype. Every fence of every type, combined into one handle, then waited on."
+      },
+      {
+        "id": "second",
+        "label": "The bill you are not shown",
+        "focus": [
+          "change",
+          "caches"
+        ],
+        "note": "The stall is the visible cost. The dropped chunk-list caches are billed to whichever system iterates next."
+      },
+      {
+        "id": "avoid",
+        "label": "Paying once instead of often",
+        "focus": [
+          "ask",
+          "ecb"
+        ],
+        "note": "Recording defers the change to a known system, so many small barriers collapse into one you can see in the profiler."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "the main thread"
+    },
+    {
+      "id": "terminal",
+      "label": "what it actually costs"
+    }
+  ],
+  "states": [
+    {
+      "id": "running",
+      "type": "start",
+      "label": "Scheduling",
+      "sublabel": "jobs in flight, nobody waits",
+      "lane": "main",
+      "col": 0,
+      "step": "01",
+      "tag": "the normal state"
+    },
+    {
+      "id": "ask",
+      "type": "decision",
+      "label": "Structural change",
+      "sublabel": "add, remove, create, destroy",
+      "lane": "main",
+      "col": 1,
+      "step": "02",
+      "tag": "any of the four"
+    },
+    {
+      "id": "wait",
+      "type": "waiting",
+      "label": "Complete everything",
+      "sublabel": "every fence, of every type",
+      "lane": "main",
+      "col": 2,
+      "step": "03",
+      "tag": "the barrier"
+    },
+    {
+      "id": "change",
+      "type": "active",
+      "label": "The change happens",
+      "sublabel": "one thread, by definition",
+      "lane": "main",
+      "col": 3,
+      "step": "04",
+      "tag": "a copy per entity"
+    },
+    {
+      "id": "resume",
+      "type": "success",
+      "label": "Back to scheduling",
+      "sublabel": "the fence table is empty",
+      "lane": "main",
+      "col": 4,
+      "step": "05",
+      "tag": "the graph restarts"
+    },
+    {
+      "id": "ecb",
+      "type": "external",
+      "label": "Record it instead",
+      "sublabel": "played back at a known system",
+      "lane": "terminal",
+      "col": 0,
+      "tag": "one barrier, not many"
+    },
+    {
+      "id": "idle",
+      "type": "waiting",
+      "label": "Workers go idle",
+      "sublabel": "nothing is queued behind it",
+      "lane": "terminal",
+      "col": 1,
+      "tag": "the visible cost"
+    },
+    {
+      "id": "caches",
+      "type": "neutral",
+      "label": "Chunk lists dropped",
+      "sublabel": "every query on that archetype",
+      "lane": "terminal",
+      "col": 2,
+      "tag": "billed to the next system"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "asks",
+      "from": "running",
+      "to": "ask",
+      "label": "a system asks",
+      "labelDy": 56
+    },
+    {
+      "id": "immediate",
+      "from": "ask",
+      "to": "wait",
+      "variant": "emphasis",
+      "label": "immediately",
+      "labelDy": -56
+    },
+    {
+      "id": "signalled",
+      "from": "wait",
+      "to": "change",
+      "variant": "emphasis",
+      "label": "all fences signalled",
+      "labelDy": -56
+    },
+    {
+      "id": "cleared",
+      "from": "change",
+      "to": "resume",
+      "variant": "emphasis",
+      "label": "table cleared",
+      "labelDy": -56
+    },
+    {
+      "id": "defer",
+      "from": "ask",
+      "to": "ecb",
+      "variant": "dashed",
+      "route": "drop",
+      "label": "or record it"
+    },
+    {
+      "id": "stall",
+      "from": "wait",
+      "to": "idle",
+      "variant": "security",
+      "route": "drop",
+      "label": "cores stall"
+    },
+    {
+      "id": "drop",
+      "from": "change",
+      "to": "caches",
+      "route": "drop",
+      "label": "caches invalidated"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What the barrier actually is",
+      "items": [
+        "Every structural change calls the same guard first · EntityDataAccess.cs:406",
+        "Which completes all jobs and invalidates arrays · EntityDataAccess.cs:415",
+        "That combines the fences of every registered type into one handle · ComponentDependencyManager.cs:147",
+        "Waits on it, then forgets every fence it was tracking · ComponentDependencyManager.cs:148"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "How to see one in the profiler",
+      "items": [
+        "The wait is wrapped in a marker literally named CompleteAllJobs · ComponentDependencyManager.cs:120",
+        "It is skipped entirely when no fences are registered · ComponentDependencyManager.cs:143",
+        "So a frame with no scheduled jobs pays nothing for its structural changes",
+        "And a frame with a deep job graph pays for the deepest chain in it"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The bill nobody shows you",
+      "items": [
+        "After the change, new archetypes are pushed to every query · EntityDataAccess.cs:487",
+        "Then every changed archetype drops its queries' chunk caches · EntityDataAccess.cs:490",
+        "The walk follows a linked list of archetypes touched this batch · EntityComponentStore.cs:2682",
+        "Those caches are rebuilt lazily, so the cost lands on the next system to iterate"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The three honest levers",
+      "items": [
+        "Record into a command buffer so many barriers become one · EntityCommandBufferSystem.cs:180",
+        "Use enableable components so a boolean never moves an entity between chunks",
+        "Operate on a whole query at once rather than one entity at a time",
+        "There is also an attribute that forces a barrier every update, if you truly need one · AlwaysSynchronizeSystemAttribute.cs:11"
+      ]
+    }
+  ]
+}

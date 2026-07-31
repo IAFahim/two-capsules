@@ -1,0 +1,117 @@
+{
+  "id": "30-core-containers",
+  "title": "The Floor Everything Stands On",
+  "map": "diagrams/30-core-containers.html",
+  "blurb": "Seen from inside a job: where a tuned number comes from, where a map is allowed to live, and how a line of text gets out.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "The layer nobody demos",
+      "focus": null,
+      "text": "Every package above this one is built on the same handful of primitives, and none of them are exciting to look at. A way to get a tuned number into a job. A way to get a line of text out. Containers you are allowed to use where the ordinary ones are illegal. It is the standard library of this stack, and reading it is the fastest way to understand why the code above it looks the way it does."
+    },
+    {
+      "id": "routing",
+      "title": "Settings are routed before the game runs",
+      "focus": "router",
+      "text": "This one caught me out. There is no runtime system that reads an attribute and decides which world a settings asset belongs in. The attribute is read in the editor, when the asset is created, and the editor writes that asset into the array on a particular prefab. By the time you press play the decision is already baked into a scene. So if a settings entity is in the wrong world, the bug is not in a system anywhere; it is in which prefab that asset was written onto, months ago."
+    },
+    {
+      "id": "log",
+      "title": "Why the logging API looks so strange",
+      "focus": "log",
+      "text": "Every call takes a fixed capacity string, and the capacity is spelled out in the method name. That looks like bad taste until you remember the constraint: compiled fast code cannot build a managed string at all, because building one means allocating. A fixed capacity string is a value type with its bytes inline, so it can be assembled on the stack. The capacity has to be in the name because it is part of the type. And the verbose and debug levels are compiled out entirely rather than filtered at runtime, so an unused log line costs literally nothing in a shipped build."
+    },
+    {
+      "id": "cfg",
+      "title": "Config vars, and one ordering trick",
+      "focus": "cfg",
+      "text": "A config var is an attribute on a static shared field, which is the one storage class that both managed code and compiled fast code can read. The scan is opt in at the type level, so it is an index rather than a sweep of every assembly. And there is a small detail worth stealing: the manager deliberately initialises the logging level variable first, before all the others, so that if anything goes wrong initialising the rest it has somewhere to report it to."
+    },
+    {
+      "id": "containers",
+      "title": "Two containers worth stealing",
+      "focus": "dyn",
+      "text": "The first is a hash map whose entire storage is a dynamic buffer on an entity. Buckets, keys and values all live in that one allocation, addressed by offsets. Which means the map serialises, copies on instantiate, and dies with its entity, all for free. The second is a stream bucketed by worker thread rather than by element index. The engine's own version needs to know how many buckets to make before you schedule; this one asks the job system how many threads there are and stops caring. No count up front, and it works from any job shape at all."
+    }
+  ],
+  "nodes": {
+    "asset": {
+      "short": "An ordinary settings object, marked with a world attribute.",
+      "deep": "The marker interface is what makes it discoverable by the settings window and the creation path; the world attribute is what makes it land somewhere specific. A separate base class exists for the kind that bakes components onto an entity, which is how a settings asset can push arbitrary data into a world without owning a behaviour of its own.",
+      "types": [
+        "ISettings",
+        "SettingsBase",
+        "SettingsWorldAttribute"
+      ]
+    },
+    "router": {
+      "short": "The editor reads the attribute and writes the asset onto a prefab.",
+      "deep": "There is a small routing table mapping world names to authoring objects, with a default for anything unmatched. All of this happens at asset creation time. Nothing at runtime ever looks at the attribute again, which is why the failure mode is a missing entity rather than an error message.",
+      "types": [
+        "EditorSettingsUtility",
+        "SettingsAuthoring"
+      ]
+    },
+    "entity": {
+      "short": "One baked entity per world, carrying whatever the assets asked for.",
+      "deep": "The baker tags it and then delegates to each asset in turn, taking a dependency on the asset so that editing it re-bakes the scene. Forget that dependency in your own settings type and you will edit values, see nothing change, and lose an afternoon.",
+      "types": [
+        "SettingsTag",
+        "SettingsAuthoring"
+      ]
+    },
+    "cfg": {
+      "short": "A static shared field with an attribute, readable from compiled fast code.",
+      "deep": "Shared statics are the vehicle because they are the only storage both worlds can see. Registration happens on code load, and command line arguments of the matching name override the stored value, which is what makes a headless server tunable without a build.",
+      "types": [
+        "ConfigVarAttribute",
+        "ConfigurableAttribute",
+        "ConfigVarManager"
+      ]
+    },
+    "job": {
+      "short": "Your compiled code: no managed types, no allocator, no exceptions.",
+      "deep": "Everything on this map exists because of that constraint. Each arrow into this node is a way of getting information in past the boundary, and each arrow out is a way of getting something back past it. Once you see the layer that way, the odd looking parts stop looking odd.",
+      "types": [
+        "IEntityCommands",
+        "BakerCommands",
+        "CommandBufferCommands",
+        "EntityManagerCommands"
+      ],
+      "goto": "diagrams/25-grove-vm.html",
+      "gotoLabel": "A whole virtual machine built on this floor"
+    },
+    "log": {
+      "short": "Fixed capacity strings only, because that is all that can be built in place.",
+      "deep": "Inside a system you fetch the logger as a singleton, so every line is stamped with which world and which frame produced it. Outside a system there is a global with the same shape. The level is checked before the string is assembled, and the verbose and debug variants are compiled away entirely in a shipped build.",
+      "types": [
+        "BLLogger",
+        "BLGlobalLogger",
+        "BLDebugSystem",
+        "LogLevel"
+      ]
+    },
+    "dyn": {
+      "short": "A hash map whose entire storage is one dynamic buffer on an entity.",
+      "deep": "Header, buckets, keys and values in one allocation, addressed as offsets so the structure survives being moved. Because it is entity data it serialises, copies on instantiate, participates in change filtering, and dies with its entity. There are set, multi map and perfect hash variants of the same idea.",
+      "types": [
+        "DynamicHashMap",
+        "DynamicMultiHashMap",
+        "DynamicPerfectHashMap"
+      ],
+      "goto": "diagrams/26-grove-state.html",
+      "gotoLabel": "The most interesting user of this container"
+    },
+    "stream": {
+      "short": "One bucket per worker thread rather than one per element index.",
+      "deep": "The engine's own stream makes you supply the bucket count when you schedule, which means you need a length before you have one. This one asks the job system how many threads exist and lets each writer pick its own bucket. So it works from any job shape, and its size is bounded by cores rather than by entities.",
+      "types": [
+        "NativeThreadStream",
+        "UnsafeThreadStream"
+      ],
+      "goto": "diagrams/05-chunk-layout.html",
+      "gotoLabel": "The memory model all of this is shaped around"
+    }
+  }
+}

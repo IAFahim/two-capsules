@@ -1,0 +1,91 @@
+{
+  "id": "16-baking",
+  "title": "Baking Is a Compile Step",
+  "map": "diagrams/16-baking.html",
+  "blurb": "A source language, a dependency-tracked front end, whole-program passes, a strip, and an object file you ship.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Nobody tells you it is a compiler",
+      "focus": null,
+      "text": "Read the documentation and baking sounds like a conversion utility. It is not. It is a compiler, and once you see it that way every confusing thing about it becomes ordinary. There is a source language, which is game objects and their components. There is a front end with dependency tracking, which is bakers. There are whole program passes that run after the front end, which are baking systems. There is a dead code pass, which is the strip. And there is an object file, which is the entity section file that actually ships. The player contains no compiler at all."
+    },
+    {
+      "id": "baker",
+      "title": "A baker cannot look around",
+      "focus": "baker",
+      "text": "Each baker gets exactly one authoring component and is expected to write components onto an entity. It cannot query the scene. It cannot see what the baker next to it did. That looks like a limitation until you notice what it buys: because a baker can only reach what it explicitly asks for, and every ask is recorded, the system knows precisely which bakers to re-run when you drag a slider. Change one field and one baker runs. The restriction is the entire incremental story."
+    },
+    {
+      "id": "dep",
+      "title": "The dependency record is the key",
+      "focus": "dep",
+      "text": "Every read a baker makes is registered as a dependency. That record is the cache key. And the failure mode that follows is the single most common baking bug there is: read something without declaring it, and the value is baked correctly the first time, then never updated again. You edit the asset, nothing happens, you assume the runtime is broken, and you spend an hour in the wrong file. The bake was never re-run because as far as the record is concerned nothing you touched was an input."
+    },
+    {
+      "id": "passes",
+      "title": "The passes, in order",
+      "focus": "bsys",
+      "text": "Bakers are not the whole compile. First a pre-baking group runs, for cleanup before anything is read. Then every baker. Then transform baking, which resolves hierarchies into world matrices. Then the ordinary baking systems, which unlike bakers can query the entire scene at once and are therefore where anything cross cutting belongs. Then linked entity groups, then companion objects, then a post-baking group, and finally the strip. Eight ordered phases, all inside a world that is created and thrown away in one call."
+    },
+    {
+      "id": "strip",
+      "title": "The strip is the dead code pass",
+      "focus": "strip",
+      "text": "Every type marked as temporary is queried and removed before serialization. That is what makes the scaffolding pattern safe: you can invent a component whose whole purpose is to carry information from a baker to a later baking system, and be certain it never reaches the player. It also explains something people find eerie, which is that you cannot inspect any of this at runtime. There is nothing to inspect. It was compiled out."
+    },
+    {
+      "id": "sections",
+      "title": "Sections are the output units",
+      "focus": "file",
+      "text": "The last thing the compile decides is how the output is split. A shared component partitions the baked entities into numbered sections, each section is moved into its own private world, and each is serialized into its own file. Section zero is the one that always comes with the scene. Everything else is separately requestable. Which means your streaming granularity is not a runtime setting at all. It was fixed at bake time, and changing it means recompiling the scene."
+    }
+  ],
+  "nodes": {
+    "go": {
+      "short": "The source language: components you can see, click and drag.",
+      "deep": "Game objects are what a designer edits and what version control diffs. Nothing about them survives into the runtime data; they are input to a compile, in the same sense that a header file is input to one. Their only job is to be readable by a human and by a baker.",
+      "types": ["SubScene", "TransformUsageFlags"]
+    },
+    "dep": {
+      "short": "Every value a baker touched, recorded as the key that decides whether it re-runs.",
+      "deep": "This is the mechanism behind incremental baking, and behind its most confusing failure. Read a value through a declared dependency and edits to it trigger a re-bake of exactly that baker. Read it some other way and the record does not know it was an input, so your edit changes nothing and no error is ever printed.",
+      "types": ["Baker", "BakerState", "BakingSettings"]
+    },
+    "baker": {
+      "short": "One per authoring component, and structurally unable to see its neighbours.",
+      "deep": "It is handed a component and writes to an entity. It cannot run a query, and every value it reaches for outside its own component is registered as a dependency. That restriction is what makes the whole pass cacheable at the granularity of a single component, which is what makes editing a scene with thousands of objects feel instant.",
+      "types": ["Baker", "TransformUsageFlags", "IComponentData"],
+      "goto": "diagrams/18-blob-assets.html",
+      "gotoLabel": "What a baker builds when the data is big"
+    },
+    "bsys": {
+      "short": "Ordinary systems that run after every baker, with full query access to the scene.",
+      "deep": "This is where anything cross cutting belongs: building a lookup table from every object of a kind, resolving references between separately baked objects, computing something that needs a total. They run in the baking world with a filter flag of their own, and they are marked to never be auto created anywhere else.",
+      "types": ["BakingSystemGroup", "PostBakingSystemGroup", "DisableAutoCreationAttribute"],
+      "goto": "diagrams/06-archetype-graph.html",
+      "gotoLabel": "What adding a component costs, even here"
+    },
+    "strip": {
+      "short": "Queries every temporary type and removes it, always last.",
+      "deep": "It is a dead code pass. Types marked as temporary baking types exist during the compile so that one phase can hand information to the next, and they are deleted before serialization so none of it reaches the player. Which is why a component you invented purely as scaffolding is invisible to every runtime inspector, correctly.",
+      "types": ["BakingSystemGroup", "TypeManager", "IComponentData"],
+      "goto": "diagrams/42-which-world.html",
+      "gotoLabel": "The other strip, the per-world one"
+    },
+    "file": {
+      "short": "A serialized chunk image, one file per section. This is the object file.",
+      "deep": "It is not a scene format in any recognisable sense. It is the memory layout of the chunks themselves, written out, with entity references converted to indices and blob handles converted to offsets. Which is why loading it is closer to mapping a binary than to parsing a document.",
+      "types": ["SceneSection", "SceneSectionData", "SerializeUtility"],
+      "goto": "diagrams/05-chunk-layout.html",
+      "gotoLabel": "What a chunk image looks like inside"
+    },
+    "load": {
+      "short": "At runtime the bytes are read, the references are patched, and the entities are moved in.",
+      "deep": "There is no baker in the player. Not disabled, not stripped down: absent, because bakers live in editor only assemblies. So if a value is wrong at runtime, no runtime code made it wrong, and no runtime code can fix it. The only correct place to look is upstream of the build.",
+      "types": ["SceneSectionStreamingSystem", "SceneTag", "EntityManager"],
+      "goto": "diagrams/17-subscene-streaming.html",
+      "gotoLabel": "How that file becomes resident"
+    }
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "id": "44-timeline-under-prediction",
+  "title": "One Asset, Two Clocks",
+  "map": "diagrams/44-timeline-under-prediction.html",
+  "blurb": "A timeline is a pure function of two numbers. Rollback decides which two.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Six bytes for a two second action",
+      "focus": null,
+      "text": "A timeline is the cheapest thing you will ever replicate. The authored asset is baked into the build, so it is identical on every machine, and everything visible about a playing timeline follows from two numbers: which timeline, and how far into it. That is a short identifier and a start tick. Six bytes, written once when the action begins and never changed again. Compare that to streaming a character's transform, which costs bytes on every single tick. Replicating the cause instead of the result is the whole argument, and it is a good one."
+    },
+    {
+      "id": "derive",
+      "title": "Accumulate versus derive",
+      "focus": "gameclock",
+      "text": "Here is the entire chapter in two lines. Elapsed plus equals delta time. Or, elapsed equals current tick minus start tick. The first is a register with feedback: its value now depends on its value last tick, all the way back to the beginning. Rewind the machine and it is wrong unless somebody saved and restored it. The second is combinational logic hanging off a counter. It has no memory, so there is nothing to restore, and netcode already restores the counter for free. The shipped package accumulates. That single addition is the only sequential element in the whole chain."
+    },
+    {
+      "id": "where",
+      "title": "Where the shipped group actually sits",
+      "focus": "asset",
+      "text": "The timeline root group lands inside the before transform group, which lands directly inside the simulation system group. The predicted simulation system group is a sibling of that, ordered first. So the timeline runs strictly after the entire prediction loop has already finished. It is outside prediction, and no amount of squinting at the group chain changes that. The good news is the world filter: the monorepo package is genuinely present in the server world. Present on the server and correct under prediction are two different properties, and the package has the first one only."
+    },
+    {
+      "id": "clocks",
+      "title": "Two rate managers, two shapes of delta",
+      "focus": "presclock",
+      "text": "On a dedicated server, the rate manager re-enters the whole simulation system group once per pending tick, pushing a tick sized delta each time. The timeline is evaluated once per tick, at integer tick boundaries. On the client, the rate manager lets the group run exactly once per rendered frame, and the delta it pushes is how far the predicted target tick moved that frame, fractional part included. So the two sides advance the same sum with differently shaped steps, and land up to a tick of phase apart. Nothing ever brings them back together."
+    },
+    {
+      "id": "boundary",
+      "title": "The rollback boundary",
+      "focus": "spawn",
+      "text": "Say this one out loud, because everything else follows from it. Rollback restores component values. It does not restore entity existence. The prediction history backup is a memory copy of ghost components into a side buffer, and on restore it writes back only the fields that were serialised. There is no create and no destroy in it. An entity your clip spawned during a replayed tick is still there when that tick replays, and your clip will cheerfully spawn a second one. Netcode's answer is not to undo the spawn. It is to make the duplicate reconcilable."
+    },
+    {
+      "id": "kinds",
+      "title": "Four kinds, four homes",
+      "focus": "kind",
+      "text": "Clips sort into exactly four kinds. Value clips are sampled and pure, and run predicted in both worlds. Cosmetic clips run on the client only, gated so they fire on the first full prediction of a tick and not on every replay. Spawn clips route through a predicted spawn request and get matched against the authoritative spawn instead of doubling. Authority clips are stripped from the client prefab entirely. The temptation is to put that table on a wiki and ask designers to respect it. Make it a type, so the wrong thing is unrepresentable rather than merely discouraged."
+    },
+    {
+      "id": "lever",
+      "title": "Kinematic is a compression scheme",
+      "focus": "value",
+      "text": "A root motion move driven entirely by a timeline really is a function of the identifier and the elapsed time. The character goes where the clip says regardless of what it brushes past, so both machines compute the same path from the same six bytes, and the transform does not need to replicate at all during the move. The moment a clip emits force into a dynamic body, that stops being true. The outcome now depends on contact, which is not derivable from the asset, so it has to go on the wire. Kinematic is compression. Force is a bandwidth commitment."
+    }
+  ],
+  "nodes": {
+    "asset": {
+      "short": "One baked blob of clips, curves and timestamps, identical on every machine.",
+      "deep": "Because it ships in the build rather than over the wire, both sides already agree on everything except the position of the play head. That is why only a short timeline identifier and a start tick ever need to travel, and why a field that never changes costs almost nothing after the first snapshot.",
+      "types": [
+        "GhostFieldAttribute",
+        "NetworkTick"
+      ]
+    },
+    "kind": {
+      "short": "The routing decision: which of the four clip kinds this is.",
+      "deep": "This should be carried by the interface a clip implements, not by designer discipline, because the interface can decide which system group evaluates it. A cosmetic clip that physically cannot run outside the gated client system is a clip nobody can misuse. Close the remaining gap at bake time, the way the graph packages in this stack already reject an invalid graph before the game ever runs.",
+      "types": [
+        "CanopyGraphValidation",
+        "IBaker"
+      ]
+    },
+    "presclock": {
+      "short": "Frame rate evaluation, client only, for anything a human eye is the sole consumer of.",
+      "deep": "This is the shipped package doing exactly what it was designed for. Leave it there. Moving visual effects into the prediction loop would re-emit particles on every replay and cap effects at the tick rate. The one change worth making is to have it read its position from the gameplay clock instead of keeping its own sum, so it becomes a display rather than a second source of truth.",
+      "types": [
+        "SimulationSystemGroup",
+        "BeforeTransformSystemGroup",
+        "BLSimulationSystemGroup"
+      ],
+      "goto": "diagrams/41-clock-domains.html",
+      "gotoLabel": "The two time domains a client lives in"
+    },
+    "gameclock": {
+      "short": "Tick minus start tick, evaluated inside prediction, on both client and server.",
+      "deep": "Stateless by construction. Replay the same tick nine times and it returns the same number nine times, because its only input is the tick, and the tick is restored for you every frame. This is the whole reason to derive rather than accumulate: you are not asking rollback to save and restore anything, you are asking it to leave you alone.",
+      "types": [
+        "PredictedSimulationSystemGroup",
+        "NetworkTime",
+        "NetworkTick"
+      ],
+      "goto": "diagrams/22-prediction-loop.html",
+      "gotoLabel": "Into the rollback loop itself"
+    },
+    "cosmetic": {
+      "short": "Visual effects, audio and interface, fired once and never un-fired.",
+      "deep": "A particle burst is not a component value, so replay cannot take it back. The gate is a single flag on the network time singleton that is set only when a tick is being fully predicted for the first time, and cleared on partial ticks. Four lines, and it is the only netcode aware code most clip authors will ever have to write.",
+      "types": [
+        "NetworkTime",
+        "Simulate"
+      ]
+    },
+    "value": {
+      "short": "Continuous sampled output: curves, offsets, root motion, stat modifiers.",
+      "deep": "The easiest kind to migrate, because everything downstream of local time in the package is already pure. Clip local time, the active bit and the weight curve are all functions of the timer position. Change what feeds the timer and the rest becomes rollback safe without being touched. A kinematic move authored this way needs no transform replication at all.",
+      "types": [
+        "LocalTransform",
+        "PredictedGhost"
+      ],
+      "goto": "diagrams/43-physics-on-the-server.html",
+      "gotoLabel": "What a force emitting clip commits you to"
+    },
+    "spawn": {
+      "short": "Creates an entity, and therefore cannot rely on rollback to clean up after it.",
+      "deep": "The client marks its speculative spawn with a predicted spawn request. When the authoritative version arrives, a classification system matches the two instead of creating a second, and any predicted spawn that never gets matched is destroyed once it ages out. So duplicates are reconciled rather than prevented, which is the only thing that works when existence itself is never rewound.",
+      "types": [
+        "PredictedGhostSpawnRequest",
+        "GhostSpawnClassificationSystem",
+        "PredictedGhostSpawnSystem"
+      ]
+    },
+    "authority": {
+      "short": "Server only decisions: score, loot, damage application, state authority.",
+      "deep": "The cleanest gate in the set, because it is enforced at bake time rather than at runtime. Marking the component as server only means the client prefab never receives it, so there is no branch to forget and no flag to check. If a client could not run it even in principle, a client cannot get it wrong.",
+      "types": [
+        "GhostPrefabType",
+        "GhostComponentAttribute",
+        "WorldSystemFilterFlags"
+      ]
+    }
+  }
+}

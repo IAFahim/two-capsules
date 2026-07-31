@@ -22,7 +22,14 @@ snapshots:     S(t=100)          S(t=150)          S(t=200)
               ← interpolation delay ≈ 2 snapshot intervals →
 ```
 
-Always between two known-good points. Never extrapolating. Never guessing.
+Always between two known-good points — **while it has two.**
+
+> **💀 An earlier draft of this chapter said "never extrapolating." That is wrong.**
+> When no snapshot newer than the interpolation tick has arrived and the ghost is *dynamic*,
+> NetCode runs the last known pair forward and inverts the interpolation factor
+> (`Runtime/Snapshot/SnapshotData.cs:256`, the maths at `:77`), clamped at
+> `MaxExtrapolationTimeSimTicks`, 20 by default. So the smooth line you see under packet
+> loss is partly a guess — a bounded one. Chapter 41 states this correctly.
 
 ```mermaid
 flowchart LR
@@ -53,8 +60,9 @@ other player's is drawn ~100 ms behind. Neither of you sees "now". Nobody ever d
 
 The buffer must hold enough history to bracket the interpolation tick even when packets drop.
 NetCode sizes it from the tick rate and observed jitter. If a ghost's data is missing for the
-bracketing ticks, the client holds the last known value — which reads as a brief freeze
-rather than a teleport. That is the correct failure mode.
+bracketing ticks, a **static** ghost holds its last known value — a brief freeze rather than a
+teleport. A **dynamic** ghost extrapolates first and only then holds, so the freeze arrives
+late and after a short drift. Both are the correct failure mode; they are not the same one.
 
 ## Why not just predict everything?
 

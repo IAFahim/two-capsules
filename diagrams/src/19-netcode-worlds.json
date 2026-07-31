@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Worlds on the Wire",
+    "subtitle": "Two worlds in one process are still two machines — and IsHost is false for both of them here",
+    "output": "diagrams/19-netcode-worlds.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "boot",
+        "label": "One enum builds the topology",
+        "focus": [
+          "playtype",
+          "server",
+          "client"
+        ],
+        "note": "RequestedPlayType is read once at boot and decides which worlds exist at all."
+      },
+      {
+        "id": "flags",
+        "label": "A world is its flags",
+        "focus": [
+          "server",
+          "client",
+          "thin"
+        ],
+        "note": "GameServer, GameClient, GameThinClient. Every netcode question is a bit test on these."
+      },
+      {
+        "id": "ishost",
+        "label": "The AND that is false here",
+        "focus": [
+          "ishost",
+          "single"
+        ],
+        "note": "IsHost is IsClient AND IsServer on one world. Separate worlds can never satisfy it."
+      },
+      {
+        "id": "wire",
+        "label": "They talk over a socket anyway",
+        "focus": [
+          "wire",
+          "server",
+          "client"
+        ],
+        "note": "Same process, same port. IPC for the in-process pair, real UDP for everyone else."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "playtype",
+      "type": "cloud",
+      "label": "RequestedPlayType",
+      "sublabel": "ClientAndServer · Client · Server",
+      "tag": "read once at boot",
+      "pos": [
+        40,
+        290
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "server",
+      "type": "backend",
+      "label": "ServerWorld",
+      "sublabel": "WorldFlags.GameServer",
+      "tag": "the only authority",
+      "pos": [
+        410,
+        60
+      ],
+      "size": [
+        230,
+        68
+      ]
+    },
+    {
+      "id": "client",
+      "type": "frontend",
+      "label": "ClientWorld",
+      "sublabel": "WorldFlags.GameClient",
+      "tag": "renders, predicts",
+      "pos": [
+        410,
+        290
+      ],
+      "size": [
+        230,
+        68
+      ]
+    },
+    {
+      "id": "thin",
+      "type": "external",
+      "label": "ThinClientWorld",
+      "sublabel": "WorldFlags.GameThinClient",
+      "tag": "no presentation",
+      "pos": [
+        410,
+        520
+      ],
+      "size": [
+        230,
+        68
+      ]
+    },
+    {
+      "id": "wire",
+      "type": "messagebus",
+      "label": "One listening port",
+      "sublabel": "IPC in-process · UDP for the rest",
+      "tag": "two driver types",
+      "pos": [
+        770,
+        290
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "ishost",
+      "type": "security",
+      "label": "IsHost",
+      "sublabel": "IsClient AND IsServer, one world",
+      "tag": "false, twice",
+      "pos": [
+        1140,
+        60
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "single",
+      "type": "cloud",
+      "label": "Single-world host",
+      "sublabel": "GameServer | GameClient together",
+      "tag": "experimental, off",
+      "pos": [
+        1140,
+        520
+      ],
+      "size": [
+        250,
+        68
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one process · separate worlds · separate entity managers · separate singletons",
+      "wraps": [
+        "server",
+        "client",
+        "thin"
+      ],
+      "pad": 26
+    }
+  ],
+  "connections": [
+    {
+      "from": "playtype",
+      "to": "server",
+      "label": "Server or both",
+      "variant": "emphasis"
+    },
+    {
+      "from": "playtype",
+      "to": "client",
+      "variant": "emphasis"
+    },
+    {
+      "from": "playtype",
+      "to": "thin",
+      "label": "editor only",
+      "variant": "dashed"
+    },
+    {
+      "from": "server",
+      "to": "wire",
+      "label": "listens"
+    },
+    {
+      "from": "client",
+      "to": "wire",
+      "variant": "emphasis"
+    },
+    {
+      "from": "thin",
+      "to": "wire",
+      "label": "connects too"
+    },
+    {
+      "from": "wire",
+      "to": "ishost",
+      "label": "still a socket between them",
+      "variant": "security"
+    },
+    {
+      "from": "single",
+      "to": "ishost",
+      "label": "the only shape that passes",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "A world is a flag word, and nothing more",
+      "items": [
+        "IsServer is a bit test for GameServer",
+        "IsClient is a bit test for GameClient, or thin client",
+        "IsThinClient is a bit test for GameThinClient",
+        "IsHost is IsClient and IsServer on the same world, which is an AND, not an opinion"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Why IsHost is false in this project",
+      "items": [
+        "The bootstrap builds ServerWorld and ClientWorld as two separate worlds",
+        "Each carries exactly one of the two flags, so the AND cannot hold",
+        "One world carrying both flags exists only behind an experimental define",
+        "So code that branches on host behaviour takes the two-world path here, always"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The thin client is an amputation, not a setting",
+      "items": [
+        "It is built from the thin client simulation filter only",
+        "No presentation, no rendering, no interpolated ghost application",
+        "It exists to hold a connection open and generate command traffic",
+        "Anything gated on the client filter simply is not there, which is usually the surprise"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Read it live, in one line",
+      "items": [
+        "Loop World.All and print the name next to the flags",
+        "One ServerWorld across every editor instance, or roles are not applied",
+        "A client with no NetworkId stopped before admission",
+        "A client with a NetworkId but no in-game flag stopped before the snapshot stream"
+      ]
+    }
+  ]
+}

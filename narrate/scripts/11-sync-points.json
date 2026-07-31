@@ -1,0 +1,118 @@
+{
+  "id": "11-sync-points",
+  "title": "The Barrier You Paid For",
+  "map": "diagrams/11-sync-points.html",
+  "blurb": "A structural change cannot start until every tracked job everywhere in the world has finished, and the bill arrives twice.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Why it has to stop",
+      "focus": null,
+      "text": "A structural change moves an entity from one chunk to another, and a chunk is a raw allocation that jobs are holding raw pointers into. If a job is still running when the move happens, it is reading memory that has been overwritten or freed. There is no clever way around that. Either you stop everything, or you defer the change until a moment when nothing is running. This map is what stopping everything actually looks like."
+    },
+    {
+      "id": "scope",
+      "title": "It is not selective",
+      "focus": "wait",
+      "text": "Here is the thing worth internalising. It does not complete the jobs that touch this archetype. It does not complete the jobs that touch these component types. It walks every type that has a fence registered, gathers the write fence and every read fence of each one, combines them all into a single handle, and waits on that. Then it forgets every fence it was tracking, so the whole dependency graph restarts from empty. One entity gaining one tag drains the entire world."
+    },
+    {
+      "id": "profiler",
+      "title": "How to actually see one",
+      "focus": "idle",
+      "text": "The wait is wrapped in a profiler marker named, helpfully, Complete All Jobs. If you have never gone looking for it, go and look. And notice the early exit: if no fences are registered at all, the whole thing is skipped. So a frame where you scheduled nothing pays nothing for its structural changes, and a frame with a deep job graph pays for the longest chain in it. The cost of a barrier is not a property of the barrier. It is a property of what was running when you hit it."
+    },
+    {
+      "id": "second",
+      "title": "The second bill",
+      "focus": "caches",
+      "text": "After the change lands, two more things run. Any newly created archetypes are offered to every existing query so they can be matched. Then every archetype whose chunk list changed walks its back pointers and clears the valid flag on each matching query's cached chunk list. Nothing is rebuilt right then. The rebuild happens the next time somebody iterates, which means the cost of your structural change is billed to a system that had nothing to do with it. That is the part that makes profiles confusing."
+    },
+    {
+      "id": "levers",
+      "title": "Three honest levers",
+      "focus": "ecb",
+      "text": "First, record the change into a command buffer instead, so many small barriers collapse into one barrier at a known system where you can see it. Second, use switchable components, so turning a thing off flips a bit in a mask rather than moving an entity between chunks. Third, operate on a whole query at once rather than one entity at a time, because the barrier is per operation, not per entity. And if you genuinely need a barrier every single update, there is an attribute for that, which is at least honest about what it is doing."
+    }
+  ],
+  "nodes": {
+    "running": {
+      "short": "Jobs in flight, fences accumulating, nobody waiting on anything.",
+      "deep": "This is where you want to be, and it is the default. Systems schedule work, hand each other handles through the scoreboard, and the main thread stays ahead of the workers. Nothing on this map happens at all until somebody asks to change the shape of an entity.",
+      "types": [
+        "SystemState",
+        "ComponentDependencyManager",
+        "SystemBase"
+      ],
+      "goto": "diagrams/09-job-graph.html",
+      "gotoLabel": "The graph that is about to be drained"
+    },
+    "ask": {
+      "short": "Add, remove, create, or destroy. Any of the four is structural.",
+      "deep": "Setting a component's value is not structural, because the bytes already have a home. Changing which components an entity has is, because it changes which archetype the entity belongs to, and therefore which chunk. Creating and destroying are structural for the same reason: a slot in a chunk has to appear or disappear.",
+      "types": [
+        "EntityManager",
+        "EntityDataAccess",
+        "EntityArchetype"
+      ],
+      "goto": "diagrams/06-archetype-graph.html",
+      "gotoLabel": "What the change actually does"
+    },
+    "wait": {
+      "short": "Every fence of every registered type, combined and waited on.",
+      "deep": "One guard function sits in front of every structural change and calls the same completion. It gathers the write fence and all read fences of every type currently in the table, combines them into one handle, completes it, and then clears the table. In development builds it also invalidates every outstanding array handle, so anything still holding one fails loudly rather than quietly.",
+      "types": [
+        "ComponentDependencyManager",
+        "ComponentSafetyHandles",
+        "EntityDataAccess"
+      ]
+    },
+    "change": {
+      "short": "Single threaded, by definition, one memory copy per moved entity.",
+      "deep": "Nothing else is running, so the change itself is a plain serial walk. Entities are moved chunk by chunk where possible rather than one at a time, and a chunk whose every entity is moving can be relabelled wholesale instead of copied. That batching is the single biggest reason operating on a query beats operating on entities in a loop.",
+      "types": [
+        "ChunkDataUtility",
+        "ArchetypeChunk",
+        "EntityBatchInChunk"
+      ]
+    },
+    "resume": {
+      "short": "The fence table is empty, so the dependency graph starts again from nothing.",
+      "deep": "That emptiness has a consequence people miss. The first system to schedule after a barrier has no fences to wait on, so it starts immediately, but it also cannot inherit any ordering from before the barrier. Everything that mattered was already completed, so the graph really can restart clean.",
+      "types": [
+        "ComponentDependencyManager",
+        "SystemState"
+      ]
+    },
+    "ecb": {
+      "short": "Record the change and let a known system apply it later.",
+      "deep": "This does not make the barrier free, it makes it countable. Instead of a barrier wherever the change was requested, you get one barrier in one system whose position in the update order you chose. That is the difference between a stall you can find in a profile and a hundred you cannot.",
+      "types": [
+        "EntityCommandBuffer",
+        "EntityCommandBufferSystem",
+        "BeginSimulationEntityCommandBufferSystem"
+      ],
+      "goto": "diagrams/12-ecb-playback.html",
+      "gotoLabel": "How the deferred version works"
+    },
+    "idle": {
+      "short": "Workers finish what they have and nothing is queued behind it.",
+      "deep": "This is the visible cost and it is the one people mean when they say sync point. But the shape matters: it is not a fixed price, it is however long the longest outstanding job chain still had to run. A barrier right after you scheduled a deep graph is expensive. The same barrier in a frame where nothing was scheduled is free.",
+      "types": [
+        "ComponentDependencyManager",
+        "SystemDependencySafetyUtility"
+      ]
+    },
+    "caches": {
+      "short": "Every query matching a changed archetype loses its chunk list.",
+      "deep": "The runtime keeps a linked list of archetypes touched during this batch, walks it, and clears a flag on each of their queries. That is all it does. The actual rebuild is lazy, so the work lands on whichever system next iterates one of those queries, which is why the profile blames the wrong system.",
+      "types": [
+        "EntityQuery",
+        "UnsafeCachedChunkList",
+        "EntityQueryData"
+      ],
+      "goto": "diagrams/08-query-matching.html",
+      "gotoLabel": "The cache that just got dropped"
+    }
+  }
+}

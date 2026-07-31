@@ -1,0 +1,130 @@
+{
+  "id": "20-tick-timeline",
+  "title": "Four Timelines",
+  "map": "diagrams/20-tick-timeline.html",
+  "blurb": "The package counts four, not three. The fourth hides behind the third whenever forced input latency is zero.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Count them again",
+      "focus": null,
+      "text": "Everybody teaches this as three clocks. Interpolated behind, server in the middle, predicted ahead. That is the picture in most articles and it is the picture in this handbook's earlier chapters. The package disagrees, in a comment, in one line, and it is worth reading literally. It says the four timelines are, in order: interpolation tick, oldest. Then snapshot arrival tick, from the server. Then server tick, which is client prediction. Then input target tick, which is inputs being raised and sent. Four. So where did the fourth one go?"
+    },
+    {
+      "id": "arrival",
+      "title": "The second timeline nobody draws",
+      "focus": "arrive",
+      "text": "Start with the one that gets left out of every diagram, including this book's. The snapshot arrival tick. The newest server state the client actually has in hand. It is not the server's present, because that state left the server half a round trip ago. It is not the predicted tick, because the client has run ahead of it. And it is not the interpolation tick, because the client is deliberately reading behind it. It is a fourth number, it moves in jumps as packets land, and both of the client's smooth clocks are built out of it."
+    },
+    {
+      "id": "estimate",
+      "title": "The client never reads the server clock",
+      "focus": "estimate",
+      "text": "Here is the part that should feel familiar from hardware. The client has no wire carrying the server's tick counter. What it has is an estimate of the tick it expects to receive next, maintained as an exponential average of how wrong it has been. Every frame the estimate is advanced by elapsed ticks and then corrected against what actually arrived. Both of the client's clocks are derived from that estimate, in opposite directions. So this is not clock recovery from an edge. It is a phase estimator with a feedback term, and everything downstream inherits its error."
+    },
+    {
+      "id": "twoclocks",
+      "title": "One estimate, two directions",
+      "focus": "predict",
+      "text": "From the estimate, subtract the interpolation depth and you have the tick you render other players at. From the same estimate, add round trip time in ticks plus a command slack margin, and you have the tick you are predicting. Each of those has its own rate multiplier, nudged by a fraction of the current error every frame, and each multiplier is clamped: prediction between nine tenths and one and a tenth, interpolation between eighty five hundredths and one and a tenth. They are servo loops. They slew, they do not step, unless the error gets large enough to give up and snap."
+    },
+    {
+      "id": "fourth",
+      "title": "The fourth, and what hides it",
+      "focus": "input",
+      "text": "Now the fourth. The tick you stamp your input with is not the tick you are predicting. It is the predicted tick plus the effective input latency. By default that latency is zero, the two numbers are identical, and the fourth timeline sits exactly on top of the third. That is why everyone counts three. Set forced input latency above zero and they separate: the client keeps predicting the near tick while your keypress is filed for a later one. Your capsule stops answering instantly, and in exchange the rollback depth drops sharply. That is the trade, stated as an offset."
+    },
+    {
+      "id": "notyours",
+      "title": "It is not always your choice",
+      "focus": "input",
+      "text": "And here is the sting. The effective latency is not simply the value you set. It is the larger of your setting and whatever the ping forces. If round trip plus slack exceeds the maximum predict ahead time, five hundred milliseconds by default, netcode raises the latency itself to keep the prediction window bounded. A high ping player therefore gets forced input latency whether or not anyone configured it. In a single world host there is a third contributor: an off frame adds one more tick. So the fourth timeline can appear on somebody else's machine and never on yours."
+    },
+    {
+      "id": "clamp",
+      "title": "When the order inverts",
+      "focus": "clamp",
+      "text": "One last mechanism, and it is the sort of detail that only exists because somebody hit it. Push forced latency high enough and the predicted tick falls behind the interpolation tick. The four timelines would be out of order. Netcode refuses. It drags the interpolation target forward to meet the predicted tick, which quietly lengthens the interpolation window. So the two knobs are coupled at the extreme. Tune one far enough and you have moved the other, and nothing in the inspector tells you that happened."
+    }
+  ],
+  "nodes": {
+    "servertick": {
+      "short": "The one authoritative timeline, and no screen anywhere is showing it.",
+      "deep": "It advances at the simulation rate and it is the only tick that is not an estimate of something else. Every other number on this map is a client's attempt to be somewhere useful relative to it. One side lags it deliberately, one side runs ahead of it deliberately, and neither is ever equal to it.",
+      "types": [
+        "NetworkTick",
+        "NetworkTime",
+        "ClientServerTickRate"
+      ],
+      "goto": "diagrams/19-netcode-worlds.html",
+      "gotoLabel": "Which world this clock lives in"
+    },
+    "arrive": {
+      "short": "The newest server tick the client actually holds. It moves in jumps.",
+      "deep": "This is the timeline the standard three clock picture omits. It is not the server's present, because that packet took half a round trip to get here. It is not either of the client's own clocks. It is the raw arrival edge, and both smooth clocks are phase estimates built from it.",
+      "types": [
+        "NetworkSnapshotAck",
+        "NetworkTick",
+        "GhostReceiveSystem"
+      ],
+      "goto": "diagrams/21-snapshot-pipeline.html",
+      "gotoLabel": "What is inside one of those packets"
+    },
+    "estimate": {
+      "short": "The client's running guess at the tick it is about to receive next.",
+      "deep": "Maintained as an exponential average of how wrong the last guess was, advanced by elapsed ticks each frame and corrected when a packet lands. It also tracks the average and deviation of the gap between snapshots, which is what lets the interpolation depth react to a worsening link without anyone touching a setting.",
+      "types": [
+        "NetworkTimeSystemData",
+        "NetworkTimeSystem",
+        "NetworkTick"
+      ]
+    },
+    "predict": {
+      "short": "Estimate plus round trip plus command slack. The tick the client simulates.",
+      "deep": "It is far enough ahead that a command stamped now arrives before the server simulates that tick. Its rate is scaled by a tenth of the current command age error, clamped between nine tenths and one and a tenth of normal, so it drifts into alignment rather than jumping. A jump of more than ten ticks logs an error, because that usually means a stall rather than a network event.",
+      "types": [
+        "NetworkTime",
+        "NetworkTick",
+        "PredictedGhost",
+        "PredictedSimulationSystemGroup"
+      ],
+      "goto": "diagrams/22-prediction-loop.html",
+      "gotoLabel": "What runs at this tick, every frame"
+    },
+    "interp": {
+      "short": "Estimate minus the interpolation depth. The tick you see everyone else at.",
+      "deep": "Its rate multiplier is clamped between eighty five hundredths and one and a tenth, and it corrects a tenth of the remaining error per frame. Only an error above ten ticks makes it snap. The depth it trails by is not a constant: it is the larger of your configured window and a jitter derived estimate, so a lossy link deepens it for you.",
+      "types": [
+        "NetworkTime",
+        "NetworkTick",
+        "ClientTickRate",
+        "GhostUpdateSystem"
+      ],
+      "goto": "diagrams/23-interpolation.html",
+      "gotoLabel": "Inside the buffer this reads from"
+    },
+    "input": {
+      "short": "Predicted tick plus effective input latency. Zero by default, so it hides.",
+      "deep": "This is the fourth timeline, and it is the tick your command data is stamped with. Because the default latency is zero it normally equals the predicted tick exactly, which is why almost every diagram shows three clocks. It separates when forced latency is configured, when ping exceeds the maximum predict ahead time, or on an off frame in single world host mode.",
+      "types": [
+        "NetworkTime",
+        "ClientTickRate",
+        "ICommandData",
+        "InputBufferData"
+      ],
+      "goto": "diagrams/02-keypress.html",
+      "gotoLabel": "Follow one keypress from this tick"
+    },
+    "clamp": {
+      "short": "The guard that refuses to let prediction fall behind interpolation.",
+      "deep": "With enough forced latency the predicted tick can drop below the interpolation tick, which would put the four timelines out of order. Netcode detects that and pulls the interpolation target forward to meet the predicted tick instead. The visible consequence is that the interpolation window lengthens on its own, so the two settings are coupled at the extreme.",
+      "types": [
+        "NetworkTimeSystemData",
+        "ClientTickRate",
+        "NetworkTick"
+      ],
+      "goto": "diagrams/41-clock-domains.html",
+      "gotoLabel": "Why these clocks must stay ordered"
+    }
+  }
+}

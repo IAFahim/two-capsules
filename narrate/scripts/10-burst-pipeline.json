@@ -1,0 +1,105 @@
+{
+  "id": "10-burst-pipeline",
+  "title": "Two Compilers, One Assembly",
+  "map": "diagrams/10-burst-pipeline.html",
+  "blurb": "Burst does not speed your code up. It compiles a different language that happens to be spelled the same, and the way back is a function pointer.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "A cross compiler, not an optimiser",
+      "focus": null,
+      "text": "The useful way to hold this is that Burst is a cross compiler for a restricted dialect. Same source file, same intermediate language, two different back ends. One produces managed code with a garbage collector, write barriers and safe points underneath it. The other produces machine code with none of those, because the dialect it accepts has no managed objects in it. That is why it can vectorise: it is compiling a language where aliasing is declarable and every value has a known size."
+    },
+    {
+      "id": "shim",
+      "title": "The package is a shim now",
+      "focus": "burst",
+      "text": "If you go looking for Burst in the project's packages you will be disappointed, and it is worth knowing why. The package is version two point zero and its entire runtime folder is a single file of type forwarders. The attribute, the compiler, the intrinsics, the shared static, all of it now lives inside the editor and the engine. So there is no Burst source in the project to read. What you can read is everything that calls it, and that turns out to be more instructive anyway."
+    },
+    {
+      "id": "pair",
+      "title": "The attribute has to be on both",
+      "focus": "attrs",
+      "text": "The classic mistake is putting the attribute on the method and not on the containing type, which silently does nothing. There is an analyzer for that now, warning number E A zero zero one zero, and its message names the fix. But read the analyzer and you find it deliberately returns without warning for anything implementing the system interface. So the one case a handbook warns you about, a system struct with the attribute on update but not on the struct, is precisely the case that still stays quiet."
+    },
+    {
+      "id": "door",
+      "title": "The doorway is a discarded body",
+      "focus": "bridge",
+      "text": "Native code cannot call a managed method. So how does compiled code inside the command buffer reach the managed part of playback? The generated bridge is lovely. There is a small method marked so that Burst deletes its body from the native build. In managed code it sets a flag to true. In native code the call vanishes and the flag stays false. Calling a method and observing that nothing happened is how the code works out which world it is running in."
+    },
+    {
+      "id": "cross",
+      "title": "And then an address in a shared static",
+      "focus": "managed",
+      "text": "Once it knows, it needs somewhere both worlds can see. That is the shared static: a global that compiled and interpreted code agree points at the same bytes. The managed side marshals a delegate into a raw function pointer and parks it there. The native side loads it and calls it. In the other direction a managed delegate is compiled to native and invoked. Every crossing is an indirect call over a marshalling boundary, and everything on the far side runs at managed speed. That is the real reason a stray managed call in a hot loop costs what it costs."
+    }
+  ],
+  "nodes": {
+    "attrs": {
+      "short": "The attribute belongs on the method and on the containing type.",
+      "deep": "Missing it on the type raises a warning that names the type, names the method, and tells you exactly what to add. But the analyzer skips anything implementing the system interface on purpose, so the most common instance of this mistake is the one it will never tell you about. That is worth remembering the next time a system is mysteriously slow.",
+      "types": [
+        "ISystem",
+        "SystemBase",
+        "Burst"
+      ]
+    },
+    "src": {
+      "short": "The code you wrote, before either compiler has looked at it.",
+      "deep": "There is only one source file and only one set of semantics you can reason about, which is the strength of the whole design. The restriction is not on what you write but on what the second compiler will accept, and the gap between those two is where every confusing Burst error comes from.",
+      "types": [
+        "ISystem",
+        "IJobEntity",
+        "IJobChunk"
+      ]
+    },
+    "il": {
+      "short": "What the C sharp compiler emits, and the only input either back end sees.",
+      "deep": "This matters more than it sounds. Burst does not parse your source, it consumes the intermediate language, which is why source generators and the compiler's own transformations are already applied by the time it looks. It is also why an attribute is the only signal available: there is no other way to mark a method at that level.",
+      "types": [
+        "Burst",
+        "BurstTrampoline"
+      ]
+    },
+    "burst": {
+      "short": "Intermediate form to machine code, ahead of time rather than just in time.",
+      "deep": "The whole package in the project is now a file of type forwarders, because the compiler moved into the editor and the engine. Two things follow. There is no Burst source to read alongside your project, and the version you are compiling against is the editor's version rather than the package's.",
+      "types": [
+        "Burst",
+        "BurstUtil"
+      ]
+    },
+    "native": {
+      "short": "Machine code with no collector, no virtual dispatch, no unwind tables.",
+      "deep": "The absences are the point. No collector means no write barriers and no safe point polling in your loop. No managed objects means every value has a known size and can live in a register. Declared aliasing means the vectoriser is allowed to be aggressive. You are not getting faster C sharp, you are getting a different language that costs less to execute.",
+      "types": [
+        "Burst",
+        "IJobChunk",
+        "IJobEntity"
+      ],
+      "goto": "diagrams/09-job-graph.html",
+      "gotoLabel": "What runs the compiled job"
+    },
+    "bridge": {
+      "short": "One address, parked in a static that both worlds agree on.",
+      "deep": "A shared static is the only sanctioned way to have a global that compiled and interpreted code both see. The managed side marshals a delegate into a raw pointer and stores it there once, at initialisation, keeping a reference alive so the collector does not eat the delegate. After that, calling across is a load and an indirect call.",
+      "types": [
+        "ECBInterop",
+        "GenerateBurstMonoInteropAttribute",
+        "BurstMonoInteropMethodAttribute"
+      ]
+    },
+    "managed": {
+      "short": "Where the deleted bodies live, reached only by an indirect call.",
+      "deep": "Everything the command buffer does with managed components ends up here, because none of it can exist in a native build. The playback walker keeps a flag per chain and picks the native or the managed path from it. Crossing is never automatic and never silent in the source, even though it is completely invisible in the profiler unless you know the marker to look for.",
+      "types": [
+        "ECBInterop",
+        "EntityCommandBuffer",
+        "EntityCommandBufferManagedComponentExtensions"
+      ],
+      "goto": "diagrams/12-ecb-playback.html",
+      "gotoLabel": "Where this crossing shows up"
+    }
+  }
+}

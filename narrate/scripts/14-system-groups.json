@@ -1,0 +1,109 @@
+{
+  "id": "14-system-groups",
+  "title": "The Update Tree",
+  "map": "diagrams/14-system-groups.html",
+  "blurb": "Three roots, three player loop phases, and the netcode groups at the positions their attributes actually give them.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Nothing here is a convention",
+      "focus": null,
+      "text": "Every box on this map is at the position an attribute put it, and every one of those attributes was read out of the packages rather than remembered. That matters more than it sounds, because most of what people believe about this tree is folklore. The one fact worth carrying away before anything else: prediction runs before the ordinary fixed step, not after it. If your mental model has physics first and rollback second, it is backwards, and the attribute that proves it is four lines from the top of the netcode prediction file."
+    },
+    {
+      "id": "roots",
+      "title": "Three roots, and only three",
+      "focus": "sim",
+      "text": "Initialization, simulation and presentation are created in every world before any of your systems exist. They are not registered, they are hardcoded as the three things that count as roots. Each is spliced into a different phase of the engine's frame. And they are not symmetrical. The presentation group carries an attribute saying its children default to presentation only, which is why an unfiltered system placed in it never reaches a server. The simulation group carries no attribute at all, which is why an unfiltered system placed in it reaches every game world including the server."
+    },
+    {
+      "id": "orderfirst",
+      "title": "The bucket at the front",
+      "focus": "netrecv",
+      "text": "Inside simulation there are three buckets, not one. A group can pin itself to the front, pin itself to the back, or say nothing and land in the middle. Four groups on this map pin themselves to the front, and then order among themselves with before and after edges. Network receive comes first because packets have to be in memory before anything reads them. Ghost simulation comes next because snapshots have to be applied before prediction restores from them. Then prediction. Then the ordinary fixed step. Read those four attributes in order and the frame stops being mysterious."
+    },
+    {
+      "id": "twofixed",
+      "title": "There are two fixed steps",
+      "focus": "pfixed",
+      "text": "Here is the thing nobody tells you. Netcode does not reuse the engine's fixed step group for prediction. It declares a second one, pinned to the front of the prediction group, and that is the one that replays. The outer fixed step is still there, still running, and it runs after the whole prediction loop has finished. So if you put a physics step in the outer group expecting it to be rolled back, it will not be. It will run once per frame, downstream of a replay that never saw it. The two groups have almost the same name and completely different lives."
+    },
+    {
+      "id": "yours",
+      "title": "Where your system actually lands",
+      "focus": "yours",
+      "text": "Write a system, add no attributes at all, and it goes into the middle bucket of the simulation group, in every game world. Not into initialization. Not into prediction. Not nowhere. It runs once per frame, after every group that pinned itself first, on client and server and local worlds simultaneously. Half of all why did that run twice questions end right there. The other half end at the trap in the ordering attributes: before and after only work between systems in the same group. Point one across a group boundary and the engine logs a warning and ignores it."
+    },
+    {
+      "id": "missing",
+      "title": "What this map leaves out, and why",
+      "focus": "sim",
+      "text": "There is more in the real tree. Command buffer systems bracket every group, pinned first and last. There is a variable rate group and a late simulation group. Command send and command receive sit inside ghost simulation and network receive. BovineLabs adds several of its own around scene loading and transforms. None of them are drawn here, and that is deliberate, because the mechanism for finding any of them is identical: open the file, read four attributes, and you know exactly where it runs."
+    }
+  ],
+  "nodes": {
+    "init": {
+      "short": "The first root group. Scene resolution and subscene streaming live here.",
+      "deep": "It is spliced into the engine's initialization phase, which is before the ordinary update. That placement is why a subscene section can become resident before any simulation system runs that frame, and why entities from a scene appear at the top of a frame rather than in the middle of one.",
+      "types": ["InitializationSystemGroup", "SceneSystemGroup", "ComponentSystemGroup"],
+      "goto": "diagrams/17-subscene-streaming.html",
+      "gotoLabel": "What actually runs in there"
+    },
+    "sim": {
+      "short": "The second root, and the one with no world filter at all.",
+      "deep": "Because it declares nothing, a chain of group attributes that ends here falls through to the fallback expansion: local, server and client simulation. That single absence is the mechanism behind the most common ECS bug there is, an unfiltered gameplay system quietly running in three worlds. It is also the default destination for any system that names no group.",
+      "types": ["SimulationSystemGroup", "WorldSystemFilterFlags", "ComponentSystemGroup"],
+      "goto": "diagrams/42-which-world.html",
+      "gotoLabel": "Why an unfiltered system lands everywhere"
+    },
+    "pres": {
+      "short": "The one root group that overrides what its children default to.",
+      "deep": "Its attribute passes a second argument naming presentation, so an unfiltered system placed inside it is presentation only and will never exist on a server. Every other root leaves that argument at its default and therefore delegates the question upward. If you want a rule that only runs where there is a screen, this group is the enforcement mechanism, not a naming convention.",
+      "types": ["PresentationSystemGroup", "WorldSystemFilterAttribute", "WorldSystemFilterFlags"],
+      "goto": "diagrams/01-machine.html",
+      "gotoLabel": "Where presentation sits in the whole stack"
+    },
+    "netrecv": {
+      "short": "Pinned to the front of simulation, and ordered before ghost simulation.",
+      "deep": "Its attributes say three things: order first, after the begin command buffer system, and before ghost simulation. So packets are pulled off the socket and into memory before any system that wants to read them has run. This is also where connection handling and command receive live on the server.",
+      "types": ["NetworkReceiveSystemGroup", "CommandReceiveSystemGroup", "SimulationSystemGroup"],
+      "goto": "diagrams/21-snapshot-pipeline.html",
+      "gotoLabel": "What arrives in those packets"
+    },
+    "ghost": {
+      "short": "Applies snapshots and gathers input, before prediction and before fixed step.",
+      "deep": "It declares itself before both the fixed step group and the prediction group, which is the ordering that makes the whole rollback scheme work: the authoritative state has to be written over the predicted state before the replay decides where to rewind to. The input gathering group and the command send group both live inside it.",
+      "types": ["GhostSimulationSystemGroup", "GhostInputSystemGroup", "CommandSendSystemGroup"],
+      "goto": "diagrams/02-keypress.html",
+      "gotoLabel": "The input this group gathers"
+    },
+    "predict": {
+      "short": "Pinned to the front of simulation and ordered before the ordinary fixed step.",
+      "deep": "On a client it runs many times in one frame, once per replayed tick. On a server it runs once. It is the same group with the same children either side, which is what lets one implementation of a movement rule be the authority and the prediction at the same time. Its own attribute uses the default filter, so it exists on the server too, which surprises people who read the word predicted as client only.",
+      "types": ["PredictedSimulationSystemGroup", "CopyCommandBufferToInputSystemGroup", "Simulate"],
+      "goto": "diagrams/22-prediction-loop.html",
+      "gotoLabel": "Inside the replay loop"
+    },
+    "pfixed": {
+      "short": "A second fixed step group, pinned first inside prediction. This is the one that replays.",
+      "deep": "It exists because the ordinary fixed step group is outside prediction and therefore cannot be rolled back. Anything you want resimulated on a correction goes here. The two groups have nearly identical names and completely different behaviour, and putting your step in the wrong one produces a bug that looks like bad physics rather than bad ordering.",
+      "types": ["PredictedFixedStepSimulationSystemGroup", "PredictedSimulationSystemGroup", "NetworkTime"],
+      "goto": "diagrams/33-predicted-physics.html",
+      "gotoLabel": "Physics inside the rollback"
+    },
+    "fixed": {
+      "short": "The ordinary fixed step, pinned to the front but ordered after prediction.",
+      "deep": "It runs on a fixed delta with a catch up loop, and it runs once the whole prediction loop has already finished for this frame. Nothing in it is rolled back, replayed or corrected. For deterministic non networked work that is exactly what you want, and for anything a snapshot might disagree with it is exactly what you do not.",
+      "types": ["FixedStepSimulationSystemGroup", "BeginSimulationEntityCommandBufferSystem", "ComponentSystemGroup"],
+      "goto": "diagrams/41-clock-domains.html",
+      "gotoLabel": "The two clocks these steps serve"
+    },
+    "yours": {
+      "short": "A system with no attributes at all. It lands here, in every game world.",
+      "deep": "Not in initialization, not in prediction, and not nowhere. The placement code adds it to the simulation group when no group attribute is present, and the classification code resolves its filter through the fallback, which names local, server and client. So the laziest possible system is also the most widely distributed one you can write.",
+      "types": ["SimulationSystemGroup", "UpdateInGroupAttribute", "WorldSystemFilterFlags"],
+      "goto": "diagrams/15-system-lifecycle.html",
+      "gotoLabel": "What happens to it every frame"
+    }
+  }
+}

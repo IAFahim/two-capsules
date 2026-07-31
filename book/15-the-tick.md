@@ -22,6 +22,14 @@ with a `NetworkTick` — a wrapping `uint`, so **never compare with `<`**. Use
 
 ## Three clocks that must agree-ish
 
+> **📐 Three is what you see at default settings. The package documents four.**
+> `Runtime/PredictionTicking/NetworkTime.cs:79` orders them interpolation → **snapshot
+> arrival** → server tick → input target. The fourth, `InputTargetTick`, is derived —
+> `ServerTick + EffectiveInputLatencyTicks` — so it collapses onto the third only when that
+> effective latency is zero, which a high-ping player does not get. And the one nobody
+> draws, snapshot arrival, is the estimate *both* client clocks are servoed off. Map
+> `20-tick-timeline` draws all four.
+
 ```mermaid
 flowchart TB
     S["<b>ServerTick</b><br/>the truth<br/>advances at SimulationTickRate"]

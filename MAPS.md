@@ -32,11 +32,11 @@ You already know cache lines and clock edges. These maps say which hardware idea
 
 | # | Map | Type | The mechanism it shows | Status |
 |---|---|---|---|---|
-| 13 | `13-bootstrap` | workflow | `ICustomBootstrap` → world creation → system discovery → group tree. Where your world actually comes from | planned |
-| 14 | `14-system-groups` | architecture | The full update tree, Initialization through Presentation, with the netcode groups grafted in at their real positions | planned |
-| 15 | `15-system-lifecycle` | lifecycle | `OnCreate` → `RequireForUpdate` gate → `OnUpdate` → `OnDestroy`, and what `Enabled` really switches | planned |
+| 13 | `13-bootstrap` | workflow | `ICustomBootstrap` → world creation → system discovery → placement → the player-loop splice. Where your world actually comes from; the tree itself belongs to 14 | planned |
+| 14 | `14-system-groups` | architecture | The full update tree — and the two fixed-step groups nobody separates: prediction declares `UpdateBefore` the ordinary fixed step, and netcode nests a second one inside itself | planned |
+| 15 | `15-system-lifecycle` | lifecycle | `OnCreate` → gate → `OnUpdate` → `OnDestroy`. The gate is a **level** (`Enabled && ShouldRunSystem()`, one `if`); `OnStartRunning`/`OnStopRunning` are **edges** off that one-bit latch | planned |
 | 16 | `16-baking` | dataflow | GameObject → `Baker` → entity → SubScene file → runtime load. The compile step nobody tells you is a compile step | planned |
-| 17 | `17-subscene-streaming` | lifecycle | Section load and unload, `RequestSceneLoaded`, and what is resident when | planned |
+| 17 | `17-subscene-streaming` | lifecycle | Section load and unload, `RequestSceneLoaded`, and the bit nobody mentions: a section is deserialized in a **separate world your systems cannot see** | planned |
 | 18 | `18-blob-assets` | dataflow | `BlobBuilder` → `BlobAssetReference`. Relative pointers, position independence, why a blob can be memory-mapped | planned |
 
 ## III · The wire
@@ -46,7 +46,7 @@ You already know cache lines and clock edges. These maps say which hardware idea
 | 02 | `02-keypress` | dataflow | One `float2` of intent and every local consequence it causes | built |
 | 03 | `03-connect` | sequence | Handshake → approval → network id → in-game | built |
 | 19 | `19-netcode-worlds` | architecture | Client world, server world, thin client — and why `IsHost` means one world with both flags | planned |
-| 20 | `20-tick-timeline` | dataflow | Input target, client predicted, server authoritative, interpolated. **Four** timelines, collapsing to three only when `ForcedInputLatencyTicks` is zero | planned |
+| 20 | `20-tick-timeline` | dataflow | Input target, client predicted, server authoritative, interpolated. **Four** timelines, collapsing to three only when *effective* input latency is zero — which a high-ping player never gets | planned |
 | 21 | `21-snapshot-pipeline` | dataflow | Importance sort → baseline delta → packet fill → receive → apply. A snapshot is not the world; it is as much of the world as fits | planned |
 | 22 | `22-prediction-loop` | workflow | Restore, replay, carry on — and why there is no *compare* in the hot path | built |
 | 23 | `23-interpolation` | dataflow | Buffer mechanics only — waypoints, the 20-tick extrapolation clamp, jitter scaling, `InterpolationDelayCorrectionFraction`. The domain choice belongs to 41 | planned |

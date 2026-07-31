@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Three Assemblies, One AND Gate",
+    "subtitle": "Our own asmdefs — and the seven-input AND that deletes an entire assembly without printing anything",
+    "output": "diagrams/31-assembly-graph.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "defines",
+        "label": "Packages become symbols",
+        "focus": [
+          "vdef",
+          "constraint"
+        ],
+        "note": "A version define says: if that package exists, define this symbol — for this one assembly only."
+      },
+      {
+        "id": "split",
+        "label": "Why three and not one",
+        "focus": [
+          "runtime",
+          "authoring",
+          "editor"
+        ],
+        "note": "Editor-only code cannot be referenced from runtime code, or the reference silently drops in a build."
+      },
+      {
+        "id": "trap",
+        "label": "The silent death",
+        "focus": [
+          "constraint",
+          "missing"
+        ],
+        "note": "One unsatisfied symbol and the whole assembly is skipped. No DLL, no warning, no error."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "vdef",
+      "type": "cloud",
+      "label": "versionDefines",
+      "sublabel": "package present → symbol defined",
+      "tag": "per assembly, never inherited",
+      "pos": [
+        40,
+        60
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "constraint",
+      "type": "security",
+      "label": "defineConstraints",
+      "sublabel": "seven symbols, all required",
+      "tag": "an AND, not a preference",
+      "pos": [
+        40,
+        330
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "missing",
+      "type": "external",
+      "label": "One symbol short",
+      "sublabel": "assembly is not compiled",
+      "tag": "nothing is logged",
+      "pos": [
+        40,
+        600
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "runtime",
+      "type": "backend",
+      "label": "Daggertooth",
+      "sublabel": "components, systems, contexts",
+      "tag": "all platforms",
+      "pos": [
+        620,
+        60
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "authoring",
+      "type": "frontend",
+      "label": "Daggertooth.Authoring",
+      "sublabel": "settings assets and bakers",
+      "tag": "plus UNITY_EDITOR",
+      "pos": [
+        620,
+        330
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "editor",
+      "type": "database",
+      "label": "Daggertooth.Editor",
+      "sublabel": "menu items, graph construction",
+      "tag": "Editor platform only",
+      "pos": [
+        620,
+        600
+      ],
+      "size": [
+        280,
+        68
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one DLL each · references point upward · nothing runtime may reach down",
+      "wraps": [
+        "runtime",
+        "authoring",
+        "editor"
+      ],
+      "pad": 26
+    }
+  ],
+  "connections": [
+    {
+      "from": "vdef",
+      "to": "constraint",
+      "label": "seven symbols",
+      "variant": "emphasis",
+      "labelDy": 24
+    },
+    {
+      "from": "constraint",
+      "to": "missing",
+      "label": "any one absent",
+      "variant": "dashed",
+      "labelDy": 24
+    },
+    {
+      "from": "constraint",
+      "to": "runtime",
+      "label": "all seven",
+      "variant": "emphasis"
+    },
+    {
+      "from": "constraint",
+      "to": "authoring",
+      "variant": "emphasis"
+    },
+    {
+      "from": "constraint",
+      "to": "editor",
+      "label": "seven, in the editor",
+      "variant": "emphasis"
+    },
+    {
+      "from": "editor",
+      "to": "authoring",
+      "label": "references"
+    },
+    {
+      "from": "authoring",
+      "to": "runtime",
+      "label": "references"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "The trap, stated once",
+      "items": [
+        "The constraint list is an AND across every symbol in it",
+        "One symbol undefined and Unity skips the assembly entirely, not partially",
+        "There is no error, no warning, and no DLL — the types simply cease to exist",
+        "What you see instead is a type-not-found error in your own file, which sends you hunting in the wrong place"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "The seven symbols our assemblies demand",
+      "items": [
+        "Two for the BovineLabs graph packages, canopy and grove",
+        "One for netcode itself",
+        "Three for Unity services: core, authentication, analytics",
+        "One for the platform toolkit — and the authoring assembly adds the editor symbol on top"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why the split is three and not one",
+      "items": [
+        "Runtime code referencing an editor-only assembly compiles fine in the editor",
+        "In a player build that assembly does not exist and the reference silently drops",
+        "So it cannot fail until the first build, where it looks like a catastrophic regression",
+        "Three assemblies make the boundary a compile error instead of a build-day surprise"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The only honest check",
+      "items": [
+        "List the script assemblies folder and look for the DLL by name",
+        "All three of ours are there: runtime, authoring, editor",
+        "If one is missing, its constraints failed — read them before reading your code",
+        "Symbols are per assembly, so every asmdef must declare its own version defines"
+      ]
+    }
+  ]
+}

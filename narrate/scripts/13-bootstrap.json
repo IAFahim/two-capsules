@@ -1,0 +1,91 @@
+{
+  "id": "13-bootstrap",
+  "title": "Where Your World Comes From",
+  "map": "diagrams/13-bootstrap.html",
+  "blurb": "Nobody calls new world. A reflection scan picks one owner, and everything after that is a census.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Nobody calls new world",
+      "focus": null,
+      "text": "Here is the first strange thing about this engine. You never write the line that creates your world. Before the first scene has loaded, before a single script has woken up, the engine reflects over every type you have compiled, looking for one that says I will take over world creation. If it finds one, it hands the whole job over. If it does not, it builds one plain world and gets on with it. Either way, the thing your entities live in was constructed by a function you did not call, from a list you did not write."
+    },
+    {
+      "id": "scan",
+      "title": "The scan, and what it does with ties",
+      "focus": "scan",
+      "text": "The scan collects every type implementing the bootstrap interface, skips the abstract ones, and then does something worth knowing about. If one candidate is assignable from another, the more derived one wins silently. That is the whole inheritance trick: a package ships a bootstrap, you subclass it, and yours quietly replaces it with no registration step anywhere. But if two candidates are unrelated, the engine logs an error and picks arbitrarily. So the mechanism that makes layering effortless is also the one that makes a second unrelated bootstrap a genuinely confusing bug."
+    },
+    {
+      "id": "census",
+      "title": "A world is a census result",
+      "focus": "census",
+      "text": "Once someone owns creation, populating a world is one question asked repeatedly: give me every system carrying this filter flag. The server world asks for server simulation. The client world asks for client simulation plus presentation. The service world asks for a bit BovineLabs invented at position twenty one. Same question, different arguments, different worlds. There is no registry, no manifest, no ordering file. The list of systems in a world is a query result over the type system, computed at startup."
+    },
+    {
+      "id": "default",
+      "title": "The word default means two different things",
+      "focus": "census",
+      "text": "This is the part that costs people days. The default filter flag has two expansions and which one you get depends on who is asking. When a world is being populated, default expands to local simulation plus presentation, and that is a literal line of code. When a system is being classified, default expands to whatever its enclosing group declares as its child default, walking up the ordering chain. If that walk reaches a group with no parent, the fallback is local plus server plus client. That second one is what you meet in practice, because the root simulation group carries no filter attribute at all. Think of the flags as a decoder's address map. Default is not an address. It is an instruction that says: decode from the enclosing region."
+    },
+    {
+      "id": "place",
+      "title": "Placement, and the silent default",
+      "focus": "place",
+      "text": "Every system in the census is then handed to a group. The group attribute says which one. If a system has no such attribute at all, it is not dropped, and it does not error. It is added to the simulation group. Then each of the three roots is sorted once, topologically, from the ordering attributes. That sort happens exactly once at startup, which is why enabling and disabling systems later is free, and why adding one at runtime is not."
+    },
+    {
+      "id": "loop",
+      "title": "The splice that makes it a frame",
+      "focus": "loop",
+      "text": "None of this ticks yet. A world with a perfectly sorted system tree does nothing at all until its groups are inserted into Unity's own player loop. Initialization goes into the engine's initialization phase, simulation into update, presentation into the phase just before late update. That is it. That is the entire connection between the entity world and the game running. Three insertions into a data structure the engine already walks every frame, which is also why a second world is not a thread, not a process, and not free. It is three more entries in the same sequential list."
+    }
+  ],
+  "nodes": {
+    "scan": {
+      "short": "Reflection over every compiled type, looking for one that claims world creation.",
+      "deep": "It runs before the first scene loads, so there is no ordering question about whether your scripts got a chance first. They did not. Types marked as opting out are filtered away, and among what remains the most derived candidate wins. That single rule is why a package can ship a bootstrap and you can extend it without registering anything anywhere.",
+      "types": ["ICustomBootstrap", "DefaultWorldInitialization", "TypeManager"]
+    },
+    "custom": {
+      "short": "Return true and the engine builds nothing of its own.",
+      "deep": "The contract is blunt: your initialize method returns a boolean, and true means you have already created a world and set the default injection pointer. The engine asserts that you did, then returns your world untouched. Netcode's implementation branches on one setting, the requested play type, and from that decides whether a server world, a client world, or both come into existence.",
+      "types": ["ICustomBootstrap", "ClientServerBootstrap", "World"],
+      "goto": "diagrams/19-netcode-worlds.html",
+      "gotoLabel": "Client, server, thin client"
+    },
+    "fallback": {
+      "short": "No bootstrap, or one that declined: the engine builds a single plain world.",
+      "deep": "It is named, flagged as a game world, made the default injection target, and populated with the default filter expansion, which is local simulation plus presentation. That is the single player configuration. Every tutorial you have read assumes this world exists, and in a netcode project it usually does not.",
+      "types": ["World", "WorldFlags", "WorldSystemFilterFlags"]
+    },
+    "nerve": {
+      "short": "A lifecycle on top: one world that never dies, and others built on demand.",
+      "deep": "Nerve is a bootstrap in its own right and separately extends the netcode one, which is exactly the inheritance trick the scan enables. It constructs a persistent service world from a filter bit of its own, then hand picks the Unity scene and entity systems it wants alongside. Client and server worlds are created and destroyed later, on a state graph transition. Netcode decides whether those worlds exist. Nerve decides when.",
+      "types": ["BovineLabsBootstrap", "Worlds", "ClientServerBootstrap"],
+      "goto": "diagrams/28-nerve-session.html",
+      "gotoLabel": "The world that outlives everything"
+    },
+    "census": {
+      "short": "Ask the type manager for every system carrying a given filter flag.",
+      "deep": "This is the only mechanism by which a system ends up in a world. There is no registration call and no configuration file. Which is also why a missing filter attribute is such a quiet failure: the system is not absent, it is present in three worlds at once, running your rule three times on three different sets of entities.",
+      "types": ["TypeManager", "WorldSystemFilterFlags", "SystemTypeIndex"],
+      "goto": "diagrams/42-which-world.html",
+      "gotoLabel": "Every flag, and what it selects"
+    },
+    "place": {
+      "short": "Each system is handed to the group its attribute names, then everything is sorted once.",
+      "deep": "The three root groups are created first, unconditionally, whether or not anything will go in them. Then every system in the census is placed. A system with no group attribute is not an error and is not dropped; it lands in the simulation group. The sort is topological over the ordering attributes and it happens exactly once, at startup.",
+      "types": ["ComponentSystemGroup", "UpdateInGroupAttribute", "SimulationSystemGroup"],
+      "goto": "diagrams/14-system-groups.html",
+      "gotoLabel": "The tree it sorts them into"
+    },
+    "loop": {
+      "short": "Three groups spliced into three phases of the engine's own frame.",
+      "deep": "Initialization goes into the engine's initialization phase, simulation into update, presentation into the phase before late update. That is the whole connection between an entity world and a running game. It also means every world in the process is walked sequentially inside one frame, on the main thread, one after another. Six worlds is six walks, not six threads.",
+      "types": ["ScriptBehaviourUpdateOrder", "InitializationSystemGroup", "PresentationSystemGroup"],
+      "goto": "diagrams/15-system-lifecycle.html",
+      "gotoLabel": "What one system does inside that tick"
+    }
+  }
+}

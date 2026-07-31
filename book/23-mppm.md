@@ -90,7 +90,8 @@ and why 3 would be an ownership bug.
 
 | Fact | Consequence |
 |---|---|
-| Virtual players share `Library/` | a re-import can stall every instance |
+| Virtual players share `Assets/` and `ProjectSettings/` by **symlink** | a re-import can stall every instance |
+| Each has its **own** `Library/` | window layout, build profiles and shader cache are per-player |
 | They do **not** share `SharedStatic` or ECS state | they are separate processes |
 | They can each have network emulation profiles | test latency/loss without a second machine |
 | They deploy the same code | a domain reload hits all of them |

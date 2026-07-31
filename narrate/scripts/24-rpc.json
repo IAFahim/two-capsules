@@ -1,0 +1,123 @@
+{
+  "id": "24-rpc",
+  "title": "The Other Channel",
+  "map": "diagrams/24-rpc.html",
+  "blurb": "A remote call is an entity that becomes bits on the reliable pipeline, and an entity again on the far side.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "There is no call",
+      "focus": null,
+      "text": "The name is a lie, and getting past it is most of the work. Nothing here calls anything. You create an entity. That entity carries your data component and a marker saying it wants to be sent. A generated system finds it, serialises it, and destroys it. On the other machine an entity appears carrying your data component and a marker saying where it came from. Two entities, one on each side, that never meet. If you try to think of this as a function invocation you will keep looking for a return value that does not exist."
+    },
+    {
+      "id": "raise",
+      "title": "Raising one is a spawn",
+      "focus": "app",
+      "text": "Sending is a structural change. You add your component and a send request to a fresh entity. The send request holds one field that matters: which connection to send it to, or nothing at all, which means broadcast. That is why sending a hundred of them in one frame is a hundred entity creations, and why doing it in a hot loop shows up in the profiler as a structural change storm rather than as network cost. The wire is not usually your problem here. The entity manager is."
+    },
+    {
+      "id": "serialize",
+      "title": "Into a byte buffer, not a socket",
+      "focus": "gen",
+      "text": "A source generator has already written a system for each of your command types. It queries for entities holding that type plus a send request, writes an index, a bit length and your serialised payload into a byte buffer hanging off the connection entity, and destroys the request entity. Nothing has been sent yet. The buffer is drained at the end of the frame. This matters because the order things are sent in is the order they were serialised, which is not necessarily the order in which you created the entities."
+    },
+    {
+      "id": "pack",
+      "title": "Many messages, one packet",
+      "focus": "rel",
+      "text": "When the buffer is drained, the sender opens a packet on the reliable pipeline, writes a five byte header, and then fills the rest with as many whole messages as will fit. Never a partial one. If a single message will not fit in one packet at all, that is a hard error and it throws, because there is no fragmentation on this path. So a large remote call is not slow, it is impossible, and the failure is loud rather than silent. That is the right choice, and it is the opposite of how the snapshot path handles the same problem."
+    },
+    {
+      "id": "contrast",
+      "title": "Two pipelines on one socket",
+      "focus": "unrel",
+      "text": "Now the contrast that gives this map its name. Both channels are the same connection and the same socket. They differ only in which pipeline stages the transport composed. The reliable one acknowledges, retransmits, and delivers in order. The unreliable one carries snapshots and commands, keeps the newest, and never makes up a loss. Snapshots are unreliable on purpose: a lost one is not worth resending, because a newer one with better truth is already twenty milliseconds behind it. Retransmission would deliver stale data late."
+    },
+    {
+      "id": "ordering",
+      "title": "The guarantee, stated exactly",
+      "focus": "rpc",
+      "text": "Here is a sentence worth memorising, because it is where people get burned. Remote calls arrive in the order they were sent, relative to each other. Nothing whatsoever is guaranteed about a remote call relative to a snapshot. Send one announcing a state change and then send the snapshot carrying that change and you must assume either order. That is why go in game is a remote call and the ghost stream is not, and why a remote call announcing something the snapshot also carries is a race you will lose intermittently."
+    },
+    {
+      "id": "arrive",
+      "title": "It becomes an entity again",
+      "focus": "dest",
+      "text": "On the receiving side, the system reads an index, looks up a function pointer, and invokes it. The default generated implementation creates an entity carrying your component and a receive request naming the connection it came from. That connection is your only sender identity, and it is the right one, because it cannot be forged by the payload. Then it checks that the number of bits read matches the number declared. If they disagree the connection is disconnected on the spot, because a desynchronised bit stream cannot be recovered from."
+    }
+  ],
+  "nodes": {
+    "app": {
+      "short": "You create an entity. That is the entire send side of the API.",
+      "deep": "Your data component plus a send request on one entity. The request names a target connection, or leaves it null to broadcast. There is no call, no handle, no completion. It is a structural change, so a burst of them costs entity manager work long before it costs bandwidth.",
+      "types": [
+        "IRpcCommand",
+        "SendRpcCommandRequest",
+        "IApprovalRpcCommand"
+      ],
+      "goto": "diagrams/03-connect.html",
+      "gotoLabel": "The one this project actually sends"
+    },
+    "gen": {
+      "short": "A generated system per command type, serialising into a per-connection buffer.",
+      "deep": "The source generator emits a serializer and a request system for each type you declare. It writes an index, a payload bit length and the packed payload into an outgoing byte buffer on the connection entity, then destroys the request entity. Nothing has touched the network yet; the buffer is drained at the end of the frame.",
+      "types": [
+        "RpcCommandRequest",
+        "RpcQueue",
+        "RpcSerializerState",
+        "RpcCollection"
+      ],
+      "goto": "diagrams/36-ghost-codegen.html",
+      "gotoLabel": "The generator that wrote this system"
+    },
+    "rel": {
+      "short": "Acknowledged, retransmitted, delivered in the order it was serialised.",
+      "deep": "The packet carries a five byte common header and then whole messages until it is full. Nothing is ever split. If a single message cannot fit, that throws, because there is no fragmentation here. When the reliable window is full the send simply does not happen and is retried on a later tick, which is expected rather than exceptional.",
+      "types": [
+        "NetworkStreamProtocol",
+        "RpcSystem",
+        "NetworkStreamDriver",
+        "NetworkDriverStore"
+      ],
+      "goto": "diagrams/39-connection-topologies.html",
+      "gotoLabel": "The pipeline stack this sits on"
+    },
+    "unrel": {
+      "short": "The same socket, different stages: snapshots and commands, newest wins.",
+      "deep": "Losses are never made up, and that is deliberate. A retransmitted snapshot would arrive after a newer one carrying better truth, so resending it would deliver stale data late. Commands solve the same problem differently, by putting redundancy in the payload rather than in the protocol.",
+      "types": [
+        "GhostSendSystem",
+        "CommandSendSystem",
+        "NetworkStreamDriver",
+        "SnapshotData"
+      ],
+      "goto": "diagrams/21-snapshot-pipeline.html",
+      "gotoLabel": "What rides the unreliable channel"
+    },
+    "rpc": {
+      "short": "Reads an index, invokes a function pointer, and checks the bits afterwards.",
+      "deep": "There is no reflection and no dispatch table lookup by name. The index selects a Burst function pointer registered at startup. After invoking it, the system compares bits read against bits declared; a mismatch disconnects the sender immediately, because a desynchronised bit stream cannot be recovered. An unknown index disconnects too.",
+      "types": [
+        "RpcSystem",
+        "RpcExecutor",
+        "RpcData",
+        "NetworkStreamRequestDisconnect"
+      ],
+      "goto": "diagrams/40-cheat-surface.html",
+      "gotoLabel": "Why this is a trust boundary"
+    },
+    "dest": {
+      "short": "An entity appears carrying your component and the connection it came from.",
+      "deep": "That connection entity is your only sender identity, and it is the trustworthy one, because it is attached by the receiver and cannot be forged in the payload. Consume it and destroy the entity when you have handled it. If you never do, it just sits there, and an age warning is the only thing that will tell you.",
+      "types": [
+        "ReceiveRpcCommandRequest",
+        "NetworkId",
+        "ConnectionApproved",
+        "NetworkStreamConnection"
+      ],
+      "goto": "diagrams/04-clientgraph.html",
+      "gotoLabel": "The state graph that consumes ours"
+    }
+  }
+}

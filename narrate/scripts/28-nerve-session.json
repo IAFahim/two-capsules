@@ -1,0 +1,122 @@
+{
+  "id": "28-nerve-session",
+  "title": "How a Session Gets Built",
+  "map": "diagrams/28-nerve-session.html",
+  "blurb": "Worlds created by a state graph, scenes routed by a bit mask, and a player that is two entities rather than one.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "The bootstrap barely does anything",
+      "focus": null,
+      "text": "You would expect the bootstrap to build the worlds. It does not. It creates one service world and stops. Every other world is created by a node inside a state graph, and destroyed when that state exits. So world lifetime equals state lifetime, which is a strong and unusual claim: leaving the game state is what tears the game world down, and there is no separate shutdown path to forget to call."
+    },
+    {
+      "id": "routing",
+      "title": "Which scene ends up in which world",
+      "focus": "loader",
+      "text": "A settings asset holds a list of scene sets. Each set carries a mask naming the kinds of world it belongs to: game, service, menu, client, server, thin client. At bake time that mask is converted into world flags and stamped onto a controller entity, one per set. At runtime the loader is doing exactly one interesting thing. It takes the mask off the entity, ands it with the flags of the world it happens to be running in, and skips the entity if the result is zero. That is the whole routing system. A bitwise and."
+    },
+    {
+      "id": "ours",
+      "title": "Where our own client settings ride",
+      "focus": "sets",
+      "text": "Our project puts a world attribute on a settings class naming the client world. The editor reads that attribute and writes the asset onto the settings prefab registered for the client. That prefab lives in the client scene. The client scene is in a set whose mask includes client. So the baked state machine entity appears in the client world, and the system that drives it filters on client simulation. Five hops, none of them a runtime lookup, and if you ever wonder where a missing entity went, you walk that chain backwards."
+    },
+    {
+      "id": "approval",
+      "title": "The gate that is switched off",
+      "focus": "approve",
+      "text": "Connection approval is controlled by one flag, and it defaults to off. With it off, both approval systems disable themselves on create. Nothing ever grants the approved marker, and nothing ever attaches an account identity. And the spawner only acts on connections that carry both. So on a fresh project, every connection succeeds, every handshake completes, and no player ever appears. No error, no warning. That failure mode is worth memorising because everything about it looks healthy."
+    },
+    {
+      "id": "player",
+      "title": "Two entities, and only one of them is you",
+      "focus": "ctrl",
+      "text": "A player is a controller and a controlled entity. The controller carries the account identity and is the durable half; the controlled entity is the body. When a connection drops, the controller is not destroyed, it is disabled, and it waits. When someone reconnects with the same account, the spawner finds that controller, re-points ownership and the command target at it, and switches it back on. Persistence without a save file, because the identity is a string rather than a network number. It is also why two players in our test show up as four ghosts, and why three would mean two clients had adopted the same controller."
+    }
+  ],
+  "nodes": {
+    "boot": {
+      "short": "Creates exactly one world at startup, and then gets out of the way.",
+      "deep": "It is the ordinary custom bootstrap hook, and when netcode is present the same class instead extends the netcode bootstrap so the world model swaps cleanly onto Unity's. What it deliberately does not do is create a game world, because deciding when a game exists is a gameplay question, not a startup question.",
+      "types": [
+        "BovineLabsBootstrap",
+        "WorldFlags"
+      ],
+      "goto": "diagrams/13-bootstrap.html",
+      "gotoLabel": "What a bootstrap normally does"
+    },
+    "graph": {
+      "short": "A node in the service graph opens the client world and the server world, and closes them again.",
+      "deep": "Entering the state calls back into the bootstrap to create; exiting it destroys. Which play type you asked for decides whether you get a client, a server, or both. This is the seam where a hierarchical state machine ends up owning process level lifetime, and it is the reason there is no separate teardown to forget.",
+      "types": [
+        "CreateWorld",
+        "NerveStateMachine",
+        "StartupGate"
+      ],
+      "goto": "diagrams/42-which-world.html",
+      "gotoLabel": "Which world am I actually in?"
+    },
+    "sets": {
+      "short": "Scene sets, each carrying a mask of the world kinds it belongs to.",
+      "deep": "One baked controller entity is created per set, and only for sets whose mask could ever match, so a set that is irrelevant to a world does not even produce an entity there. The flag with the required marker also forces the wait for load behaviour on, regardless of what you asked for.",
+      "types": [
+        "SubSceneSet",
+        "SceneSettings",
+        "SubSceneLoadFlags"
+      ]
+    },
+    "loader": {
+      "short": "Ands the set's mask against this world's flags, and skips it if nothing matches.",
+      "deep": "That single test is the entire routing mechanism. There is no registry, no lookup, no per state switching. If a set is marked to wait for load, the loader pauses the whole world until streaming finishes, which is how you get a deterministic first frame instead of a race.",
+      "types": [
+        "SubSceneLoadingSystem",
+        "SubSceneLoadData",
+        "LoadSubScene"
+      ]
+    },
+    "approve": {
+      "short": "A token, sent before a network identifier has been granted at all.",
+      "deep": "Netcode reserves a special class of remote call that is allowed to travel before approval, and this rides it. The server validates the token asynchronously, and on success attaches the approved marker plus an account identity. Every rejection path ends the same way: a request to disconnect with an approval failure reason, which is classified as not worth retrying.",
+      "types": [
+        "ApprovalRequest",
+        "ConnectionApprovalSystem",
+        "ConnectionApprovalServerSystem",
+        "ConnectionApproved"
+      ],
+      "goto": "diagrams/03-connect.html",
+      "gotoLabel": "The handshake this sits inside"
+    },
+    "spawn": {
+      "short": "Turns an approved connection into a controller, or finds the one it left behind.",
+      "deep": "Three passes each tick: mark controllers inactive for connections that dropped, reattach an approved connection to an existing controller with the same account, or instantiate a fresh controller and body. It also guards against two connections claiming the same account in the same frame, and kicks the duplicate.",
+      "types": [
+        "PlayerConnectionSystem",
+        "ServerPrefabs",
+        "AccountIdentity"
+      ]
+    },
+    "ctrl": {
+      "short": "The durable half of a player: the account, kept across a disconnect.",
+      "deep": "It is disabled rather than destroyed when the connection goes, along with everything linked to it, and re-enabled when the same account returns. Ownership is re-pointed while everything is still disabled, and the enabling happens last, after every other system has had its chance to repair state.",
+      "types": [
+        "ControllerAuthoring",
+        "ControllerActive",
+        "ControllerOwnership",
+        "PrimaryControlledEntity"
+      ]
+    },
+    "pawn": {
+      "short": "The body: the entity that this player's input is actually pointed at.",
+      "deep": "It carries only a back pointer to its controller. The connection's command target is what routes input to it, and the ghost owner field is what tells every client which one of these is theirs. Two entities per player is what lets identity outlive a respawn without any special casing.",
+      "types": [
+        "ControlledEntityAuthoring",
+        "ControllerEntity",
+        "CommandTarget",
+        "GhostOwner"
+      ],
+      "goto": "diagrams/41-clock-domains.html",
+      "gotoLabel": "Why ownership decides which clock you run on"
+    }
+  }
+}

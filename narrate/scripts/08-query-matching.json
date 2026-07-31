@@ -1,0 +1,111 @@
+{
+  "id": "08-query-matching",
+  "title": "Where a Query Actually Filters",
+  "map": "diagrams/08-query-matching.html",
+  "blurb": "Five rejections at five granularities, and only the last one costs anything per entity.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "The filtering is not where you think",
+      "focus": null,
+      "text": "The word query makes you picture a scan. It is not a scan. By the time your update runs, the answer is a flat array of chunk indices that was computed earlier and cached. Everything on the left of this map happens when the query is created, or when a new archetype is born, and neither of those is per frame. What is left inside your loop is two bit tricks."
+    },
+    {
+      "id": "bloom",
+      "title": "A bloom filter, in an entity system",
+      "focus": "bloom",
+      "text": "This one surprised me. Every component type hashes to five bits of a sixty four bit word. An archetype's mask is the bitwise or of all its types' masks. A query's mask is the or of everything it requires. Then the first test is one and operation: if the required bits are not all present, this archetype cannot possibly match, and it is rejected without reading a single type number. The source even explains the choice of five bits: fewer and different types collide, more and or-ing enough masks together hides a missing type. It is a probabilistic reject in front of an exact one, exactly like a cache tag in front of a tag comparison."
+    },
+    {
+      "id": "exact",
+      "title": "Then the honest comparison",
+      "focus": "types",
+      "text": "Survivors go through the cheap categorical rejects first. Disabled, prefab, system instance, meta chunk. All four are excluded unless you asked for them, which is why your first query mysteriously misses your prefabs. Only after that does it walk the two sorted arrays, the archetype's types and the query's required types, and check the required set, the excluded set, the any set. That walk is linear and it is the expensive part, which is precisely why the bloom filter sits in front of it."
+    },
+    {
+      "id": "cache",
+      "title": "The chunk list is a flat array",
+      "focus": "chunks",
+      "text": "A match records two things: the archetype in the query's list, and a back pointer to the query on the archetype. Then all the matching archetypes' chunk lists get flattened into one array of chunk indices, with a parallel array saying which archetype each chunk came from. Archetypes holding zero entities are skipped during that flatten. And the whole thing is guarded by a valid flag, which somebody else drops for you whenever a structural change touches a matching archetype."
+    },
+    {
+      "id": "inner",
+      "title": "Two bit tricks, and that is all",
+      "focus": "mask",
+      "text": "Inside the loop there are exactly two filters left. The version filter compares a stored version number and can skip a whole chunk without touching it, and it has a hard ceiling of two shared values and two changed types, which is a real limit you can hit. Then the switchable component state is two sixty four bit words, one bit per slot. Finding the next entity is count trailing zeros. Advancing past it is clearing the lowest set bit with a single and. If nothing in the chunk is switchable the mask is all ones and the loop is a plain range. That is the entire per entity cost of a query."
+    }
+  ],
+  "nodes": {
+    "desc": {
+      "short": "The required, optional, excluded and present sets, written once.",
+      "deep": "You build this in create, not in update, and the system caches it. The four sets are not symmetric: required and present affect matching in different ways, and the excluded set is the one that quietly makes an archetype invisible to you forever. Options on top of it decide whether disabled entities, prefabs, system instances and meta chunks are even considered.",
+      "types": [
+        "EntityQueryDesc",
+        "EntityQueryBuilder",
+        "EntityQueryOptions"
+      ],
+      "goto": "diagrams/01-machine.html",
+      "gotoLabel": "Where queries sit in the whole machine"
+    },
+    "bloom": {
+      "short": "One and operation against a sixty four bit mask rejects most archetypes.",
+      "deep": "Each component type hashes deterministically to five set bits. An archetype ors together the masks of every type it holds; a query ors together the masks of what it requires. If the query's bits are not a subset of the archetype's, no match is possible. False positives cost you an exact check you would have done anyway. False negatives cannot happen, which is what makes it safe.",
+      "types": [
+        "TypeManager",
+        "Archetype",
+        "ArchetypeQuery"
+      ]
+    },
+    "types": {
+      "short": "The categorical rejects, then a walk of two sorted arrays.",
+      "deep": "Disabled, prefab, system instance and meta chunk archetypes are excluded unless the query explicitly asked for them, and each is a single flag test. Then the required, present and excluded sets are checked by walking the archetype's sorted type array. There is also an early exit when the archetype simply has fewer types than the query requires.",
+      "types": [
+        "ArchetypeFlags",
+        "ComponentType",
+        "EntityQueryManager"
+      ]
+    },
+    "matched": {
+      "short": "Recorded in both directions, once, when the archetype first matches.",
+      "deep": "The query gets a record naming the archetype and the position of each requested type inside it, so iteration never has to search for a type again. The archetype gets a back pointer to the query. That back pointer is what lets a structural change find every query it just invalidated without searching, and it is the quiet reason invalidation is cheap.",
+      "types": [
+        "MatchingArchetype",
+        "EntityQueryData",
+        "EntityQueryMask"
+      ],
+      "goto": "diagrams/06-archetype-graph.html",
+      "gotoLabel": "Where archetypes come from"
+    },
+    "chunks": {
+      "short": "Every matching chunk from every matching archetype, flattened into one array.",
+      "deep": "Alongside the chunk indices there are two parallel arrays: which matching archetype each chunk belongs to, and its position within that archetype's own list. A valid flag guards the whole thing, and the rebuild simply clears and refills, skipping archetypes with no entities. The rebuild itself is compiled to native code, because it runs often enough to matter.",
+      "types": [
+        "UnsafeCachedChunkList",
+        "ArchetypeChunk",
+        "ChunkIndex"
+      ],
+      "goto": "diagrams/11-sync-points.html",
+      "gotoLabel": "What drops this cache"
+    },
+    "filter": {
+      "short": "A version compare that can skip a whole chunk without reading it.",
+      "deep": "Two flavours: filter by a shared component value, or filter by whether a component type has been written since a given version. Both have a capacity of exactly two, which is a real ceiling rather than a soft guideline. And both operate per chunk, so change filtering is coarse: one write anywhere in a chunk makes the whole chunk look changed.",
+      "types": [
+        "EntityQueryFilter",
+        "ChangeVersionUtility",
+        "ArchetypeChunk"
+      ]
+    },
+    "mask": {
+      "short": "Two sixty four bit words per chunk, walked with count trailing zeros.",
+      "deep": "Switchable components let you turn an entity off without moving it to a different chunk, and the state lives as a bit mask in the chunk. The enumerator finds the next set bit with count trailing zeros and then clears the lowest set bit with a single and. It is the same loop you would write to service a pending interrupt register, and it is the only genuinely per entity work a query does.",
+      "types": [
+        "ChunkEntityEnumerator",
+        "EnabledMask",
+        "IEnableableComponent"
+      ],
+      "goto": "diagrams/22-prediction-loop.html",
+      "gotoLabel": "The one bit that eats projects"
+    }
+  }
+}

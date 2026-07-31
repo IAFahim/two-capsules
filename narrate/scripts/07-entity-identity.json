@@ -1,0 +1,106 @@
+{
+  "id": "07-entity-identity",
+  "title": "One Word, and the Bit That Says Alive",
+  "map": "diagrams/07-entity-identity.html",
+  "blurb": "An entity handle is sixty four bits with no pointer in it, and the version field is what turns a dangling reference into a null instead of a disaster.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Eight bytes, no address",
+      "focus": null,
+      "text": "An entity is not an object and it is not a pointer. It is one sixty four bit word, and if you look at the source you find something better than the two integers everyone quotes. It is a single raw field with three bit fields packed into it: twenty eight bits of index, twelve bits of type identifier, and twenty four bits of version. Index and version are properties that mask and shift, not fields you can take the address of. Which means comparing two entities is one compare of one word, and nothing else."
+    },
+    {
+      "id": "why",
+      "title": "Why a version at all",
+      "focus": "check",
+      "text": "Twenty eight bits gives you about two hundred and sixty eight million indices, and in a game that spawns and destroys constantly you will chew through those and start reusing them. Without a generation counter, a handle you kept from three seconds ago would silently address whatever now occupies that index. With one, the handle fails a comparison you were already paying for, because the lookup has to read that slot anyway. You get detection for free out of work you could not avoid."
+    },
+    {
+      "id": "slot",
+      "title": "The slot table, and one clever bit",
+      "focus": "slot",
+      "text": "The index selects a slot, and the slot is itself one packed word holding the version, the chunk, and the position inside that chunk. Then comes the detail I enjoyed most. A slot whose version has its low bit clear holds no live entity. Live means odd. That is the same trick as an even and odd sequence counter in lock free code, and it means the null entity, whose version is zero, falls out of the rule for free rather than needing a special case."
+    },
+    {
+      "id": "outcome",
+      "title": "Two outcomes, no third",
+      "focus": "stale",
+      "text": "So the lookup is: mask the index, read the slot, compare the version. Equal, and you get a chunk and a slot number unpacked from the same word you already loaded. Not equal, and you get nothing. There is no third branch where it half works. A stale handle in this system is a null, not a corrupted read, and that difference is the whole reason you can hand entity handles around inside components without fear."
+    },
+    {
+      "id": "consequences",
+      "title": "Three consequences worth carrying",
+      "focus": "handle",
+      "text": "First, the hash code of an entity is its index alone, with the version thrown away, so a recycled handle collides with the one it replaced in a hash map. Second, sorting entities sorts on index, again ignoring the version. Third, the position inside a chunk is stored in a single byte, which is exactly why a chunk can never hold more than a hundred and twenty eight entities however small your components are. The identity design and the chunk capacity limit are the same decision seen from two ends."
+    }
+  ],
+  "nodes": {
+    "handle": {
+      "short": "One sixty four bit word, and there is no address anywhere in it.",
+      "deep": "The struct is declared with an explicit size of eight bytes and holds exactly one raw field. Everything you think of as a field is a property that masks and shifts. That is what lets the equality operator compare the two words directly, and it is why passing entities around by value costs the same as passing a long integer.",
+      "types": [
+        "Entity",
+        "EntityManager"
+      ],
+      "goto": "diagrams/05-chunk-layout.html",
+      "gotoLabel": "Where the data actually lives"
+    },
+    "bits": {
+      "short": "Twenty four bits of version, twelve of type identifier, twenty eight of index.",
+      "deep": "The comment in the source says the layout deliberately matches the engine's own identifier type, so a reinterpret cast between them is byte identical. That is the seam where the entity system meets the rest of the engine, and it is the reason this layout is packed rather than the two plain integers older documentation describes.",
+      "types": [
+        "Entity",
+        "TypeIndex"
+      ]
+    },
+    "slot": {
+      "short": "One word per index, holding version, chunk, and position inside the chunk together.",
+      "deep": "It lives on the engine side now rather than inside the entity package, and the package reads it through a static that both compiled and interpreted code agree on. Reads use a volatile load, because entity ids can be allocated from worker threads without a lock, which is what makes recording a create inside a job possible at all.",
+      "types": [
+        "EntityComponentStore",
+        "EntityInChunk",
+        "ChunkIndex"
+      ]
+    },
+    "check": {
+      "short": "Compare the version in the slot against the version in your hand.",
+      "deep": "One integer comparison, on a word the lookup had to load anyway to find the chunk. That is the entire safety mechanism. It costs a compare and a predictable branch, and in exchange every stale handle in the program becomes a detected null instead of a silent read of somebody else's data.",
+      "types": [
+        "Entity",
+        "EntityComponentStore",
+        "EntityStorageInfoLookup"
+      ]
+    },
+    "resolve": {
+      "short": "A chunk and a position inside it, unpacked from the word you already read.",
+      "deep": "No second load, no pointer chase. The chunk index and the position are bit fields of the same slot word as the version, so a successful lookup and a failed one cost nearly the same. From there the actual component address is the chunk buffer, plus the type's offset, plus the position times the stride.",
+      "types": [
+        "EntityInChunk",
+        "ArchetypeChunk",
+        "ChunkIndex"
+      ],
+      "goto": "diagrams/06-archetype-graph.html",
+      "gotoLabel": "What decides which chunk"
+    },
+    "stale": {
+      "short": "Versions differ, so the lookup hands back nothing at all.",
+      "deep": "Not an exception in a shipping build, not a crash, not a garbage pointer. A null chunk, which every caller already has to handle. In development builds there is an extra check that throws with a message naming the destroyed entity, but the shipping behaviour is the quiet one, and it is quiet on purpose.",
+      "types": [
+        "Entity",
+        "EntityInChunk"
+      ]
+    },
+    "recycle": {
+      "short": "Destroy an entity and its index goes back to be handed out again.",
+      "deep": "The index is the scarce resource, so it gets reused aggressively, and the version is what keeps that reuse honest. Every reuse bumps the version, so no handle from a previous life ever compares equal. The low bit of the version doubles as the liveness flag, which means the counter effectively advances by one on death and one on rebirth.",
+      "types": [
+        "EntityManager",
+        "EntityComponentStore",
+        "CleanupEntity"
+      ],
+      "goto": "diagrams/12-ecb-playback.html",
+      "gotoLabel": "Who mints ids from inside a job"
+    }
+  }
+}

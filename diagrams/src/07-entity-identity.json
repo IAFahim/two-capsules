@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "One Word, and the Bit That Says Alive",
+    "subtitle": "An entity handle is 64 bits with no pointer in it — and the version field is what turns a dangling reference into a null instead of a disaster",
+    "output": "diagrams/07-entity-identity.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "word",
+        "label": "The handle is one word",
+        "focus": [
+          "handle",
+          "bits"
+        ],
+        "note": "Eight bytes, three packed fields, no address anywhere. Comparing two entities is a single sixty-four-bit compare."
+      },
+      {
+        "id": "lookup",
+        "label": "Index picks, version proves",
+        "focus": [
+          "slot",
+          "check"
+        ],
+        "note": "The index selects a slot. The version in that slot must equal the version in your hand or the lookup refuses."
+      },
+      {
+        "id": "stale",
+        "label": "Detectable, not catastrophic",
+        "focus": [
+          "resolve",
+          "stale"
+        ],
+        "note": "The same comparison produces either a chunk plus a slot number, or nothing. There is no third outcome."
+      },
+      {
+        "id": "recycle",
+        "label": "Why indices come back",
+        "focus": [
+          "recycle",
+          "slot"
+        ],
+        "note": "Indices are scarce and get reused. The version is the generation counter that keeps the reuse honest."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "handle",
+      "type": "cloud",
+      "label": "Entity",
+      "sublabel": "one 64-bit word, size 8",
+      "tag": "no pointer inside",
+      "pos": [
+        60,
+        100
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "slot",
+      "type": "database",
+      "label": "The slot table",
+      "sublabel": "version and chunk in one word",
+      "tag": "engine side, global",
+      "pos": [
+        550,
+        100
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "check",
+      "type": "backend",
+      "label": "Compare the version",
+      "sublabel": "slot version equals yours?",
+      "tag": "one branch",
+      "pos": [
+        1040,
+        100
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "resolve",
+      "type": "frontend",
+      "label": "Chunk plus slot number",
+      "sublabel": "unpacked from the same word",
+      "tag": "slot fits in a byte",
+      "pos": [
+        1530,
+        100
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "bits",
+      "type": "security",
+      "label": "Version 24 · TypeId 12 · Index 28",
+      "sublabel": "packed, never separate fields",
+      "tag": "equality is one compare",
+      "pos": [
+        60,
+        430
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "recycle",
+      "type": "security",
+      "label": "Destroy, then reuse",
+      "sublabel": "the index goes back on the list",
+      "tag": "low bit clear means dead",
+      "pos": [
+        550,
+        430
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "stale",
+      "type": "external",
+      "label": "Nothing, not a crash",
+      "sublabel": "the handle resolves to null",
+      "tag": "detectable",
+      "pos": [
+        1530,
+        430
+      ],
+      "size": [
+        280,
+        68
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one integer compare decides between an address and a null",
+      "wraps": [
+        "check",
+        "resolve",
+        "stale"
+      ],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    {
+      "from": "handle",
+      "to": "bits",
+      "label": "how it packs",
+      "variant": "dashed",
+      "labelDy": 145
+    },
+    {
+      "from": "handle",
+      "to": "slot",
+      "label": "index picks a slot",
+      "variant": "emphasis"
+    },
+    {
+      "from": "slot",
+      "to": "check",
+      "label": "read the word",
+      "variant": "emphasis"
+    },
+    {
+      "from": "check",
+      "to": "resolve",
+      "label": "equal",
+      "variant": "emphasis"
+    },
+    {
+      "from": "check",
+      "to": "stale",
+      "label": "not equal",
+      "variant": "security"
+    },
+    {
+      "from": "recycle",
+      "to": "slot",
+      "label": "bump the version",
+      "variant": "security",
+      "labelDy": -145
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The layout, from the source",
+      "items": [
+        "The struct is laid out sequential with size 8 · Unity.Entities/Types/Entity.cs:31",
+        "Bit layout is version 24, type id 12, index 28 · Entity.cs:34, :39",
+        "Index and Version are properties over one raw field, not fields · Entity.cs:60, :73",
+        "So equality compares that single word and nothing else · Entity.cs:88"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What the version buys you",
+      "items": [
+        "Twenty-eight index bits is 268 million slots, and they are recycled aggressively",
+        "Without a generation counter, a reused index silently addresses somebody else's data",
+        "With one, the stale handle fails a comparison you were already paying for",
+        "The slot lookup returns a null chunk rather than an address · EntityComponentStoreEntities.cs:72"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The liveness bit",
+      "items": [
+        "A slot whose version has its low bit clear holds no live entity · EntityComponentStoreEntities.cs:55",
+        "Version zero is the null sentinel, and zero is even, so the rule stays consistent",
+        "The lookup short-circuits on version zero before it even touches the table · line 69",
+        "This is the same trick as an even-odd sequence counter in lock-free code"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Three consequences worth knowing",
+      "items": [
+        "The hash code of an entity is its index alone, so recycled handles collide · Entity.cs:129",
+        "Comparing entities for sorting compares indices, not versions · Entity.cs:107",
+        "The slot packs the position inside the chunk, asserted below 128 · EntityComponentStoreEntities.cs:84",
+        "That 128 is the same ceiling the chunk capacity math obeys · TypeManager.cs:705"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "The Active Path",
+    "subtitle": "Canopy stores one number, rebuilds a whole path from it every tick, and a jump by name edits only the part of that path that actually changed",
+    "output": "diagrams/27-canopy-hsm.html",
+    "viewBox": [
+      1120,
+      700
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "cursor",
+        "label": "One number is the machine",
+        "focus": [
+          "leaf",
+          "path"
+        ],
+        "note": "The leaf is stored. Everything above it is recomputed by chasing parent pointers and reversing."
+      },
+      {
+        "id": "jump",
+        "label": "What a named jump does",
+        "focus": [
+          "goto",
+          "split"
+        ],
+        "note": "There are no transition edges. A node names a state, and the machine finds the common ancestor."
+      },
+      {
+        "id": "order",
+        "label": "Up, then down",
+        "focus": [
+          "exit",
+          "enter"
+        ],
+        "note": "Exits run deepest first, entries shallowest first. Anything shared by both paths is never touched."
+      },
+      {
+        "id": "refuse",
+        "label": "Caught before you ship",
+        "focus": [
+          "goto",
+          "reject"
+        ],
+        "note": "Two roots, a missing default child, a name that hashes onto another name — all refused at bake."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "the path, every tick"
+    },
+    {
+      "id": "jump",
+      "label": "the arithmetic of a jump"
+    },
+    {
+      "id": "terminal",
+      "label": "refused at bake"
+    }
+  ],
+  "states": [
+    {
+      "id": "leaf",
+      "type": "start",
+      "label": "Active leaf",
+      "sublabel": "one number, in grove state",
+      "lane": "main",
+      "col": 0,
+      "step": "01",
+      "tag": "the whole cursor"
+    },
+    {
+      "id": "path",
+      "type": "active",
+      "label": "The active path",
+      "sublabel": "root to leaf, rebuilt from it",
+      "lane": "main",
+      "col": 1,
+      "step": "02",
+      "tag": "all of it runs"
+    },
+    {
+      "id": "goto",
+      "type": "decision",
+      "label": "Go To",
+      "sublabel": "a name, hashed to an int",
+      "lane": "main",
+      "col": 2,
+      "step": "03",
+      "tag": "no edges exist"
+    },
+    {
+      "id": "exit",
+      "type": "waiting",
+      "label": "Exit, bottom up",
+      "sublabel": "deepest first, history recorded",
+      "lane": "main",
+      "col": 3,
+      "step": "05",
+      "tag": "jumping here throws"
+    },
+    {
+      "id": "enter",
+      "type": "success",
+      "label": "Enter, top down",
+      "sublabel": "shallowest first, leaf number moving",
+      "lane": "main",
+      "col": 4,
+      "step": "06",
+      "tag": "next tick, rebuilt from it"
+    },
+    {
+      "id": "split",
+      "type": "neutral",
+      "label": "Common ancestor",
+      "sublabel": "old path against new, prefix wins",
+      "lane": "jump",
+      "col": 1,
+      "step": "04",
+      "tag": "shared states stay"
+    },
+    {
+      "id": "reject",
+      "type": "failure",
+      "label": "Refused at bake",
+      "sublabel": "two roots · no default child · colliding names",
+      "lane": "terminal",
+      "col": 0,
+      "tag": "never reaches runtime"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "rebuild",
+      "from": "leaf",
+      "to": "path",
+      "variant": "emphasis",
+      "label": "chase parents",
+      "labelDy": -56
+    },
+    {
+      "id": "jumped",
+      "from": "path",
+      "to": "goto",
+      "variant": "emphasis",
+      "label": "a block jumps",
+      "labelDy": 56
+    },
+    {
+      "id": "resolve",
+      "from": "goto",
+      "to": "split",
+      "variant": "emphasis",
+      "label": "find the target"
+    },
+    {
+      "id": "unwind",
+      "from": "split",
+      "to": "exit",
+      "variant": "emphasis",
+      "label": "below the split",
+      "labelDy": 30
+    },
+    {
+      "id": "wind",
+      "from": "exit",
+      "to": "enter",
+      "variant": "emphasis",
+      "label": "then downward",
+      "labelDy": -56
+    },
+    {
+      "id": "unknown",
+      "from": "goto",
+      "to": "reject",
+      "variant": "security",
+      "route": "drop",
+      "label": "unknown name"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Why a path, not a state",
+      "items": [
+        "Every state above the leaf is active too, and its blocks run every tick",
+        "That is why a connection watcher belongs on the root and not on a child",
+        "Parent pointers are walked up · Canopy BovineLabs.Canopy/CanopyStateMachine.cs:254",
+        "Then the list is reversed, so the root runs first · same file:267"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The jump, step by step",
+      "items": [
+        "The name is resolved by scanning nodes · Canopy BovineLabs.Canopy/CanopyStateMachine.cs:270",
+        "Old and new paths are compared until they differ · same file:195",
+        "Only states below that point exit, deepest first · same file:212",
+        "Then the new branch is entered, shallowest first · same file:358"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The re-entrancy guard nobody mentions",
+      "items": [
+        "Each transition bumps a version number kept in grove state",
+        "Every enter and update loop rechecks it and abandons a stale walk",
+        "So a jump fired from inside Enter wins, and the older walk stops quietly",
+        "A jump fired from inside Exit throws · Canopy BovineLabs.Canopy/CanopyStateMachine.cs:461"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What bake time refuses",
+      "items": [
+        "Two parentless states · Canopy BovineLabs.Canopy.Authoring/CanopyGraphValidation.cs:139",
+        "A composite with no default child, or with two · same file:205 and :173",
+        "A cycle in the parent chain · same file:261",
+        "Two names hashing onto each other · same file:86",
+        "Because the id is a single int · Canopy BovineLabs.Canopy.Data/CanopyStateId.cs:12"
+      ]
+    }
+  ]
+}

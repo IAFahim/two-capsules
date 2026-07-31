@@ -98,6 +98,9 @@ the crate is predicted. If the crate can knock a barrel, the barrel is predicted
 predicted set is the transitive closure of "can be touched by something predicted", and in a
 fully physics-based game that is close to everything dynamic.
 
+If those forces are emitted by authored timeline clips rather than by hand-written systems,
+chapter 44 covers what has to change for the clip to survive rollback.
+
 That is a budget, so do the arithmetic before the design.
 
 The server steps physics once per simulation tick, and the default tick rate is 60

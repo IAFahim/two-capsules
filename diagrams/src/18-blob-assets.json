@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Position-Independent Data",
+    "subtitle": "Every pointer inside a blob is an offset from its own address, so the block is valid wherever it lands",
+    "output": "diagrams/18-blob-assets.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1220,
+      620
+    ],
+    "views": [
+      {
+        "id": "build",
+        "label": "Built once, in scratch",
+        "focus": [
+          "builder",
+          "block"
+        ],
+        "note": "You allocate wherever it fits, then the whole graph is flattened into one contiguous allocation."
+      },
+      {
+        "id": "relative",
+        "label": "The trick, in one line",
+        "focus": [
+          "block",
+          "rel"
+        ],
+        "note": "A blob pointer is a signed offset from the address of the offset field itself. Nothing in the block knows where it lives."
+      },
+      {
+        "id": "file",
+        "label": "Written byte for byte",
+        "focus": [
+          "rel",
+          "batch"
+        ],
+        "note": "Because no pointer inside is absolute, serialization is a copy and deserialization is a copy back."
+      },
+      {
+        "id": "load",
+        "label": "One word of fixup",
+        "focus": [
+          "batch",
+          "patch",
+          "read"
+        ],
+        "note": "Only the handle on the component is patched. The body is never walked, which is what makes mapping it viable."
+      }
+    ]
+  },
+  "stages": [
+    {
+      "label": "build"
+    },
+    {
+      "label": "the block"
+    },
+    {
+      "label": "the handle"
+    },
+    {
+      "label": "the file"
+    },
+    {
+      "label": "at runtime"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "builder",
+      "type": "backend",
+      "label": "BlobBuilder",
+      "sublabel": "allocate, then fill",
+      "tag": "scratch chunks",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "block",
+      "type": "database",
+      "label": "One block",
+      "sublabel": "header, then all the data",
+      "tag": "a single allocation",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "rel",
+      "type": "security",
+      "label": "Relative pointers",
+      "sublabel": "offset from its own address",
+      "tag": "32 bits, signed",
+      "stage": 1,
+      "row": 1
+    },
+    {
+      "id": "ref",
+      "type": "frontend",
+      "label": "The handle",
+      "sublabel": "the only real pointer",
+      "tag": "sits on a component",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "batch",
+      "type": "database",
+      "label": "Serialized batch",
+      "sublabel": "blocks end to end",
+      "tag": "in the section file",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "patch",
+      "type": "messagebus",
+      "label": "Load fixup",
+      "sublabel": "base plus the stored offset",
+      "tag": "one word per handle",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "read",
+      "type": "frontend",
+      "label": "Read from a job",
+      "sublabel": "shared, immutable, no copy",
+      "tag": "every entity, one block",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "builder",
+      "to": "block",
+      "label": "flatten",
+      "classification": "build",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "block",
+      "to": "rel",
+      "label": "no absolutes",
+      "classification": "invariant"
+    },
+    {
+      "from": "block",
+      "to": "ref",
+      "label": "one pointer",
+      "classification": "handle",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "ref",
+      "to": "batch",
+      "label": "as an offset",
+      "classification": "artifact",
+      "route": "straight"
+    },
+    {
+      "from": "rel",
+      "to": "read",
+      "label": "valid anywhere",
+      "classification": "invariant",
+      "variant": "dashed"
+    },
+    {
+      "from": "batch",
+      "to": "patch",
+      "label": "read back",
+      "classification": "artifact",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "patch",
+      "to": "read",
+      "label": "then use it",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The one line that makes it work",
+      "items": [
+        "A blob pointer stores a signed offset, not an address · Blobs.cs:737",
+        "Dereferencing takes the address of the offset field and adds the offset to it · Blobs.cs:764",
+        "A blob array does exactly the same thing for its elements · Blobs.cs:823",
+        "So the block is correct at any base address, and copying it needs no fixup at all"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What the header is for",
+      "items": [
+        "A fixed thirty-two byte header sits immediately before the data · Blobs.cs:195",
+        "It carries a validation pointer, the length, the allocator and a hash · :198 to :201",
+        "The validation pointer is what turns use-after-dispose into an assert instead of garbage",
+        "For a serialized blob it is written as null and filled in on load · :208"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Load is one word per reference",
+      "items": [
+        "In the file, the handle on each component is stored as a byte offset into the batch",
+        "On load the offset is replaced by the batch base plus that offset · Serialization/SerializeUtility.cs:400 to :404",
+        "Minus one is the null sentinel and stays null",
+        "Nothing walks inside the block, so the fixup cost is independent of how big the blob is"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What this buys you",
+      "items": [
+        "A million entities can share one navigation mesh or one lookup table with no duplication",
+        "The block is immutable by contract, so every job can read it with no synchronisation",
+        "Blob-only types are marked so the compiler refuses to let you copy one out by value",
+        "Copy a blob field out by value and every offset inside it now points at nothing"
+      ]
+    }
+  ]
+}

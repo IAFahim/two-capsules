@@ -111,6 +111,11 @@ The interpolation buffer that defines "the past" is two network ticks by default
 `Runtime/PredictionTicking/NetworkTimeSystem.cs:214`), with extrapolation clamped at 20
 simulation ticks (`NetworkTimeSystem.cs:215`).
 
+Two ticks is a **floor, not the value.** The effective depth is
+`max(configured, avgArrivalGap + 1.25 × deviation)`, clamped at six network intervals
+(`NetworkTimeSystem.cs:553`). A lossy link deepens the buffer without telling anyone, so the
+latency you measure on a clean link is not the latency your players get.
+
 ## The cost asymmetry
 
 | | Interpolated | Predicted | OwnerPredicted |

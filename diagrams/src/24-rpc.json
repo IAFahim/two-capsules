@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "The Other Channel",
+    "subtitle": "An RPC is an entity that becomes bits on the reliable pipeline, and an entity again on the far side",
+    "output": "diagrams/24-rpc.html",
+    "viewBox": [
+      1160,
+      880
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "raise",
+        "label": "Raising one is a spawn",
+        "focus": [
+          "app",
+          "gen"
+        ],
+        "note": "You do not call anything. You create an entity with two components and let a generated system find it."
+      },
+      {
+        "id": "pack",
+        "label": "Many RPCs, one packet",
+        "focus": [
+          "gen",
+          "rel"
+        ],
+        "note": "The queue is a byte buffer. The sender fills a packet with as many whole messages as fit."
+      },
+      {
+        "id": "contrast",
+        "label": "Two pipelines, one socket",
+        "focus": [
+          "rel",
+          "unrel"
+        ],
+        "note": "Reliable ordered for RPCs. Unreliable drop-old for snapshots and commands. Same connection."
+      },
+      {
+        "id": "arrive",
+        "label": "It becomes an entity again",
+        "focus": [
+          "rpc",
+          "dest"
+        ],
+        "note": "The receiver spawns an entity carrying your component plus the connection that sent it."
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "app",
+      "type": "frontend",
+      "label": "Your system",
+      "sublabel": "sender world"
+    },
+    {
+      "id": "gen",
+      "type": "backend",
+      "label": "Codegen",
+      "sublabel": "generated request system"
+    },
+    {
+      "id": "rel",
+      "type": "messagebus",
+      "label": "Reliable",
+      "sublabel": "acked and ordered"
+    },
+    {
+      "id": "unrel",
+      "type": "external",
+      "label": "Unreliable",
+      "sublabel": "same connection"
+    },
+    {
+      "id": "rpc",
+      "type": "security",
+      "label": "Rpc system",
+      "sublabel": "receiver world"
+    },
+    {
+      "id": "dest",
+      "type": "frontend",
+      "label": "Your handler",
+      "sublabel": "receiver world"
+    }
+  ],
+  "segments": [
+    {
+      "from": 160,
+      "to": 300,
+      "label": "1 · raise"
+    },
+    {
+      "from": 320,
+      "to": 440,
+      "label": "2 · pack"
+    },
+    {
+      "from": 460,
+      "to": 600,
+      "label": "3 · deliver"
+    },
+    {
+      "from": 620,
+      "to": 780,
+      "label": "4 · invoke"
+    }
+  ],
+  "messages": [
+    {
+      "id": "raise",
+      "from": "app",
+      "to": "gen",
+      "y": 190,
+      "label": "entity: your command + send request",
+      "variant": "emphasis"
+    },
+    {
+      "id": "target",
+      "from": "app",
+      "to": "gen",
+      "y": 240,
+      "label": "target connection, or null to broadcast",
+      "variant": "dashed"
+    },
+    {
+      "id": "serialize",
+      "from": "gen",
+      "to": "rel",
+      "y": 340,
+      "label": "index, bit length, payload → outgoing buffer",
+      "variant": "emphasis"
+    },
+    {
+      "id": "consume",
+      "from": "gen",
+      "to": "app",
+      "y": 390,
+      "label": "request entity destroyed",
+      "variant": "return"
+    },
+    {
+      "id": "packfill",
+      "from": "rel",
+      "to": "rpc",
+      "y": 480,
+      "label": "one packet, five byte header, whole messages only",
+      "variant": "emphasis"
+    },
+    {
+      "id": "retry",
+      "from": "rel",
+      "to": "gen",
+      "y": 530,
+      "label": "send queue full: keep it, retry next tick",
+      "variant": "return"
+    },
+    {
+      "id": "snapshots",
+      "from": "unrel",
+      "to": "dest",
+      "y": 580,
+      "label": "snapshots and commands: newest wins, never resent",
+      "variant": "dashed"
+    },
+    {
+      "id": "invoke",
+      "from": "rpc",
+      "to": "dest",
+      "y": 660,
+      "label": "entity: your command + receive request",
+      "variant": "emphasis"
+    },
+    {
+      "id": "verify",
+      "from": "rpc",
+      "to": "rel",
+      "y": 710,
+      "label": "bits read must equal bits declared",
+      "variant": "security"
+    },
+    {
+      "id": "handled",
+      "from": "dest",
+      "to": "rpc",
+      "y": 760,
+      "label": "consume, then destroy the entity",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "app",
+      "from": 185,
+      "to": 396,
+      "type": "frontend"
+    },
+    {
+      "participant": "gen",
+      "from": 185,
+      "to": 536,
+      "type": "backend"
+    },
+    {
+      "participant": "rel",
+      "from": 335,
+      "to": 716,
+      "type": "messagebus"
+    },
+    {
+      "participant": "unrel",
+      "from": 575,
+      "to": 586,
+      "type": "external"
+    },
+    {
+      "participant": "rpc",
+      "from": 475,
+      "to": 766,
+      "type": "security"
+    },
+    {
+      "participant": "dest",
+      "from": 575,
+      "to": 766,
+      "type": "frontend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The whole API is two components",
+      "items": [
+        "Create an entity carrying your command plus a send request to send one",
+        "The send request names one connection, or nothing at all to broadcast",
+        "On the far side an entity appears carrying your command plus a receive request",
+        "The receive request names the connection it came from, which is your only sender identity"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Reliable next to unreliable",
+      "items": [
+        "Remote calls take the reliable ordered pipeline: acked, retransmitted, delivered in send order",
+        "Snapshots and commands take the unreliable one: newest wins, losses are never made up",
+        "Both are the same connection and the same socket, just different pipeline stages",
+        "So the ordering guarantee holds within remote calls and nowhere across the two"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The failure modes are quiet",
+      "items": [
+        "The reliable window can fill, and then sending simply retries on later ticks",
+        "A message too large for one packet is a hard error, because it can never be split",
+        "A received entity you never consume just sits there, and the age warning is your only clue",
+        "Deserializing fewer bits than were declared disconnects the offender on the spot"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Ordering, precisely",
+      "items": [
+        "Remote calls arrive in the order they were serialised, not the order you raised the entities",
+        "Nothing is guaranteed about a remote call relative to a snapshot",
+        "So never use one to announce a state change the snapshot also carries",
+        "Before approval only the approval kind is accepted, and anything else drops the connection"
+      ]
+    }
+  ]
+}

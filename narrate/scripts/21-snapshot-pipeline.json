@@ -1,0 +1,133 @@
+{
+  "id": "21-snapshot-pipeline",
+  "title": "As Much World As Fits",
+  "map": "diagrams/21-snapshot-pipeline.html",
+  "blurb": "A snapshot is not the world. It is a prioritised prefix of the world, cut off wherever the packet ends.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "The sentence that reframes everything",
+      "focus": null,
+      "text": "A snapshot is not a picture of the world. It is as much of the world as fits in one packet, chosen in priority order, encoded as differences against what this one client already acknowledged. Every word there is doing work. As much as fits: there is a hard byte ceiling. Chosen in priority order: the list is sorted before a single bit is written. This one client: the encoding is different for every connection. And differences: almost nothing on the wire is an absolute value."
+    },
+    {
+      "id": "sort",
+      "title": "Order first, then write",
+      "focus": "sort",
+      "text": "The first thing that happens is not encoding. It is sorting. The server walks the ghost chunks for this connection, computes a priority for each one, and sorts the whole list descending before writing anything. That order is what makes the cut meaningful. If it wrote in arbitrary order and stopped when full, the packet would carry a random sample. Because it sorts first, the packet carries the most important prefix, and whatever fell off the end keeps ageing so its priority climbs for next time."
+    },
+    {
+      "id": "baseline",
+      "title": "Every client has a different past",
+      "focus": "baselines",
+      "text": "Now the encoding, and this is the part that surprises people who expect a broadcast. The server does not encode one snapshot and send it to everybody. It keeps a per connection history of what it sent and which slots each client acknowledged, and it delta encodes against that client's own acknowledged state. Two clients on the same tick receive genuinely different bytes for the same entity, because they last confirmed different ticks. This is why send cost scales with connections times ghosts and not with ghosts alone."
+    },
+    {
+      "id": "three",
+      "title": "Three baselines, one prediction",
+      "focus": "encode",
+      "text": "It goes further than a simple difference. For each entity the serializer finds up to three acknowledged baselines and uses them to extrapolate a prediction of the current value, then encodes only the residual against that prediction. Constant velocity therefore costs almost nothing: the extrapolation is right and the residual is near zero, and a near zero residual costs a handful of bits after entropy coding. That is a linear predictor plus an entropy coder, which is a familiar shape if you have looked at any lossless codec."
+    },
+    {
+      "id": "cut",
+      "title": "Where the world gets cut",
+      "focus": "cut",
+      "text": "Writing continues until the bit budget runs out, and then it stops mid list. Nothing is dropped, nothing is queued, nothing errors. The chunks below the line simply were not sent this tick, and their age term keeps climbing, so they rise in the sort and go out on a later one. Starvation is prevented by ageing rather than by a queue. This is bus arbitration with a priority that increments while you wait, and if you have built one of those in hardware you already know its failure modes."
+    },
+    {
+      "id": "receive",
+      "title": "What lands, and where it goes",
+      "focus": "recv",
+      "text": "On the client the packet is decoded against the same baselines, and the result is written into a ring buffer attached to each ghost. Thirty two slots by default, each stamped with its tick, sized for about half a second of round trip. Note what did not happen: nothing was applied to any entity yet. The receive path only fills slots. The decision about which slot to read is somebody else's job, one system later, and it depends on which timeline that particular ghost lives on."
+    },
+    {
+      "id": "apply",
+      "title": "The same buffer, two different reads",
+      "focus": "apply",
+      "text": "The update system is where the split happens. For an interpolated ghost it reads at the interpolation tick, finds the two slots that bracket it, and blends. For a predicted ghost it reads at the tick being predicted, pins the blend factor to zero, and uses the result as a rollback point rather than a display value. One buffer, one arrival path, two entirely different meanings depending on a flag on the entity. That is the cleanest place in the whole package to see that prediction and interpolation are two readers of one queue."
+    }
+  ],
+  "nodes": {
+    "sort": {
+      "short": "The chunk list is sorted by priority before a single bit is written.",
+      "deep": "Priority is a base importance multiplied by how many ticks it has been since this connection last saw that chunk, then adjusted by whatever scaling function you supplied. Sorting first is what makes the packet a meaningful prefix rather than a random sample, and the age term is what stops a low priority chunk from starving forever.",
+      "types": [
+        "GhostSendSystem",
+        "GhostSendSystemData",
+        "GhostImportance",
+        "GhostConnectionPosition"
+      ],
+      "goto": "diagrams/37-interest-management.html",
+      "gotoLabel": "The arbitration, in full"
+    },
+    "baselines": {
+      "short": "Per connection history of what was sent and what came back acknowledged.",
+      "deep": "Thirty two slots per chunk, each holding a previously serialised snapshot. Only slots this client acknowledged can be used as baselines, and a baseline older than the maximum age is discarded. Because every connection acknowledges a different tick, every connection gets a different encoding of the same world.",
+      "types": [
+        "GhostSystemConstants",
+        "NetworkSnapshotAck",
+        "SnapshotDataBuffer",
+        "PrespawnGhostBaseline"
+      ]
+    },
+    "encode": {
+      "short": "Change mask, then a residual against a prediction, then an entropy coder.",
+      "deep": "Up to three baselines are found per entity and used to extrapolate what the value probably is now. Only the difference from that extrapolation is written. Fields are quantised to integers first, so a float that jitters in its last decimal place compares equal and costs zero bits. Constant motion is therefore nearly free on the wire.",
+      "types": [
+        "GhostChunkSerializer",
+        "GhostComponentSerializer",
+        "GhostCollectionPrefabSerializer",
+        "IGhostSerializer"
+      ],
+      "goto": "diagrams/36-ghost-codegen.html",
+      "gotoLabel": "Where this serializer came from"
+    },
+    "packet": {
+      "short": "One unreliable packet per connection per network tick, with a hard ceiling.",
+      "deep": "The budget is the transport payload capacity minus the pipeline header, unless you override it per connection. If not even one ghost fits, the size is doubled and the entire serialisation is thrown away and redone, up to eight times. That retry is expensive and it warns, and it usually means a configured packet size that is too small rather than a ghost that is too large.",
+      "types": [
+        "GhostSendSystemData",
+        "NetworkStreamSnapshotTargetSize",
+        "GhostSystemConstants",
+        "NetworkStreamProtocol"
+      ],
+      "goto": "diagrams/39-connection-topologies.html",
+      "gotoLabel": "The driver stack underneath"
+    },
+    "cut": {
+      "short": "The chunks below the line. Not lost, not queued, just not this tick.",
+      "deep": "Their age term keeps climbing, so their priority climbs, so they rise in the next sort. This is what makes the system degrade gracefully instead of falling over: a crowded world does not fail, it just refreshes distant things less often. The visible symptom of a badly tuned priority is something important updating at the rate of scenery.",
+      "types": [
+        "GhostSendSystemData",
+        "GhostImportance",
+        "GhostRelevancy"
+      ],
+      "goto": "diagrams/37-interest-management.html",
+      "gotoLabel": "Deciding who deserves the packet"
+    },
+    "recv": {
+      "short": "Decode against our copy of the baseline, then write into a ring slot.",
+      "deep": "The client keeps the same thirty two slot history the server assumes it has, which is why the two stay in step. Nothing is applied to an entity here. This stage only fills a slot and stamps it with its tick. It also builds the acknowledgement that rides back on the command stream and tells the server which baselines it may use next.",
+      "types": [
+        "GhostReceiveSystem",
+        "SnapshotData",
+        "SnapshotDataBuffer",
+        "GhostDeserializerState"
+      ],
+      "goto": "diagrams/34-predicted-spawning.html",
+      "gotoLabel": "When the ghost arriving is one you already made"
+    },
+    "apply": {
+      "short": "Reads the ring at whichever tick this ghost's timeline names.",
+      "deep": "For an interpolated ghost the target is the interpolation tick and the two bracketing slots are blended. For a predicted ghost the target is the tick being predicted, the blend factor is pinned to zero, and the value becomes a rollback point rather than something to display. Same buffer, same arrival path, two completely different meanings.",
+      "types": [
+        "GhostUpdateSystem",
+        "DataAtTick",
+        "PredictedGhost",
+        "LocalTransform"
+      ],
+      "goto": "diagrams/23-interpolation.html",
+      "gotoLabel": "The interpolated read, in detail"
+    }
+  }
+}

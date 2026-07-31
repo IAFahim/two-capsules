@@ -1,0 +1,108 @@
+{
+  "id": "09-job-graph",
+  "title": "The Graph You Never Wrote",
+  "map": "diagrams/09-job-graph.html",
+  "blurb": "One write fence and seventeen read fences per component type. Every edge in your job graph falls out of that array.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "It is a scoreboard",
+      "focus": null,
+      "text": "You have seen this structure before, in a processor. For every component type there is one slot holding the fence of the last job that wrote it, and a small array of slots holding the fences of jobs that are currently reading it. That is a reader writer scoreboard, and every dependency edge you never wrote comes out of it by the same rules you would use for register hazards."
+    },
+    {
+      "id": "rule",
+      "title": "The rule, in one sentence",
+      "focus": "get",
+      "text": "When you ask for your dependency, for every type you read it takes that type's write fence, and for every type you write it takes the write fence and every read fence. Then it combines them into one handle. Read the consequence off that: a reader waits for writers, a writer waits for writers and for all readers, and two readers of the same type are never ordered against each other. Read after write, write after read, write after write. Read after read is not a hazard, so it never becomes an edge."
+    },
+    {
+      "id": "lazy",
+      "title": "Lazy on the way in, automatic on the way out",
+      "focus": "put",
+      "text": "Before your update runs, the system just sets a flag saying it will need the fences. It does not fetch them. The first time you actually touch the dependency, the fetch happens and the flag clears. If you never touch it, nothing is combined at all. On the way out, if you scheduled anything, the runtime submits the batched jobs and writes your returned handle into the fence slots of every type you declared. That is the step that makes the next system's dependency correct without either system knowing the other exists."
+    },
+    {
+      "id": "slots",
+      "title": "Seventeen readers, and then a spill",
+      "focus": "slots",
+      "text": "The read slots are a fixed size array. One write fence, seventeen read fences, per type, for every type the type manager knows. When the eighteenth reader arrives there is nowhere to put it, so the seventeen are combined into a single handle, that handle goes back into slot zero, and the count drops to one. It is a spill, and it is the moment the graph quietly gets coarser. Those seventeen jobs are now indistinguishable from each other to anything that comes later."
+    },
+    {
+      "id": "notedges",
+      "title": "What never becomes an edge",
+      "focus": "types",
+      "text": "Three things get dropped before the graph is ever built. A zero sized type that is not switchable is removed from both lists entirely, because a tag has no data to race on. Declaring a write on a type you also read removes it from the reading list, so write wins. And a job that declares no types at all is registered as a reader of the entity type itself, purely so that the next full barrier still catches it. That last one is not about correctness of ordering, it is about not leaking a job that nobody will ever wait on."
+    }
+  ],
+  "nodes": {
+    "types": {
+      "short": "Which component types you read, and which you write.",
+      "deep": "This comes straight out of the queries you built, plus anything you asked for by hand. You never write the graph, you write the access pattern, and the graph is derived from it. That is the whole trade: you give up the ability to hand tune the ordering, and in exchange you cannot get it wrong.",
+      "types": [
+        "EntityQuery",
+        "ComponentType",
+        "CalculateReaderWriterDependency"
+      ],
+      "goto": "diagrams/08-query-matching.html",
+      "gotoLabel": "Where those lists come from"
+    },
+    "get": {
+      "short": "Combine the fences that could actually collide with you.",
+      "deep": "For each type you read it takes only the write fence. For each type you write it takes the write fence and every registered read fence. Everything gathered goes into one combined handle. The asymmetry is the point: it is why two systems reading the same transforms run at the same time, and why a third writing them waits for both.",
+      "types": [
+        "SystemState",
+        "ComponentDependencyManager",
+        "DependencyHandle"
+      ]
+    },
+    "run": {
+      "short": "You schedule, and the handle you get back is now the chain.",
+      "deep": "The handle in and the handle out are both yours to manage. Schedule several jobs and you can chain them by hand or fan them out and combine. Assign the dependency yourself and the automatic fetch is skipped entirely, which is both the escape hatch and the way to break your own ordering if you are careless.",
+      "types": [
+        "IJobChunk",
+        "IJobEntity",
+        "SystemState"
+      ],
+      "goto": "diagrams/10-burst-pipeline.html",
+      "gotoLabel": "What the job is compiled into"
+    },
+    "put": {
+      "short": "After your update, your handle goes into the slots of every type you touched.",
+      "deep": "It only happens if you actually scheduled something and did not already complete it, which is a real optimisation for systems that only run work on the main thread. Just before the registration the runtime submits the batched jobs, so scheduling many small jobs in one update costs one submission rather than many.",
+      "types": [
+        "SystemState",
+        "ComponentDependencyManager",
+        "SystemBase"
+      ]
+    },
+    "slots": {
+      "short": "One write fence and seventeen read fences, for every component type.",
+      "deep": "Two flat arrays allocated once at world creation, indexed by a compact type number. Types are only given a slot the first time somebody actually declares access to them, so most of the array stays untouched. The whole structure is cleared wholesale at every full barrier rather than being maintained incrementally.",
+      "types": [
+        "ComponentDependencyManager",
+        "TypeIndex",
+        "TypeManager"
+      ]
+    },
+    "spill": {
+      "short": "The eighteenth reader forces the previous seventeen into one handle.",
+      "deep": "The combine writes the result back into the first read slot and resets the count to one, which frees sixteen slots immediately. Nothing breaks, but the graph loses resolution: anything that later waits on that type now waits on all seventeen as a unit. If you ever wonder why a system seems to wait longer than its declared conflicts justify, this is a candidate.",
+      "types": [
+        "ComponentDependencyManager",
+        "DependencyHandle"
+      ]
+    },
+    "stall": {
+      "short": "Or you can wait right here, on purpose.",
+      "deep": "Completing the dependency instead of chaining it turns your system into a barrier for every type it declared. Sometimes that is exactly right, because you are about to do something on the main thread that cannot be expressed as a job. It is a sync point either way, and the honest version is the one you chose deliberately.",
+      "types": [
+        "SystemState",
+        "ComponentDependencyManager",
+        "CompleteWorldDependencySystem"
+      ],
+      "goto": "diagrams/11-sync-points.html",
+      "gotoLabel": "The barrier you just chose"
+    }
+  }
+}

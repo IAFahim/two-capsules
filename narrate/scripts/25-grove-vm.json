@@ -1,0 +1,126 @@
+{
+  "id": "25-grove-vm",
+  "title": "Grove Is a Bytecode VM",
+  "map": "diagrams/25-grove-vm.html",
+  "blurb": "A graph you drew, compiled into an instruction image, and decoded by a switch that a compiler wrote for you.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Not a visual scripting tool",
+      "focus": null,
+      "text": "Call it visual scripting and you will misjudge it completely. What is actually here is a small virtual machine. There is an ahead of time linker, a flat instruction image, and an interpreter built from a switch statement that a source generator emits at compile time. If you have ever written a bootloader, or a microcode table, you have already built one of these. The only unusual part is that the assembler has a mouse."
+    },
+    {
+      "id": "compile",
+      "title": "One node, four different shapes",
+      "focus": "auth",
+      "text": "The single most common confusion is that a node is one thing. It is four. In the editor it is a box you can drag, and that is the source code. After the importer runs it is a small settings object, and that is the object file. After baking it is a run of bytes inside a blob, and that is the image. And at runtime it is a static method, which is the instruction set. Four artefacts, four assemblies, one idea. Every mystery about grove dissolves once you can say which of the four you are looking at."
+    },
+    {
+      "id": "image",
+      "title": "The image, and why it holds no pointers",
+      "focus": "blob",
+      "text": "The whole graph flattens into one blob asset. Every internal reference is a relative offset rather than an address, which means the image can be copied anywhere and still work. That is position independent code, arrived at for exactly the same reason it was invented for: nobody knows where it is going to be loaded. It also means the image can be shared, read only, by every entity running that graph, and that has a consequence we will chase in the next map."
+    },
+    {
+      "id": "opcode",
+      "title": "Opcode assignment, from both directions",
+      "focus": "attr",
+      "text": "Here is the part I find genuinely delightful. The authoring object exposes a node type number, and that number gets written into the header when the image is built. Separately, an attribute on a static method claims the same number for that method. Two entirely different assemblies agreeing on an integer. That is exactly what an instruction set architecture is, and each package takes its own range, counting downward from a negative offset, so that grove, canopy and nerve can extend the same machine without ever colliding."
+    },
+    {
+      "id": "decode",
+      "title": "The decode step has to be code",
+      "focus": "swi",
+      "text": "A blob cannot hold a function pointer, because a function pointer is an address and the whole point of the image is that it contains no addresses. So the instruction can only store a number, and the decoding has to live in real compiled code. That is what the generator emits: a switch on that integer, with one case per claimed opcode. It emits a separate copy for each context type, so everything is specialised and nothing is generic at runtime. Burst turns a dense integer switch into a jump table and will happily inline straight through it. No virtual call anywhere."
+    },
+    {
+      "id": "reach",
+      "title": "What the instruction can see",
+      "focus": "ctx",
+      "text": "The methods are static and hold no fields, which sounds crippling until you see the context. Every node receives a context struct by reference, and the fields on it are yours: the buffers for this chunk, the component lookups, a command buffer to write into. A partial declaration and the generator fills in the plumbing by reading your field types. So a node is a pure function of its own data and that context, and the context is the only window it has onto the world. Register file on one side, memory mapped input and output on the other."
+    }
+  ],
+  "nodes": {
+    "graph": {
+      "short": "The graph asset you actually edit, stored as text on disk.",
+      "deep": "It carries node positions, wires and authored values, and nothing else in the pipeline ever reads it again after import. The file extension is what decides which graph type it is, and therefore which nodes the editor will even offer you. That is the first place a graph can quietly be wrong.",
+      "types": [
+        "GroveGraph",
+        "CanopyGraph"
+      ]
+    },
+    "auth": {
+      "short": "One small settings object per node, each carrying its own opcode.",
+      "deep": "The importer walks the graph and creates one of these for every node, as sub assets of the file. Each one knows its node type number and knows how to write itself into a blob builder. This is the object file stage, and it is the last point at which anything is still editable.",
+      "types": [
+        "GroveAuth",
+        "GroveImporter",
+        "GroveExecutionAuth"
+      ]
+    },
+    "blob": {
+      "short": "One blob for the whole graph, addressed by offsets rather than pointers.",
+      "deep": "It holds a root pointer, a table of every node keyed by node id, and the declared inputs and outputs of the graph. Because it contains no absolute addresses it can be memory mapped, shared read only, and handed to thousands of entities at once. Nothing per entity can possibly live here.",
+      "types": [
+        "GraphData",
+        "BlobAssetReference",
+        "NodeUnion",
+        "GraphBaker"
+      ],
+      "goto": "diagrams/18-blob-assets.html",
+      "gotoLabel": "Why an image with no pointers in it"
+    },
+    "header": {
+      "short": "The instruction: a type number, an authored node id, and the payload right behind it.",
+      "deep": "Every execution node in the image starts with this header, and its own data struct sits immediately after it in memory. Reading a node's data is pointer arithmetic on a known offset, not a lookup. The node id is kept so that state, debugging and history can all key off the authored identity rather than a position.",
+      "types": [
+        "ExecutionHeader",
+        "ExecutionHeaderExtensions"
+      ]
+    },
+    "attr": {
+      "short": "An attribute on a static method, claiming one opcode for that method.",
+      "deep": "It takes the number, and optionally the input type for nodes that receive a value. The generator finds these purely by attribute name, collects every claim across every assembly it can see, and builds the dispatch from that set. Nothing registers at runtime and nothing is discovered by reflection while the game is running.",
+      "types": [
+        "ExecuteNodeAttribute",
+        "GroveExecutionTypes",
+        "NerveExecutionTypes"
+      ]
+    },
+    "ctx": {
+      "short": "The struct that carries everything a node is allowed to touch.",
+      "deep": "You declare the fields; the generator writes the code that creates them, refreshes them each update, and re-points them at each chunk. Because the executor copies the context by value when it builds an execution, anything you assign after that copy is what the run actually sees. That ordering detail is subtle and it has bitten people.",
+      "types": [
+        "IContext",
+        "IContextGenerator",
+        "BufferContainer",
+        "GroveContext"
+      ],
+      "goto": "diagrams/26-grove-state.html",
+      "gotoLabel": "Where a node keeps what it remembers"
+    },
+    "swi": {
+      "short": "The dispatch switch, written by a generator, once per context type.",
+      "deep": "It switches on the header's integer and calls the matching static method. Generating one copy per context means every call is fully specialised, with no generic dispatch left at runtime. This is the reason grove is cheap enough to run per entity, per tick, inside a job.",
+      "types": [
+        "IContextGenerator",
+        "GraphExecution",
+        "GraphImpl"
+      ],
+      "goto": "diagrams/36-ghost-codegen.html",
+      "gotoLabel": "Another generator, reading another set of attributes"
+    },
+    "exec": {
+      "short": "The static method that is the node's actual behaviour.",
+      "deep": "It takes its own data by reference, the entity context, and your context, and it holds no state of its own between calls. That is not a stylistic choice. There is exactly one copy of the method and one copy of the node data in the image, shared by every entity, so a field on it would be a field shared by everybody.",
+      "types": [
+        "CanopyStateMachine",
+        "CanopyGoTo",
+        "GoInGame"
+      ],
+      "goto": "diagrams/04-clientgraph.html",
+      "gotoLabel": "Four of these instructions, wired into a real machine"
+    }
+  }
+}

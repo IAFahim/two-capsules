@@ -1,0 +1,86 @@
+{
+  "id": "15-system-lifecycle",
+  "title": "One System, One Frame",
+  "map": "diagrams/15-system-lifecycle.html",
+  "blurb": "Two switches ANDed in a single if, and a one-bit latch that turns the result into edges.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "The whole thing is one if statement",
+      "focus": null,
+      "text": "There is a temptation to imagine a scheduler here, something that decides which systems are eligible this frame and builds a list. There is nothing of the kind. The group walks its sorted array, and for every entry it evaluates one condition: the enabled bit, ANDed with a requirement test. True runs your update. False does not. That is the entire gating mechanism, and it is written the same way for both the managed and the unmanaged flavour of system."
+    },
+    {
+      "id": "create",
+      "title": "Creation is not part of the frame",
+      "focus": "create",
+      "text": "Your create callback runs once, when the world is built, before any group has ticked. It runs whether or not the system will ever update again. This is where queries are built and where you declare what your update requires, and both of those are structural decisions that then hold for the life of the world. If you are used to lazy initialisation on first use, unlearn it here: by the time the first frame happens, every system in the world has already had its create callback run."
+    },
+    {
+      "id": "gate",
+      "title": "Two switches, and they are not the same switch",
+      "focus": "gate",
+      "text": "The first switch is a bit you own. Set it false and the system stops updating, immediately, with no other side effects. The second switch is the requirement test, and it belongs to the data. If you declared that your update requires a component, the test asks whether any chunk anywhere holds one. If you declared nothing, it returns true immediately. Think of the first as a chip select you drive by hand and the second as a data ready line the world raises for you. They are ANDed, so either one low means no update."
+    },
+    {
+      "id": "skip",
+      "title": "A skipped system is still there",
+      "focus": "skip",
+      "text": "Turning a system off does not remove it from anything. It stays in its group's sorted array, it is visited every frame, the sort is not recomputed, and turning it back on costs nothing but the next evaluation of that if. This is worth internalising because it sets the price of the feature. Toggling systems is a branch not taken, so it is cheap enough to do per frame and per world. Adding or removing a system at runtime is not that; that is a structural change to the tree and a resort."
+    },
+    {
+      "id": "edges",
+      "title": "The latch that makes edges",
+      "focus": "stop",
+      "text": "There is a single stored bit remembering whether the system ran last frame, and it is what turns a level into edges. The first frame the gate is true, that bit is set and the start callback fires once. The first frame the gate goes false after having been true, the engine completes any jobs the system still owns, fires the stop callback once, and clears the bit. It is an edge detector, in the plain hardware sense. Which is why the stop callback is the correct place to release anything the system was holding, and the update callback never is."
+    },
+    {
+      "id": "trap",
+      "title": "The requirement test ignores your filters",
+      "focus": "gate",
+      "text": "Here is the sharp edge. The requirement test checks each required query with an emptiness test that deliberately ignores filters. That means enableable components do not count, and shared component filters do not count. Require a component that exists on a thousand entities and is disabled on all thousand of them, and the gate opens anyway. Your update runs, your query matches nothing, and you spend an afternoon convinced the gate is broken. It is not. It was answering a coarser question than you asked."
+    }
+  ],
+  "nodes": {
+    "create": {
+      "short": "Runs once, at world construction, before any group has ticked.",
+      "deep": "Queries are built here, and so is the declaration of what the update requires. Both are structural, and both hold for the life of the world. It also runs on systems that will never update even once, because creation is driven by the world's system list rather than by whether anything will match.",
+      "types": ["ISystem", "SystemBase", "EntityQuery"],
+      "goto": "diagrams/13-bootstrap.html",
+      "gotoLabel": "Where the world that created it came from"
+    },
+    "gate": {
+      "short": "The enabled bit ANDed with the requirement test, evaluated every single frame.",
+      "deep": "One condition, in one place, for both managed and unmanaged systems. The enabled half is a single bit inside the system's flag word, so reading and writing it is free. The requirement half walks the required queries and asks each whether it is empty, short circuiting on the first empty one. Declare no requirements and it returns true without looking at anything.",
+      "types": ["SystemState", "EntityQuery", "RequireMatchingQueriesForUpdateAttribute"],
+      "goto": "diagrams/08-query-matching.html",
+      "gotoLabel": "What that emptiness test is really asking"
+    },
+    "run": {
+      "short": "The only place your work happens, and the level the two edge callbacks bracket.",
+      "deep": "By the time it is called, the system's dependency handle already carries whatever the safety system worked out from your reads and writes. Most updates schedule rather than execute, so the interesting cost is usually not in here at all; it is in what this method hands to the job system before returning.",
+      "types": ["ISystem", "SystemBase", "SystemState"],
+      "goto": "diagrams/09-job-graph.html",
+      "gotoLabel": "What an update usually schedules"
+    },
+    "skip": {
+      "short": "The gate closed. The system is still sorted, still visited, and costs one branch.",
+      "deep": "Nothing is removed and nothing is recomputed. This is the mechanism that makes disabling a system a per frame decision you can afford: the only cost of an off system is evaluating the condition that keeps it off. Contrast that with adding or removing a system, which changes the tree and forces a resort.",
+      "types": ["ComponentSystemGroup", "SystemState"],
+      "goto": "diagrams/14-system-groups.html",
+      "gotoLabel": "The group that keeps visiting it"
+    },
+    "stop": {
+      "short": "Fires once, on the falling edge, after pending jobs have been completed.",
+      "deep": "A single stored bit remembers last frame's answer, so this callback cannot fire twice in a row and cannot fire on a system that never ran. Before it is called the engine completes the system's outstanding dependency, which means it is the one safe place to release native containers the system was still handing to jobs.",
+      "types": ["SystemBase", "SystemState", "ISystem"]
+    },
+    "destroy": {
+      "short": "Runs when the world goes away, even for a system that never updated once.",
+      "deep": "It is guaranteed in a way the running callbacks are not: those depend on edges that may never happen, this one depends only on the world being disposed. Anything allocated in the create callback belongs here. In a project where worlds are built and torn down on state transitions rather than once at startup, this stops being a shutdown detail and becomes a per session one.",
+      "types": ["ISystem", "SystemBase", "World"],
+      "goto": "diagrams/28-nerve-session.html",
+      "gotoLabel": "The worlds that get destroyed on purpose"
+    }
+  }
+}

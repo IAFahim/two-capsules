@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "The Delay Line",
+    "subtitle": "Inside the interpolation buffer: an irregular write pointer, a servo-driven read pointer, and the guess it makes when the waypoints run out",
+    "output": "diagrams/23-interpolation.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "write",
+        "label": "The write side is irregular",
+        "focus": [
+          "arrive",
+          "ring"
+        ],
+        "note": "Packets land whenever the wire delivers them. Each one drops into a tick-stamped slot."
+      },
+      {
+        "id": "depth",
+        "label": "How deep the buffer sits",
+        "focus": [
+          "jitter",
+          "delay"
+        ],
+        "note": "The larger of the configured window and the measured jitter wins, so a bad link deepens the buffer for you."
+      },
+      {
+        "id": "servo",
+        "label": "The read pointer is a servo",
+        "focus": [
+          "read"
+        ],
+        "note": "It never jumps for small errors. It runs a bit fast or a bit slow until the error is gone."
+      },
+      {
+        "id": "guess",
+        "label": "When it runs out of waypoints",
+        "focus": [
+          "bracket",
+          "extrap"
+        ],
+        "note": "With nothing newer to bracket against, a dynamic ghost is extrapolated — clamped, and only for dynamic ghosts."
+      }
+    ],
+    "viewBox": [
+      1200,
+      660
+    ]
+  },
+  "stages": [
+    {
+      "label": "arrivals"
+    },
+    {
+      "label": "the ring"
+    },
+    {
+      "label": "how far back"
+    },
+    {
+      "label": "the read pointer"
+    },
+    {
+      "label": "two waypoints"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "arrive",
+      "type": "messagebus",
+      "label": "Snapshot lands",
+      "sublabel": "whenever the wire delivers",
+      "tag": "irregular",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "ring",
+      "type": "database",
+      "label": "Tick-stamped slots",
+      "sublabel": "32 per ghost, newest index kept",
+      "tag": "write pointer",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "jitter",
+      "type": "external",
+      "label": "Arrival jitter",
+      "sublabel": "mean gap plus deviation",
+      "tag": "scale 1.25",
+      "stage": 1,
+      "row": 1
+    },
+    {
+      "id": "delay",
+      "type": "backend",
+      "label": "Buffer depth",
+      "sublabel": "larger of configured and measured",
+      "tag": "2 network ticks",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "read",
+      "type": "security",
+      "label": "Read pointer",
+      "sublabel": "estimate minus the depth",
+      "tag": "servo, not a jump",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "bracket",
+      "type": "frontend",
+      "label": "Before and after",
+      "sublabel": "the two slots straddling it",
+      "tag": "factor 0 to 1",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "extrap",
+      "type": "external",
+      "label": "Nothing after",
+      "sublabel": "run the last pair forward",
+      "tag": "clamped at 20 ticks",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "arrive",
+      "to": "ring",
+      "label": "into a slot",
+      "classification": "state",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "arrive",
+      "to": "jitter",
+      "label": "gap measured",
+      "classification": "timing",
+      "fromSide": "bottom"
+    },
+    {
+      "from": "jitter",
+      "to": "delay",
+      "label": "widen it",
+      "classification": "timing"
+    },
+    {
+      "from": "delay",
+      "to": "read",
+      "label": "how far back",
+      "classification": "timing",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ring",
+      "to": "read",
+      "label": "indexed by tick",
+      "classification": "state",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "read",
+      "to": "bracket",
+      "label": "lerp between",
+      "classification": "output",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "read",
+      "to": "extrap",
+      "label": "guess forward",
+      "classification": "output",
+      "variant": "security",
+      "fromSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Two pointers, one buffer",
+      "items": [
+        "The write pointer moves when a packet lands, which is irregular",
+        "The read pointer moves with the client's own clock, a fixed depth behind",
+        "The gap between them is the entire jitter budget",
+        "Too shallow and you underrun and see a freeze; too deep and you added latency for nothing"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The depth is not just your setting",
+      "items": [
+        "The configured window is two network ticks, which is a floor, not a ceiling",
+        "The measured arrival gap plus one and a quarter deviations competes with it",
+        "The larger of the two wins, clamped at six network intervals",
+        "So a lossy link silently deepens your buffer, and the delay you tuned is not the delay you get"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The read pointer never teleports for small errors",
+      "items": [
+        "It corrects a tenth of the remaining error per frame",
+        "Its rate is clamped between 0.85 and 1.1 times normal",
+        "Only an error above ten ticks makes it snap outright",
+        "That is a phase-locked loop: slew the clock, do not step it"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "It does extrapolate, and that surprises people",
+      "items": [
+        "With no slot newer than the read pointer, a dynamic ghost runs the last known pair forward",
+        "The clamp is twenty simulation ticks by default, then it holds",
+        "A static ghost never extrapolates; it holds the last value instead",
+        "With exactly one slot in the buffer the factor is pinned to zero and nothing moves"
+      ]
+    }
+  ]
+}

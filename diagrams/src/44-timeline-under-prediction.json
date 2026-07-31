@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "One Asset, Two Clocks",
+    "subtitle": "The same authored timeline read by a predicted gameplay clock and a frame-based presentation clock — and the clip kind decides which",
+    "output": "diagrams/44-timeline-under-prediction.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "asset",
+        "label": "One authored asset",
+        "focus": [
+          "asset",
+          "kind"
+        ],
+        "note": "Clips, curves and timestamps bake into a blob that is byte-identical on every machine. Only the start tick travels."
+      },
+      {
+        "id": "gameplay",
+        "label": "The predicted clock",
+        "focus": [
+          "kind",
+          "gameclock"
+        ],
+        "note": "Position is derived, not accumulated: current tick minus start tick. Stateless, so replay costs nothing to undo."
+      },
+      {
+        "id": "presentation",
+        "label": "The presentation clock",
+        "focus": [
+          "kind",
+          "presclock"
+        ],
+        "note": "Once per rendered frame, on the client only. It samples the gameplay clock instead of keeping its own sum."
+      },
+      {
+        "id": "kinds",
+        "label": "Four kinds, four homes",
+        "focus": [
+          "value",
+          "spawn",
+          "authority"
+        ],
+        "note": "Value clips are pure. Spawn clips route through a predicted spawn request. Authority clips never reach the client prefab."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "asset",
+      "type": "cloud",
+      "label": "Authored timeline",
+      "sublabel": "clips · curves · timestamps",
+      "tag": "baked blob",
+      "pos": [
+        430,
+        40
+      ],
+      "size": [
+        240,
+        68
+      ]
+    },
+    {
+      "id": "kind",
+      "type": "security",
+      "label": "Clip kind",
+      "sublabel": "carried by the interface, not a wiki page",
+      "tag": "routing decision",
+      "pos": [
+        410,
+        230
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "presclock",
+      "type": "frontend",
+      "label": "Presentation clock",
+      "sublabel": "once per rendered frame",
+      "tag": "client only",
+      "pos": [
+        40,
+        430
+      ],
+      "size": [
+        230,
+        68
+      ]
+    },
+    {
+      "id": "gameclock",
+      "type": "backend",
+      "label": "Gameplay clock",
+      "sublabel": "tick minus start tick",
+      "tag": "predicted, both worlds",
+      "pos": [
+        800,
+        430
+      ],
+      "size": [
+        230,
+        68
+      ]
+    },
+    {
+      "id": "cosmetic",
+      "type": "frontend",
+      "label": "Cosmetic event",
+      "sublabel": "VFX · audio · UI",
+      "tag": "gated on first full tick",
+      "pos": [
+        40,
+        640
+      ],
+      "size": [
+        230,
+        68
+      ]
+    },
+    {
+      "id": "value",
+      "type": "backend",
+      "label": "Value clip",
+      "sublabel": "sampled, pure, idempotent",
+      "tag": "safe to replay",
+      "pos": [
+        450,
+        640
+      ],
+      "size": [
+        230,
+        68
+      ]
+    },
+    {
+      "id": "spawn",
+      "type": "messagebus",
+      "label": "Spawn event",
+      "sublabel": "predicted spawn request",
+      "tag": "classified, never doubled",
+      "pos": [
+        800,
+        640
+      ],
+      "size": [
+        230,
+        68
+      ]
+    },
+    {
+      "id": "authority",
+      "type": "external",
+      "label": "Authority event",
+      "sublabel": "stripped from the client prefab",
+      "tag": "server only",
+      "pos": [
+        1150,
+        640
+      ],
+      "size": [
+        230,
+        68
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "presentation domain · frame rate · nothing here is authoritative",
+      "wraps": [
+        "presclock",
+        "cosmetic"
+      ],
+      "pad": 24
+    },
+    {
+      "kind": "region",
+      "label": "prediction domain · tick rate · replayed many times per frame",
+      "wraps": [
+        "gameclock",
+        "value",
+        "spawn",
+        "authority"
+      ],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "from": "asset",
+      "to": "kind",
+      "variant": "dashed"
+    },
+    {
+      "from": "kind",
+      "to": "presclock",
+      "label": "cosmetic",
+      "variant": "emphasis"
+    },
+    {
+      "from": "kind",
+      "to": "gameclock",
+      "label": "decides an outcome",
+      "variant": "emphasis"
+    },
+    {
+      "from": "presclock",
+      "to": "cosmetic"
+    },
+    {
+      "from": "gameclock",
+      "to": "value",
+      "label": "sample"
+    },
+    {
+      "from": "gameclock",
+      "to": "spawn"
+    },
+    {
+      "from": "gameclock",
+      "to": "authority",
+      "label": "server prefab"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Accumulate versus derive",
+      "items": [
+        "elapsed += deltaTime is a register: its value depends on every previous tick",
+        "elapsed = tick − start is combinational: it depends only on the tick",
+        "Rollback restores the tick for free, so the derived form needs no save or restore",
+        "The shipped package accumulates, at TimerUpdateSystem.cs:475"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The rollback boundary",
+      "items": [
+        "Rollback restores component values, not entity existence",
+        "The backup is a memcopy of ghost components · GhostPredictionHistorySystem.cs:184",
+        "An entity spawned during a replayed tick is still there when that tick replays",
+        "So spawns are reconciled, not undone, via PredictedGhostSpawnRequest"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Where the shipped group actually sits",
+      "items": [
+        "SimulationSystemGroup → BeforeTransformSystemGroup → TimelineSystemGroup",
+        "PredictedSimulationSystemGroup is a sibling ordered first, not a parent",
+        "So the timeline runs after the whole prediction loop, never inside it",
+        "Filter is Simulation | Presentation | Editor | Menu · TimelineSystemGroup.cs:20"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Two rate managers, two shapes of delta",
+      "items": [
+        "Server re-enters SimulationSystemGroup once per tick · NetcodeServerRateManager.cs:48",
+        "Client runs it exactly once per rendered frame · NetcodeClientRateManager.cs:54",
+        "Client delta lands on a fraction of a tick · NetcodeClientRateManager.cs:108",
+        "Nothing replicates or restores the timer, so the gap is never corrected"
+      ]
+    }
+  ]
+}

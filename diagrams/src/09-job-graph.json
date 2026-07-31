@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "The Graph You Never Wrote",
+    "subtitle": "One write fence and seventeen read fences per component type — every edge in your job graph falls out of that array",
+    "output": "diagrams/09-job-graph.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "declare",
+        "label": "You declare, you never wire",
+        "focus": [
+          "types",
+          "get"
+        ],
+        "note": "The query already said which component types you read and which you write. That declaration is the only input the dependency system gets."
+      },
+      {
+        "id": "hazard",
+        "label": "The hazard rule, in one line",
+        "focus": [
+          "get",
+          "slots"
+        ],
+        "note": "A reader waits on writers. A writer waits on writers and on every reader. Two readers of the same type never wait for each other."
+      },
+      {
+        "id": "publish",
+        "label": "The handle goes back on the board",
+        "focus": [
+          "run",
+          "put"
+        ],
+        "note": "Your returned handle is written into the fence slots of every type you touched, so the next system inherits the edge without asking."
+      },
+      {
+        "id": "spill",
+        "label": "When the slots run out",
+        "focus": [
+          "slots",
+          "spill"
+        ],
+        "note": "Seventeen readers is the ceiling. The eighteenth forces those seventeen to be combined into one handle, which frees the slots again."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "decl",
+      "label": "what the query declared"
+    },
+    {
+      "id": "comb",
+      "label": "what you are handed"
+    },
+    {
+      "id": "sch",
+      "label": "what you schedule"
+    },
+    {
+      "id": "reg",
+      "label": "what gets recorded"
+    },
+    {
+      "id": "board",
+      "label": "the scoreboard"
+    },
+    {
+      "id": "over",
+      "label": "the two escape hatches",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "ph1",
+      "label": "declare",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "ph2",
+      "label": "combine, schedule",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "ph3",
+      "label": "record",
+      "fromCol": 4,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "types",
+    "get",
+    "run",
+    "put",
+    "slots"
+  ],
+  "nodes": [
+    {
+      "id": "types",
+      "lane": "decl",
+      "col": 0,
+      "type": "cloud",
+      "label": "Type lists",
+      "sublabel": "read set, write set",
+      "tag": "write beats read"
+    },
+    {
+      "id": "get",
+      "lane": "comb",
+      "col": 1,
+      "type": "backend",
+      "label": "Combine",
+      "sublabel": "only fences that bite",
+      "tag": "lazy, once"
+    },
+    {
+      "id": "run",
+      "lane": "sch",
+      "col": 2,
+      "type": "frontend",
+      "label": "Schedule",
+      "sublabel": "handle in, handle out",
+      "tag": "your chain"
+    },
+    {
+      "id": "put",
+      "lane": "reg",
+      "col": 3,
+      "type": "security",
+      "label": "Register",
+      "sublabel": "after your update",
+      "tag": "automatic"
+    },
+    {
+      "id": "slots",
+      "lane": "board",
+      "col": 4,
+      "type": "database",
+      "label": "Fence slots",
+      "sublabel": "1 write, 17 reads",
+      "tag": "per type"
+    },
+    {
+      "id": "spill",
+      "lane": "over",
+      "col": 5,
+      "type": "external",
+      "label": "Overflow",
+      "sublabel": "collapse 17 into 1",
+      "tag": "slot reclaimed"
+    },
+    {
+      "id": "stall",
+      "lane": "over",
+      "col": 1,
+      "type": "external",
+      "label": "Or block",
+      "sublabel": "complete, on purpose",
+      "tag": "a sync point"
+    }
+  ],
+  "edges": [
+    {
+      "from": "types",
+      "to": "get",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "get",
+      "to": "run",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "run",
+      "to": "put",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "put",
+      "to": "slots",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "slots",
+      "to": "spill",
+      "role": "error",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "get",
+      "to": "stall",
+      "role": "branch",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The hazard rule, from the source",
+      "items": [
+        "For each type you read: take that type's write fence · ComponentDependencyManager.cs:239",
+        "For each type you write: take the write fence and every read fence · line 246",
+        "Combine them all into one handle and hand it back · line 266",
+        "So two readers of the same type are never ordered against each other"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The scoreboard is a fixed array",
+      "items": [
+        "One write fence per component type · ComponentDependencyManager.cs:44",
+        "Seventeen read fences per component type · ComponentDependencyManager.cs:45",
+        "Sized for every type the type manager knows about · ComponentDependencyManager.cs:46",
+        "The eighteenth reader collapses the seventeen into one · ComponentDependencyManager.cs:391"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What never becomes an edge",
+      "items": [
+        "A zero-sized type that is not enableable is dropped from both lists · CalculateReaderWriterDependency.cs:13",
+        "Declaring a write removes that type from the reading list · CalculateReaderWriterDependency.cs:36",
+        "A job declaring no types at all is registered as a reader of Entity · ComponentDependencyManager.cs:278",
+        "That exists only so the job is still caught by the next full sync point"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "When each step happens",
+      "items": [
+        "Before your update the system marks itself as needing the fences · SystemState.cs:581",
+        "The fences are fetched the first time you touch the dependency · SystemState.cs:406",
+        "After your update the jobs are batch-submitted and the handle recorded · SystemState.cs:590",
+        "Assign the dependency yourself and the fetch is skipped entirely · SystemState.cs:421"
+      ]
+    }
+  ]
+}

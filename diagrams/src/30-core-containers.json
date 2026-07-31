@@ -1,0 +1,277 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "The Floor Everything Stands On",
+    "subtitle": "Seen from inside a Burst job: where a tuned number comes from, where a map is allowed to live, and how a line of text gets out",
+    "output": "diagrams/30-core-containers.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "routing",
+        "label": "Settings are routed at edit time",
+        "focus": [
+          "asset",
+          "router"
+        ],
+        "note": "No runtime system reads an attribute and picks a world. The editor already wrote the asset onto a prefab."
+      },
+      {
+        "id": "knobs",
+        "label": "Two ways in",
+        "focus": [
+          "entity",
+          "cfg"
+        ],
+        "note": "Per-world tuning arrives as a baked entity. Global tuning arrives as a shared static you can also set from a command line."
+      },
+      {
+        "id": "containers",
+        "label": "Containers that live in the data",
+        "focus": [
+          "dyn",
+          "stream"
+        ],
+        "note": "A map on a buffer travels with its entity. A stream with one bucket per worker needs no count up front."
+      },
+      {
+        "id": "out",
+        "label": "Getting a line out",
+        "focus": [
+          "job",
+          "log"
+        ],
+        "note": "The awkward API is the point: fixed-capacity strings are the only kind Burst can build."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "asset",
+      "type": "cloud",
+      "label": "A settings asset",
+      "sublabel": "one object, one world attribute",
+      "tag": "on disk",
+      "pos": [
+        60,
+        60
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "router",
+      "type": "security",
+      "label": "The editor decides",
+      "sublabel": "attribute picks the prefab",
+      "tag": "never at runtime",
+      "pos": [
+        420,
+        60
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "entity",
+      "type": "database",
+      "label": "One settings entity",
+      "sublabel": "baked into that world's scene",
+      "tag": "read as a singleton",
+      "pos": [
+        780,
+        60
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "cfg",
+      "type": "frontend",
+      "label": "Config vars",
+      "sublabel": "shared statics, set from a command line",
+      "tag": "readable in Burst",
+      "pos": [
+        420,
+        330
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "job",
+      "type": "backend",
+      "label": "Your Burst code",
+      "sublabel": "no managed types, no allocator",
+      "tag": "the customer",
+      "pos": [
+        780,
+        330
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "log",
+      "type": "external",
+      "label": "One line out",
+      "sublabel": "fixed-capacity strings only",
+      "tag": "level checked first",
+      "pos": [
+        420,
+        600
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "dyn",
+      "type": "database",
+      "label": "A map on a buffer",
+      "sublabel": "saves, copies and moves with the entity",
+      "tag": "no separate allocation",
+      "pos": [
+        1140,
+        330
+      ],
+      "size": [
+        260,
+        68
+      ]
+    },
+    {
+      "id": "stream",
+      "type": "messagebus",
+      "label": "A per-thread stream",
+      "sublabel": "one bucket per worker, not per index",
+      "tag": "no count up front",
+      "pos": [
+        1140,
+        600
+      ],
+      "size": [
+        260,
+        68
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "settled before the game runs",
+      "wraps": [
+        "asset",
+        "router"
+      ],
+      "pad": 22
+    },
+    {
+      "kind": "region",
+      "label": "containers that live where the data already is",
+      "wraps": [
+        "dyn",
+        "stream"
+      ],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    {
+      "from": "asset",
+      "to": "router",
+      "label": "world attribute",
+      "variant": "emphasis"
+    },
+    {
+      "from": "router",
+      "to": "entity",
+      "label": "into a scene",
+      "variant": "emphasis"
+    },
+    {
+      "from": "entity",
+      "to": "job",
+      "label": "per world",
+      "variant": "emphasis",
+      "labelDy": 90
+    },
+    {
+      "from": "cfg",
+      "to": "job",
+      "label": "global"
+    },
+    {
+      "from": "job",
+      "to": "dyn",
+      "label": "keyed state",
+      "labelDy": 53,
+      "labelDx": -70
+    },
+    {
+      "from": "job",
+      "to": "stream",
+      "label": "events out"
+    },
+    {
+      "from": "job",
+      "to": "log",
+      "label": "text out",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Routing happens in the editor",
+      "items": [
+        "A settings asset carries a marker interface · Core BovineLabs.Core/Settings/ISettings.cs:10",
+        "A world attribute names its worlds · Core BovineLabs.Core/Settings/SettingsWorldAttribute.cs:10",
+        "The editor reads it and writes the asset onto a prefab",
+        "Core BovineLabs.Core.Editor/Settings/EditorSettingsUtility.cs:114 — nothing routes at runtime"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why the logging API looks like that",
+      "items": [
+        "Burst cannot build a managed string, so every call takes a fixed-capacity one",
+        "The size is in the method name because capacity is part of the type",
+        "Inside a system you fetch it as a singleton · Core BovineLabs.Core/Debug/BLLogger.cs:18",
+        "Outside one there is a global with the same shape · Core BovineLabs.Core/Debug/BLGlobalLogger.cs:13"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Config vars, and the ordering trick",
+      "items": [
+        "One attribute on a shared static field · Core BovineLabs.Core/ConfigVars/ConfigVarAttribute.cs:14",
+        "The type must opt in, so it is an index, not a sweep · Core BovineLabs.Core/ConfigVars/ConfigurableAttribute.cs:10",
+        "Registration runs on code load · Core BovineLabs.Core/ConfigVars/ConfigVarManager.cs:54",
+        "The log level is initialised first, so later failures can be reported"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Two containers worth stealing",
+      "items": [
+        "A hash map whose whole storage is one buffer · Core BovineLabs.Core/Iterators/DynamicHashMap/DynamicHashMap.cs:19",
+        "A stream bucketed by worker thread · Core BovineLabs.Core/Collections/EventStream/UnsafeThreadStream.cs:36",
+        "That is why it needs no element count before you schedule",
+        "One interface writes entities three ways · Core BovineLabs.Core/EntityCommands/IEntityCommands.cs:10"
+      ]
+    }
+  ]
+}

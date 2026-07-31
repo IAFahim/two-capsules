@@ -1,0 +1,124 @@
+{
+  "id": "32-mppm",
+  "title": "Two Editors, One EEPROM",
+  "map": "diagrams/32-mppm.html",
+  "blurb": "Virtual players are separate processes sharing one preferences store. Roles are the strapping pins that free them.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Not a simulation of a second player",
+      "focus": null,
+      "text": "Multiplayer play mode gives you extra editor instances so you can test two clients without building. The temptation is to read them as a lightweight simulation of a second player. They are not. Each one is a genuinely separate editor process, with its own worlds, its own sockets, its own domain, and no shared memory of any kind. Two facts about them do all the damage, and both are about sharing: they share your library folder, and they share your editor preferences."
+    },
+    {
+      "id": "folder",
+      "title": "A folder of symlinks",
+      "focus": "vp",
+      "text": "Look at what is actually on disk. Inside the library folder there is a virtual project directory per player, and inside each one, the assets folder and the project settings folder are symbolic links pointing straight back at your real project. There is no copy, no sync step and no divergence, because there is only ever one file. What the virtual project does keep for itself is small: a private library holding window layout, build profiles and a shader cache. The compiled assemblies are not in there. So an edit appears instantly in every instance, and a reimport stalls all of them at once, for exactly the same reason."
+    },
+    {
+      "id": "shared",
+      "title": "The pref they all read",
+      "focus": "prefs",
+      "text": "Now the second shared thing, and it is the one that crashes. The play mode type, which decides whether an instance builds a server world, a client world or both, is stored in editor preferences under a key scoped by the product name. Not by the instance. Not by the player index. By the product name. Every process reading that key gets the same answer, and its default is client and server. So the second editor happily concludes it should build a server world too."
+    },
+    {
+      "id": "crash",
+      "title": "The cascade, and why it misleads",
+      "focus": "boot",
+      "text": "Two server worlds means two attempts to bind the same port. The first succeeds, the second fails, and then the failure cascades. Subscene loaders find two server worlds where they expected one. Entity assertions fire. The console fills with errors that have nothing to do with sockets, and the port bind message is buried three screens up. The cascade is louder than the cause, which is exactly why this one is hard, and it is a good general lesson: the loudest error is rarely the first one."
+    },
+    {
+      "id": "wrongfix",
+      "title": "The obvious fix does not work",
+      "focus": "prefs",
+      "text": "The instinct is to open the play mode tools window in the second instance and set it to client. You cannot. An additional editor does not get that window. And the value you would be changing in the main editor is the shared one, which would change it for the host too. So you are being asked to configure two independent boards by editing one shared memory chip, and there is no version of that which works. The problem is not the setting. The problem is that there is only one of it."
+    },
+    {
+      "id": "roles",
+      "title": "Roles are the strapping pins",
+      "focus": "roles",
+      "text": "The fix is to give each instance its own storage. Install the dedicated server package, and netcode's assembly definition defines a symbol for multiplayer roles. That symbol switches the preference getter to ask the roles manager first, and only fall back to the shared key if roles are disabled. Each player now carries its own role, saved in the play mode system data file next to its name and its identifier. Set the main editor to client and server, set the second player to client, and the topology is finally what you drew."
+    },
+    {
+      "id": "confirm",
+      "title": "How you know it took",
+      "focus": "worlds",
+      "text": "Two confirmations, one visual and one factual. Visually, the play mode type control in the play mode tools window goes grey, because roles have taken over and the old control is disabled. If it is still editable, the symbol is not active and you are still on the shared key. Factually, loop over every world in every instance and count the server worlds. There must be exactly one, across all of them. Then count ghosts: four for two players, because each player is a controller entity plus a capsule entity."
+    }
+  ],
+  "nodes": {
+    "main": {
+      "short": "The one full editor. It owns the scenario and launches everything else.",
+      "deep": "It is also the only instance with the play mode tools window, which is why it looks like the place to fix everything and is not. It is a player in the scenario in its own right, with its own role entry, so it is not privileged at runtime, only in the user interface.",
+      "types": [
+        "MultiplayerPlayModeWindow",
+        "MultiplayerPlayModePreferences"
+      ],
+      "goto": "diagrams/03-connect.html",
+      "gotoLabel": "What its client does on connect"
+    },
+    "vp": {
+      "short": "A directory per player, whose assets and settings are symlinks to yours.",
+      "deep": "The assets folder and the project settings folder are symbolic links straight back at your project, so there is exactly one copy of every file and no synchronisation step at all. What it keeps privately is only editor instance state: window layout, build profiles, a shader cache. No compiled assemblies, no separate asset database. That is why edits appear instantly and why a reimport stalls every instance at once.",
+      "types": [
+        "MultiplayerPlayModePreferences"
+      ]
+    },
+    "player": {
+      "short": "A real second editor process, with its own worlds, sockets and domain.",
+      "deep": "It shares no memory with the main editor. No static state crosses between them, no singleton is visible from one to the other, and a domain reload hits them independently. It has no play mode tools window, which is why verification here goes through scripting rather than the interface.",
+      "types": [
+        "World",
+        "WorldFlags",
+        "ClientServerBootstrap"
+      ],
+      "goto": "diagrams/19-netcode-worlds.html",
+      "gotoLabel": "What this process actually builds"
+    },
+    "prefs": {
+      "short": "One key, scoped by product name, read identically by every instance.",
+      "deep": "The key is a prefix built from the product name plus the setting name, so it is per project and not per instance. Its default is client and server. That single default is what makes a second editor try to bind a port that is already taken, and the cascade of loader and entity errors that follows is much louder than the bind failure itself.",
+      "types": [
+        "MultiplayerPlayModePreferences",
+        "PlayType",
+        "ClientServerBootstrap"
+      ]
+    },
+    "roles": {
+      "short": "A per-player role, consulted before the shared key ever gets read.",
+      "deep": "Installing the dedicated server package defines the roles symbol through a version define on netcode's own assembly. With it, the preference getter asks the roles manager first and returns immediately, so the shared key becomes unreachable. Each player's role lives in the play mode system data file alongside its name and identifier.",
+      "types": [
+        "MultiplayerPlayModePreferences",
+        "PlayType",
+        "NetCodeConfig"
+      ],
+      "goto": "diagrams/31-assembly-graph.html",
+      "gotoLabel": "How a version define works"
+    },
+    "boot": {
+      "short": "Reads the requested play type once, and builds worlds accordingly.",
+      "deep": "It runs independently inside every process. Whatever value it reads is the value that process acts on, and there is no coordination between instances. Additional thin clients are bootstrapped after the main worlds, and only in the editor, which is one more reason the instance count and the world count rarely match.",
+      "types": [
+        "ClientServerBootstrap",
+        "PlayType",
+        "ICustomBootstrap",
+        "BovineLabsBootstrap"
+      ],
+      "goto": "diagrams/19-netcode-worlds.html",
+      "gotoLabel": "The flags it stamps on each world"
+    },
+    "worlds": {
+      "short": "Server, client, or both. The count across all instances is the real test.",
+      "deep": "Exactly one server world across every editor instance means roles are applied. Two means they are not. From there, four ghosts for two players is the healthy reading, because each player owns a controller entity and a capsule entity. Three would be an ownership bug, not a spawn bug.",
+      "types": [
+        "World",
+        "WorldFlags",
+        "GhostInstance",
+        "NetworkId"
+      ],
+      "goto": "diagrams/42-which-world.html",
+      "gotoLabel": "Telling which world you are in"
+    }
+  }
+}

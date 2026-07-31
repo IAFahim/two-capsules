@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "The Archetype Is a Set",
+    "subtitle": "Adding a component never edits an entity — it hashes a different set, finds a different chunk, and copies the entity there",
+    "output": "diagrams/06-archetype-graph.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "set",
+        "label": "A sorted array of type indices",
+        "focus": [
+          "srcset",
+          "insert"
+        ],
+        "note": "An archetype has no name of its own. It is a sorted array of component type indices, and that array is the entire identity."
+      },
+      {
+        "id": "nograph",
+        "label": "There is no graph",
+        "focus": [
+          "lookup",
+          "dst"
+        ],
+        "note": "No edge is ever stored. The new set is hashed whole and probed in an open-addressed table: hit reuses, miss creates."
+      },
+      {
+        "id": "move",
+        "label": "What the entity actually pays",
+        "focus": [
+          "convert",
+          "dstchunk"
+        ],
+        "note": "Two sorted arrays walked in step, one memory copy per surviving component, and a new index in a different allocation."
+      },
+      {
+        "id": "aftershock",
+        "label": "The bills that arrive later",
+        "focus": [
+          "capacity",
+          "queries"
+        ],
+        "note": "A new archetype changes how many entities fit in a chunk, and drops the cached chunk list of every query that matches it."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "srcset",
+      "type": "cloud",
+      "label": "Archetype A",
+      "sublabel": "sorted array of type indices",
+      "tag": "shared by all its chunks",
+      "pos": [
+        60,
+        100
+      ],
+      "size": [
+        260,
+        68
+      ]
+    },
+    {
+      "id": "insert",
+      "type": "backend",
+      "label": "Insert one type",
+      "sublabel": "stack copy, still sorted",
+      "tag": "no allocation",
+      "pos": [
+        530,
+        100
+      ],
+      "size": [
+        260,
+        68
+      ]
+    },
+    {
+      "id": "lookup",
+      "type": "security",
+      "label": "Hash the whole array",
+      "sublabel": "open addressing, linear probe",
+      "tag": "confirmed by memcmp",
+      "pos": [
+        1000,
+        100
+      ],
+      "size": [
+        260,
+        68
+      ]
+    },
+    {
+      "id": "dst",
+      "type": "cloud",
+      "label": "Archetype B",
+      "sublabel": "found, or created and added",
+      "tag": "A plus one type",
+      "pos": [
+        1000,
+        430
+      ],
+      "size": [
+        260,
+        68
+      ]
+    },
+    {
+      "id": "capacity",
+      "type": "database",
+      "label": "Chunk capacity",
+      "sublabel": "buffer over the stride sum",
+      "tag": "capped at 128",
+      "pos": [
+        1470,
+        430
+      ],
+      "size": [
+        260,
+        68
+      ]
+    },
+    {
+      "id": "convert",
+      "type": "backend",
+      "label": "Convert",
+      "sublabel": "both type arrays, in step",
+      "tag": "one copy per shared type",
+      "pos": [
+        1000,
+        760
+      ],
+      "size": [
+        260,
+        68
+      ]
+    },
+    {
+      "id": "dstchunk",
+      "type": "database",
+      "label": "A chunk of B",
+      "sublabel": "new address, new slot",
+      "tag": "old pointers now lie",
+      "pos": [
+        1470,
+        760
+      ],
+      "size": [
+        260,
+        68
+      ]
+    },
+    {
+      "id": "queries",
+      "type": "external",
+      "label": "Matching queries",
+      "sublabel": "back pointers on the archetype",
+      "tag": "chunk caches dropped",
+      "pos": [
+        1940,
+        760
+      ],
+      "size": [
+        260,
+        68
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "no edge is stored anywhere · the sorted set is the key",
+      "wraps": [
+        "insert",
+        "lookup",
+        "dst"
+      ],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    {
+      "from": "srcset",
+      "to": "insert",
+      "label": "add one type",
+      "variant": "emphasis"
+    },
+    {
+      "from": "insert",
+      "to": "lookup",
+      "label": "hash it whole",
+      "variant": "emphasis"
+    },
+    {
+      "from": "lookup",
+      "to": "dst",
+      "label": "hit or create",
+      "variant": "emphasis",
+      "labelDy": 145
+    },
+    {
+      "from": "dst",
+      "to": "capacity",
+      "label": "relayout",
+      "variant": "dashed"
+    },
+    {
+      "from": "dst",
+      "to": "convert",
+      "label": "the move",
+      "variant": "emphasis",
+      "labelDy": 150
+    },
+    {
+      "from": "convert",
+      "to": "dstchunk",
+      "label": "lands here"
+    },
+    {
+      "from": "dstchunk",
+      "to": "queries",
+      "label": "invalidate",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The set, from the source",
+      "items": [
+        "Types is an array sorted by type index, TypesCount long · Unity.Entities/Types/Archetype.cs:35",
+        "Adding a type builds a new sorted array on the stack · EntityComponentStoreCreateArchetype.cs:508",
+        "Then GetOrCreateArchetype hashes and probes it · EntityComponentStoreCreateArchetype.cs:14",
+        "The hash covers the whole array and is confirmed by MemCmp · ChunkListMap.cs:234, :312"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why there is no edge cache",
+      "items": [
+        "An archetype with N types has N ways to remove and thousands of ways to add",
+        "Storing that graph would cost far more than recomputing the key each time",
+        "The key is cheap: one hash over a few hundred bytes, one probe, one memcmp",
+        "So the graph lives in your head, not in memory — the table is the only structure"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What the copy actually is",
+      "items": [
+        "Both type arrays are sorted, so Convert walks them as a two-pointer merge",
+        "Type in both: one MemCpy of count times stride · ChunkDataUtility.cs:623",
+        "Type only in the destination: MemClear, and new enableable bits set enabled · ChunkDataUtility.cs:633",
+        "Type only in the source: dropped, and deallocated if it owned memory"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The two bills you did not ask for",
+      "items": [
+        "Chunk capacity is recomputed for the new archetype · EntityComponentStore.cs:2481",
+        "It is capped at 128 entities per chunk whatever the strides allow · TypeManager.cs:705",
+        "Every archetype keeps back pointers to the queries that match it · Archetype.cs:39",
+        "So a changed chunk list drops those queries' caches · EntityComponentStore.cs:2682"
+      ]
+    }
+  ]
+}

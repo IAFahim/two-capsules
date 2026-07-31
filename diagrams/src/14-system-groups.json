@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "The Update Tree",
+    "subtitle": "Three root groups, three player loop phases, and the netcode groups at the positions their attributes actually give them",
+    "output": "diagrams/14-system-groups.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "viewBox": [1250, 720],
+    "views": [
+      {
+        "id": "roots",
+        "label": "Three roots, three phases",
+        "focus": ["init", "sim", "pres"],
+        "note": "These three are created in every world whether or not anything is put in them, and each is appended to a different player loop phase."
+      },
+      {
+        "id": "order",
+        "label": "The OrderFirst bucket",
+        "focus": ["netrecv", "ghost", "predict", "fixed"],
+        "note": "Four groups pin themselves to the front of simulation, then order among themselves with UpdateBefore."
+      },
+      {
+        "id": "surprise",
+        "label": "Prediction runs before fixed step",
+        "focus": ["predict", "pfixed", "fixed"],
+        "note": "There are two fixed-step groups. The one inside prediction is the one that replays; the outer one does not."
+      },
+      {
+        "id": "yours",
+        "label": "Where an unpinned system lands",
+        "focus": ["sim", "yours"],
+        "note": "No attribute at all means simulation, in the middle, after everything that pinned itself first."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "init",
+      "type": "cloud",
+      "label": "InitializationSystemGroup",
+      "sublabel": "scene resolve and streaming live here",
+      "tag": "PlayerLoop · Initialization",
+      "pos": [60, 60],
+      "size": [240, 84]
+    },
+    {
+      "id": "sim",
+      "type": "backend",
+      "label": "SimulationSystemGroup",
+      "sublabel": "carries no world filter at all",
+      "tag": "PlayerLoop · Update",
+      "pos": [420, 60],
+      "size": [260, 84]
+    },
+    {
+      "id": "pres",
+      "type": "frontend",
+      "label": "PresentationSystemGroup",
+      "sublabel": "the one root that overrides its children",
+      "tag": "PlayerLoop · PreLateUpdate",
+      "pos": [800, 60],
+      "size": [250, 84]
+    },
+    {
+      "id": "netrecv",
+      "type": "messagebus",
+      "label": "NetworkReceiveSystemGroup",
+      "sublabel": "packets in, before anything reads them",
+      "tag": "OrderFirst",
+      "pos": [60, 310],
+      "size": [220, 84]
+    },
+    {
+      "id": "ghost",
+      "type": "database",
+      "label": "GhostSimulationSystemGroup",
+      "sublabel": "apply snapshots, gather input",
+      "tag": "OrderFirst",
+      "pos": [340, 310],
+      "size": [240, 84]
+    },
+    {
+      "id": "predict",
+      "type": "security",
+      "label": "PredictedSimulationSystemGroup",
+      "sublabel": "runs once on the server, many times on a client",
+      "tag": "OrderFirst",
+      "pos": [620, 310],
+      "size": [300, 84]
+    },
+    {
+      "id": "fixed",
+      "type": "backend",
+      "label": "FixedStepSimulationSystemGroup",
+      "sublabel": "the ordinary fixed step, outside prediction",
+      "tag": "OrderFirst",
+      "pos": [960, 310],
+      "size": [230, 84]
+    },
+    {
+      "id": "pfixed",
+      "type": "security",
+      "label": "PredictedFixedStepSimulationSystemGroup",
+      "sublabel": "a second fixed step, inside the replay",
+      "tag": "OrderFirst, nested",
+      "pos": [620, 540],
+      "size": [300, 84]
+    },
+    {
+      "id": "yours",
+      "type": "external",
+      "label": "Your unpinned system",
+      "sublabel": "no attribute of any kind",
+      "tag": "the middle",
+      "pos": [960, 540],
+      "size": [230, 84]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "pinned to the front of simulation · ordered among themselves by UpdateBefore",
+      "wraps": ["netrecv", "ghost", "predict", "fixed"],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "id": "initsim",
+      "from": "init",
+      "to": "sim",
+      "label": "same frame",
+      "variant": "emphasis"
+    },
+    {
+      "id": "simpres",
+      "from": "sim",
+      "to": "pres",
+      "label": "same frame",
+      "variant": "emphasis"
+    },
+    {
+      "id": "into",
+      "from": "sim",
+      "to": "netrecv",
+      "label": "contains, in this order",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "o1",
+      "from": "netrecv",
+      "to": "ghost",
+      "variant": "emphasis"
+    },
+    {
+      "id": "o2",
+      "from": "ghost",
+      "to": "predict",
+      "variant": "emphasis"
+    },
+    {
+      "id": "o3",
+      "from": "predict",
+      "to": "fixed",
+      "variant": "emphasis"
+    },
+    {
+      "id": "nest",
+      "from": "predict",
+      "to": "pfixed",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "middle",
+      "from": "fixed",
+      "to": "yours",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Every position on this map, read from an attribute",
+      "items": [
+        "NetworkReceiveSystemGroup · OrderFirst in simulation, before ghost simulation · Runtime/Connection/NetworkStreamReceiveSystem.cs:30, :32",
+        "GhostSimulationSystemGroup · OrderFirst, before fixed step and before prediction · Runtime/PredictionTicking/GhostSimulationSystemGroup.cs:21, :22, :23",
+        "PredictedSimulationSystemGroup · OrderFirst, before fixed step · Runtime/PredictionTicking/GhostPredictionSystemGroup.cs:183, :184",
+        "FixedStepSimulationSystemGroup · OrderFirst, after the begin command buffer · DefaultWorld.cs:327, :328"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The surprise that reorders your mental model",
+      "items": [
+        "Prediction is not somewhere after fixed step; it declares UpdateBefore fixed step",
+        "So the replay loop finishes before the ordinary fixed step has run once",
+        "Netcode adds a second fixed step of its own, pinned first inside prediction · GhostPredictionSystemGroup.cs:195",
+        "Physics you want rolled back must go in that one, not in the outer fixed step"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Three roots, and only three",
+      "items": [
+        "Initialization, simulation and presentation are created before any of your systems · DefaultWorldInitialization.cs:314",
+        "Everything else on this map is a child that asked to be there",
+        "Presentation is the only root that overrides what its children default to · DefaultWorld.cs:768",
+        "Simulation declares nothing, which is why an unfiltered system lands in every game world"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What this map deliberately leaves out",
+      "items": [
+        "The begin and end command buffer systems that bracket every group",
+        "VariableRateSimulationSystemGroup and LateSimulationSystemGroup, both real, both rarely load-bearing",
+        "The command send and receive groups, which sit inside ghost simulation and network receive",
+        "BovineLabs adds several more; the mechanism for reading their position is the same four attributes"
+      ]
+    }
+  ]
+}

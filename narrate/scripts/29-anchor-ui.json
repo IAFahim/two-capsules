@@ -1,0 +1,112 @@
+{
+  "id": "29-anchor-ui",
+  "title": "UI Without a Round Trip",
+  "map": "diagrams/29-anchor-ui.html",
+  "blurb": "There is no per-frame sync pass. One comparison inside a generated setter decides whether the managed world hears about the write at all.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "The thing that is not here",
+      "focus": null,
+      "text": "I went looking for the system that scans the bindings every frame and pushes changes into the interface. It does not exist. There is no diff pass, no flush queue, no dirty list. Which means the answer to how the interface stays cheap is not a clever batching scheme. It is that the expensive path is never taken unless a value actually changed, and the test for that lives at the write itself."
+    },
+    {
+      "id": "write",
+      "title": "What a system actually writes",
+      "focus": "sys",
+      "text": "A system holds a raw pointer to a plain unmanaged struct and assigns a field on it. That is the whole author facing surface. No component, no singleton, no callback registration. It has to happen on the main thread, and writing from a scheduled job is explicitly unsupported, because the change path can end in a managed dictionary lookup and that is not something a worker thread may do."
+    },
+    {
+      "id": "gate",
+      "title": "The comparison is the mechanism",
+      "focus": "gate",
+      "text": "The property you assign is generated, and its setter is hard wired to a helper that compares the old value with the new one and returns immediately if they match. So an idle screen with fifty bound fields, written every frame, costs fifty comparisons and nothing else. No allocation, no delegate, no boundary crossing. And because the setter is generated, there is no way to write the field and skip the check, which is exactly the property you want from a mechanism like this."
+    },
+    {
+      "id": "cross",
+      "title": "One call out of the fast side",
+      "focus": "tramp",
+      "text": "When the values genuinely differ, the write has to reach managed code, and that is a real problem: compiled fast code cannot call a normal delegate. The solution is a function pointer trampoline, installed once at code load, that packs any argument struct into a pointer and a length. So one callback signature serves every kind of notification. On the other side the arguments are unpacked, the change is applied, and the ordinary property changed events are raised synchronously, right there at the write."
+    },
+    {
+      "id": "identity",
+      "title": "The address is the identity",
+      "focus": "ptr",
+      "text": "How does the fast side say which object it means, when it cannot hold a managed reference? By pointer. The view model keeps its unmanaged data on a small box, that box is pinned so the garbage collector cannot move it, and the resulting address is registered as a key in a dictionary that maps back to the managed object. So the identity crossing the boundary is a raw address. Pinning is not an optimisation here, it is the correctness requirement: move the object and the key stops meaning anything."
+    },
+    {
+      "id": "paint",
+      "title": "And then it is just an interface",
+      "focus": "ui",
+      "text": "From the view model onward there is nothing special left. It raises the standard change notification, the standard binding machinery hears it, and the element redraws. The element knows nothing about entities, worlds, or jobs. That separation is the actual product: everything upstream of the view model is data oriented, everything downstream is ordinary user interface code, and the seam between them is one comparison and one function pointer."
+    }
+  ],
+  "nodes": {
+    "sys": {
+      "short": "A system assigns a field on an unmanaged struct it holds a pointer to.",
+      "deep": "The helper resolves the view model from a service container, pins it, and caches the address. It can also build a query so the system only updates while the relevant screen is the active destination, which is how a view model stops costing anything the moment its screen is gone.",
+      "types": [
+        "UIHelper",
+        "IViewModelService",
+        "AnchorApp"
+      ],
+      "goto": "diagrams/01-machine.html",
+      "gotoLabel": "Where a system sits in the whole stack"
+    },
+    "attr": {
+      "short": "One attribute on a private field. That is the entire declaration.",
+      "deep": "It has to sit inside a partial struct, and the generator reports a compile error if it does not. The generator also recognises a few field shapes and gives them different surfaces: a plain value, a value with a consumed once flag, and a list that gets a container wrapper so a system can hand it an array, a buffer or a set.",
+      "types": [
+        "SystemPropertyAttribute"
+      ]
+    },
+    "set": {
+      "short": "The generated property. Its setter is the only way the value can change.",
+      "deep": "The getter is the raw field; the setter is wired straight to the compare and notify helper. Because you never write the setter, you can never accidentally write the field and skip the notification, and there is no stored dirty bit anywhere for the two halves to disagree about.",
+      "types": [
+        "BindingObjectNotifyDataExtensions"
+      ]
+    },
+    "gate": {
+      "short": "Compare old against new, and return doing nothing if they match.",
+      "deep": "This is the change detection, in full. It is not a system, not a pass, and not a schedule. The cost of a value that did not change is one equality test on a struct, which the compiler will usually reduce to a couple of instructions. The cost of a value that did change is everything to the right of this node.",
+      "types": [
+        "BindingObjectNotifyDataExtensions"
+      ]
+    },
+    "ptr": {
+      "short": "The unmanaged data is pinned, and its address is the key back to the object.",
+      "deep": "The struct sits on a tiny managed box purely so it can be pinned, because you cannot pin a field of an arbitrary object graph. The pinned address then keys a dictionary of view models. Unpinning on teardown is done in nested try and finally blocks, so a throw mid teardown still releases the handle.",
+      "types": [
+        "IBindingObjectNotify",
+        "SystemObservableObject",
+        "UIHelper"
+      ]
+    },
+    "tramp": {
+      "short": "A function pointer out of compiled fast code, installed once at code load.",
+      "deep": "Fast compiled code cannot call a delegate, so the bridge packs any argument struct into a pointer and a length and calls one fixed callback signature. Three of these cover the whole surface: set a value, set a list, and notify without writing. The navigation half of the package uses the identical trick for commands.",
+      "types": [
+        "BurstObjectNotify"
+      ]
+    },
+    "vm": {
+      "short": "The managed view model, found by looking its address up in a table.",
+      "deep": "It raises change notification before and after the copy, so anything listening sees a proper transition rather than a torn read. Its base class implements the three notification interfaces at once, which is what lets both hand written properties and generated ones funnel through one place.",
+      "types": [
+        "ObservableObject",
+        "SystemObservableObject",
+        "IViewModelService"
+      ]
+    },
+    "ui": {
+      "short": "An ordinary element, reading an ordinary property, redrawing.",
+      "deep": "Nothing here knows about entities. The markup names a data source type and a path, and the binding resolves it at import time, which is the origin of a famous trap: if the assembly holding that type has not been compiled yet, the reference is dropped silently and never retried.",
+      "types": [
+        "UISystemGroup"
+      ],
+      "goto": "diagrams/30-core-containers.html",
+      "gotoLabel": "The trampoline mechanism comes from here"
+    }
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "id": "19-netcode-worlds",
+  "title": "Worlds on the Wire",
+  "map": "diagrams/19-netcode-worlds.html",
+  "blurb": "Two worlds in one process are still two machines. And the host flag is false for both of them here.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "One process, two machines",
+      "focus": null,
+      "text": "Press play in the editor and you get two worlds. A server world and a client world, in one operating system process, sharing one address space. It is tempting to read that as one program wearing two hats. It is not. They have separate entity managers, separate singletons, separate copies of every system, and they talk to each other over a socket. Nothing crosses between them except bytes on a connection. If you keep that one fact, most of the confusing behaviour in this package stops being confusing."
+    },
+    {
+      "id": "flags",
+      "title": "A world is a flag word",
+      "focus": "server",
+      "text": "There is no world class hierarchy here. A world carries a flags field, and netcode reads bits out of it. One bit means game server. Another means game client. A third means thin client. Every question the package asks about a world is a bit test on that word. Is this the server? Test one bit. Is this a client? Test one bit, or the thin bit. That is the entire type system, and it is the reason a world can be interrogated from Burst compiled code with no branches worth mentioning."
+    },
+    {
+      "id": "ishost",
+      "title": "The AND that is false here",
+      "focus": "ishost",
+      "text": "Now the interesting one. The host test is defined as: is a client, and is a server. Both, on the same world. Read that again with the flag word in mind. It is asking whether one world carries both bits at once. In this project it never does. The bootstrap built two worlds, and each got exactly one bit. So the host test returns false on the server world, and false on the client world, and there is nowhere in this topology where it could return true. Our own client state system says so in a comment, right where it fills the field in."
+    },
+    {
+      "id": "single",
+      "title": "Where it would be true",
+      "focus": "single",
+      "text": "There is a shape where it is true, and it is worth knowing so you can recognise it when you read package code. A single world host builds one world with both flags set at once, so the client half and the server half share an entity manager and never touch a socket. It is guarded behind an experimental define and a configuration setting, and it is off here. But netcode is full of branches that check for it, and those branches are the reason a comment saying our topology is not a host world is a load bearing comment, not a note."
+    },
+    {
+      "id": "thin",
+      "title": "The thin client is an amputation",
+      "focus": "thin",
+      "text": "The thin client world is not a client with rendering turned off. It is built from a different filter entirely, so the systems that were never marked for thin client simulation do not exist in it at all. No presentation, no rendering, no interpolated ghost application. It holds a connection open and generates command traffic, which is exactly what you want for testing fifty players. The surprise arrives when something you assumed was universal turns out to have been marked client only, and simply is not there. That includes, in this project, the subscene loading that brings up the client graph."
+    },
+    {
+      "id": "wire",
+      "title": "They still talk over a socket",
+      "focus": "wire",
+      "text": "Even in one process, the two worlds do not read each other's memory. The server binds a port and listens. The client connects. Netcode registers two transports for this: a shared memory transport for the pair inside one process, and a real socket for everyone else, including a second editor instance on the same machine. That is why the server row in the tools window shows two endpoints. The in-process pair takes the fast path, and it is still a connection, with an identifier, a state machine, and a disconnect reason."
+    }
+  ],
+  "nodes": {
+    "playtype": {
+      "short": "One enum, read once at startup, deciding which worlds exist at all.",
+      "deep": "It has three values: client and server, client only, server only. The bootstrap reads it once and builds accordingly. Everything downstream, including whether your player can even spawn, is a consequence of this one read. In the editor it comes from a preference, and that preference is shared between editor instances, which is its own chapter.",
+      "types": [
+        "ClientServerBootstrap",
+        "PlayType",
+        "NetCodeConfig",
+        "OverrideAutomaticNetcodeBootstrap"
+      ],
+      "goto": "diagrams/32-mppm.html",
+      "gotoLabel": "Why a second editor reads the same value"
+    },
+    "server": {
+      "short": "The only world with authority, and the only one that never renders.",
+      "deep": "It carries the game server flag and nothing else. Systems land in it because they declared the server simulation filter. It owns the truth, it owns the port, and it is the only place where a decision is final. Everything you see on any screen is some client's approximation of what happened here, at a tick that has already passed.",
+      "types": [
+        "WorldFlags",
+        "WorldSystemFilterFlags",
+        "NetworkStreamDriver",
+        "GhostSendSystem"
+      ],
+      "goto": "diagrams/42-which-world.html",
+      "gotoLabel": "Which world does my system land in?"
+    },
+    "client": {
+      "short": "Carries the game client flag, renders, and runs two clocks of its own.",
+      "deep": "It never has authority over anything. What it does have is two derived timelines, one behind the server and one ahead of it, and every replicated entity in it is assigned to one of them. That assignment is the single largest performance decision in the project, and it is made per prefab at bake time.",
+      "types": [
+        "WorldFlags",
+        "NetworkTime",
+        "PredictedGhost",
+        "GhostUpdateSystem"
+      ],
+      "goto": "diagrams/41-clock-domains.html",
+      "gotoLabel": "The two clocks inside this world"
+    },
+    "thin": {
+      "short": "Built from a different system filter, so most of the client is simply absent.",
+      "deep": "It is not a client with features disabled. Systems are gathered by the thin client simulation filter, and anything that did not opt in was never added. It exists to hold a connection and fabricate input, which makes it perfect for load testing and misleading for anything else. In this project it also does not load the client subscenes, so it has no state graph.",
+      "types": [
+        "WorldSystemFilterFlags",
+        "ClientServerBootstrap",
+        "WorldFlags"
+      ],
+      "goto": "diagrams/39-connection-topologies.html",
+      "gotoLabel": "Every topology these worlds can form"
+    },
+    "wire": {
+      "short": "One listening port, two transports: shared memory in-process, a real socket outside.",
+      "deep": "The driver store registers more than one driver type. A client and server in the same process get a shared memory transport with no kernel involved. Anything else, including a second editor instance on this same machine, takes a real socket to the same port. Both look identical to your code, because a connection is an entity either way.",
+      "types": [
+        "NetworkStreamDriver",
+        "NetworkDriverStore",
+        "TransportType",
+        "NetworkStreamConnection"
+      ],
+      "goto": "diagrams/03-connect.html",
+      "gotoLabel": "What crosses it, in order"
+    },
+    "ishost": {
+      "short": "Defined as: is a client, and is a server, on the same world. False here, twice.",
+      "deep": "This is a bit test conjunction, not a configuration option. Two separate worlds cannot satisfy it, because each carries only one of the two flags. Package code branches on it in a couple of dozen places, and every one of those branches takes the two-world path in this project. Reading it as meaning our client and server are in the same process is the mistake that costs an afternoon.",
+      "types": [
+        "WorldFlags",
+        "World",
+        "WorldUnmanaged",
+        "ClientServerBootstrap"
+      ]
+    },
+    "single": {
+      "short": "One world carrying both flags, which is the only shape the host test accepts.",
+      "deep": "Behind an experimental define, the bootstrap can build a single world holding the server simulation, the client simulation and presentation together. There is no socket between the halves. That is the topology the host branches were written for, and it changes command timing, prediction and spawn handling in ways the two-world path never sees. It is off here, and knowing it exists is what makes the false host test make sense.",
+      "types": [
+        "WorldFlags",
+        "NetCodeConfig",
+        "ClientServerBootstrap"
+      ],
+      "goto": "diagrams/39-connection-topologies.html",
+      "gotoLabel": "Listen server, dedicated, relay"
+    }
+  }
+}

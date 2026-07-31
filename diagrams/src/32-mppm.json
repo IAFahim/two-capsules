@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Two Editors, One EEPROM",
+    "subtitle": "Virtual players are separate processes sharing one preferences store — and roles are the strapping pins that free them",
+    "output": "diagrams/32-mppm.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "clone",
+        "label": "What a virtual player is",
+        "focus": [
+          "main",
+          "vp",
+          "player"
+        ],
+        "note": "A folder of symlinks back to your assets, launched as a genuinely separate editor process."
+      },
+      {
+        "id": "shared",
+        "label": "The pref they all read",
+        "focus": [
+          "prefs",
+          "boot"
+        ],
+        "note": "One key, scoped by product name, not by instance. Every process reads the same value."
+      },
+      {
+        "id": "roles",
+        "label": "Roles override the pref",
+        "focus": [
+          "roles",
+          "boot"
+        ],
+        "note": "With the dedicated server package installed, a per-player role is consulted first and the shared key is ignored."
+      },
+      {
+        "id": "worlds",
+        "label": "What actually gets built",
+        "focus": [
+          "boot",
+          "worlds"
+        ],
+        "note": "The play type decides which worlds exist. Two servers means two binds on one port."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "main",
+      "type": "frontend",
+      "label": "Main editor",
+      "sublabel": "owns the scenario",
+      "tag": "the only full UI",
+      "pos": [
+        40,
+        330
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "vp",
+      "type": "database",
+      "label": "Virtual project folder",
+      "sublabel": "symlinked assets and settings",
+      "tag": "one per player",
+      "pos": [
+        380,
+        330
+      ],
+      "size": [
+        270,
+        68
+      ]
+    },
+    {
+      "id": "player",
+      "type": "frontend",
+      "label": "Additional editor",
+      "sublabel": "its own process and sockets",
+      "tag": "no play mode tools",
+      "pos": [
+        740,
+        330
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "prefs",
+      "type": "external",
+      "label": "Shared preference",
+      "sublabel": "one key per product name",
+      "tag": "defaults to client and server",
+      "pos": [
+        740,
+        60
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "roles",
+      "type": "security",
+      "label": "Per-player role",
+      "sublabel": "stored beside the player list",
+      "tag": "needs the dedicated server package",
+      "pos": [
+        740,
+        600
+      ],
+      "size": [
+        280,
+        68
+      ]
+    },
+    {
+      "id": "boot",
+      "type": "backend",
+      "label": "Bootstrap",
+      "sublabel": "reads the requested play type",
+      "tag": "once, at play",
+      "pos": [
+        1120,
+        330
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "worlds",
+      "type": "cloud",
+      "label": "Worlds built",
+      "sublabel": "server, client, or both",
+      "tag": "one server, total",
+      "pos": [
+        1470,
+        330
+      ],
+      "size": [
+        250,
+        68
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "separate processes · shared library folder · no shared memory, no shared statics",
+      "wraps": [
+        "vp",
+        "player"
+      ],
+      "pad": 26
+    }
+  ],
+  "connections": [
+    {
+      "from": "main",
+      "to": "vp",
+      "label": "launch",
+      "variant": "emphasis"
+    },
+    {
+      "from": "vp",
+      "to": "player",
+      "label": "same code",
+      "variant": "emphasis"
+    },
+    {
+      "from": "player",
+      "to": "boot",
+      "variant": "emphasis"
+    },
+    {
+      "from": "prefs",
+      "to": "boot",
+      "label": "read when roles are off",
+      "variant": "dashed"
+    },
+    {
+      "from": "roles",
+      "to": "boot",
+      "label": "consulted first",
+      "variant": "security"
+    },
+    {
+      "from": "boot",
+      "to": "worlds",
+      "label": "play type decides",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "A virtual player is not a sandbox",
+      "items": [
+        "It is a real second editor process with its own worlds, sockets and domain",
+        "Its folder holds symlinks to your assets and project settings, so edits appear instantly",
+        "Its own library holds only per-instance editor state; the compiled assemblies come from yours",
+        "It shares nothing at runtime: no static state crosses between processes"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The crash, and why the obvious fix fails",
+      "items": [
+        "The play type preference key is scoped by product name, not by instance",
+        "Its default is client and server, so a second player builds a server world too",
+        "Two servers bind the same port; the bind failure then cascades into loader and entity errors",
+        "Changing it in play mode tools cannot help, because a virtual player has no such window"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Roles are the strapping pins",
+      "items": [
+        "Installing the dedicated server package defines the roles symbol as a version define",
+        "The preference getter then asks the roles manager first and never reaches the shared key",
+        "Each player carries its own role, saved in the play mode system data file",
+        "Visible confirmation: the play type control in play mode tools goes grey"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The reading that means it worked",
+      "items": [
+        "Main editor on client and server, second player on client only",
+        "Exactly one server world across every instance",
+        "Four ghosts for two players, because each player is a controller plus a capsule",
+        "A thin client is a different amputation again, and it will not load the client subscenes"
+      ]
+    }
+  ]
+}

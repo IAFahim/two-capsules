@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Where a Query Actually Filters",
+    "subtitle": "Five rejections at five granularities — and only the last one costs anything per entity",
+    "output": "diagrams/08-query-matching.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "once",
+        "label": "Most of it happens once",
+        "focus": [
+          "desc",
+          "matched"
+        ],
+        "note": "Archetype matching runs when the query is made, and again when a new archetype is born. Never inside your update."
+      },
+      {
+        "id": "bloom",
+        "label": "A bloom filter guards the gate",
+        "focus": [
+          "bloom",
+          "types"
+        ],
+        "note": "Five bits per component type, or-ed into one word. A single AND rejects most archetypes before any type index is read."
+      },
+      {
+        "id": "cache",
+        "label": "The chunk list is a flat array",
+        "focus": [
+          "matched",
+          "chunks"
+        ],
+        "note": "Every matching chunk from every matching archetype, flattened into one array, rebuilt only after something drops it."
+      },
+      {
+        "id": "entity",
+        "label": "The only per-entity cost",
+        "focus": [
+          "filter",
+          "mask"
+        ],
+        "note": "A version compare can skip a whole chunk. Inside a chunk that survives, a 128-bit mask picks entities with count-trailing-zeros."
+      }
+    ],
+    "viewBox": [
+      1160,
+      620
+    ]
+  },
+  "stages": [
+    {
+      "label": "describe once"
+    },
+    {
+      "label": "bloom reject"
+    },
+    {
+      "label": "flag and type reject"
+    },
+    {
+      "label": "the matched set"
+    },
+    {
+      "label": "per chunk"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "desc",
+      "type": "cloud",
+      "label": "Query description",
+      "sublabel": "All · Any · None · Present",
+      "tag": "built in OnCreate",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "bloom",
+      "type": "security",
+      "label": "Bloom reject",
+      "sublabel": "one AND on a 64-bit mask",
+      "tag": "five bits per type",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "types",
+      "type": "security",
+      "label": "Flags, then types",
+      "sublabel": "disabled · prefab · system",
+      "tag": "two sorted arrays",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "matched",
+      "type": "database",
+      "label": "Matching archetypes",
+      "sublabel": "recorded once, in both directions",
+      "tag": "grows, never per frame",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "chunks",
+      "type": "database",
+      "label": "Cached chunk list",
+      "sublabel": "flat array of chunk indices",
+      "tag": "rebuilt only when dropped",
+      "stage": 3,
+      "row": 1
+    },
+    {
+      "id": "filter",
+      "type": "backend",
+      "label": "Version filter",
+      "sublabel": "shared value, change version",
+      "tag": "skips a whole chunk",
+      "stage": 4,
+      "row": 1
+    },
+    {
+      "id": "mask",
+      "type": "frontend",
+      "label": "Enabled bitmask",
+      "sublabel": "two 64-bit words per chunk",
+      "tag": "count trailing zeros",
+      "stage": 4,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "desc",
+      "to": "bloom",
+      "label": "hash the All set",
+      "classification": "build",
+      "variant": "emphasis"
+    },
+    {
+      "from": "bloom",
+      "to": "types",
+      "label": "survivors",
+      "classification": "match",
+      "variant": "emphasis"
+    },
+    {
+      "from": "types",
+      "to": "matched",
+      "label": "it matches",
+      "classification": "match",
+      "variant": "emphasis"
+    },
+    {
+      "from": "matched",
+      "to": "chunks",
+      "label": "flatten",
+      "classification": "cache",
+      "variant": "emphasis"
+    },
+    {
+      "from": "chunks",
+      "to": "filter",
+      "label": "per chunk",
+      "classification": "iterate",
+      "variant": "emphasis"
+    },
+    {
+      "from": "filter",
+      "to": "mask",
+      "label": "chunk survives",
+      "classification": "iterate",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What runs when",
+      "items": [
+        "Matching runs at query creation and when a new archetype is born · EntityQueryManager.cs:945",
+        "A match adds a record to the query and a back pointer to the archetype · lines 967, 970",
+        "The chunk list is rebuilt only after an invalidation, not every update · EntityQueryManager.cs:1593",
+        "Archetypes holding zero entities are skipped during that rebuild · EntityQueryManager.cs:1602"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The bloom filter nobody mentions",
+      "items": [
+        "Each component type hashes to five bits of a 64-bit word · TypeManager.cs:3492",
+        "An archetype's mask is the OR of all its types' masks · EntityComponentStore.cs:2421",
+        "A query whose required bits are missing is rejected in one AND · EntityQueryManager.cs:1077",
+        "The source explains the choice of five: fewer collides, more hides misses · TypeManager.cs:3494"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The filter has a hard ceiling",
+      "items": [
+        "Shared component filtering holds at most two values · EntityQueryFilter.cs:11",
+        "Change filtering holds at most two component types · EntityQueryFilter.cs:23",
+        "Both compare a stored version, so the unit of skipping is a whole chunk",
+        "Filtering is skipped entirely unless one of those counts is non-zero · EntityQueryFilter.cs:33"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Inside a surviving chunk",
+      "items": [
+        "The enableable state is two 64-bit words, one bit per slot · ChunkEntityEnumerator.cs:16",
+        "The next entity is count-trailing-zeros of the low word · ChunkEntityEnumerator.cs:63",
+        "Then the lowest set bit is cleared with a single AND · ChunkEntityEnumerator.cs:64",
+        "With nothing enableable the mask is all ones and the loop is a plain range"
+      ]
+    }
+  ]
+}

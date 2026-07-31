@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Four Timelines",
+    "subtitle": "The package counts four, not three — and the fourth hides behind the third whenever forced input latency is zero",
+    "output": "diagrams/20-tick-timeline.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "estimate",
+        "label": "The client never reads the server clock",
+        "focus": [
+          "arrive",
+          "estimate"
+        ],
+        "note": "It estimates the tick it is about to receive, and builds both of its own clocks from that estimate."
+      },
+      {
+        "id": "split",
+        "label": "One estimate, two directions",
+        "focus": [
+          "estimate",
+          "interp",
+          "predict"
+        ],
+        "note": "Subtract the interpolation window for the past. Add round trip plus command slack for the future."
+      },
+      {
+        "id": "fourth",
+        "label": "The fourth timeline",
+        "focus": [
+          "predict",
+          "input"
+        ],
+        "note": "Input target tick is predicted tick plus effective input latency. At zero they are the same number."
+      },
+      {
+        "id": "clamp",
+        "label": "When the order inverts",
+        "focus": [
+          "input",
+          "clamp"
+        ],
+        "note": "Enough forced latency pushes prediction behind interpolation, so the interpolation window is stretched instead."
+      }
+    ],
+    "viewBox": [
+      1200,
+      660
+    ]
+  },
+  "stages": [
+    {
+      "label": "the only truth"
+    },
+    {
+      "label": "what actually landed"
+    },
+    {
+      "label": "the client's estimate"
+    },
+    {
+      "label": "two clocks from one estimate"
+    },
+    {
+      "label": "the fourth"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "servertick",
+      "type": "backend",
+      "label": "Server tick",
+      "sublabel": "advances at the simulation rate",
+      "tag": "rendered by nobody",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "arrive",
+      "type": "messagebus",
+      "label": "Snapshot arrival",
+      "sublabel": "last tick received locally",
+      "tag": "irregular",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "estimate",
+      "type": "database",
+      "label": "Arrival estimate",
+      "sublabel": "next tick we expect to receive",
+      "tag": "exponential average",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "predict",
+      "type": "frontend",
+      "label": "Predicted tick",
+      "sublabel": "estimate + round trip + slack",
+      "tag": "time scale 0.9 to 1.1",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "interp",
+      "type": "frontend",
+      "label": "Interpolation tick",
+      "sublabel": "estimate − interpolation frames",
+      "tag": "time scale 0.85 to 1.1",
+      "stage": 3,
+      "row": 1
+    },
+    {
+      "id": "input",
+      "type": "security",
+      "label": "Input target tick",
+      "sublabel": "predicted + effective input latency",
+      "tag": "default latency 0",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "clamp",
+      "type": "external",
+      "label": "Order guard",
+      "sublabel": "predicted must not fall behind",
+      "tag": "stretches the window",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "servertick",
+      "to": "arrive",
+      "label": "per network tick",
+      "classification": "wire",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "arrive",
+      "to": "estimate",
+      "label": "aged, corrected",
+      "classification": "estimate",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "estimate",
+      "to": "predict",
+      "label": "run ahead",
+      "classification": "future",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "estimate",
+      "to": "interp",
+      "label": "fall behind",
+      "classification": "past",
+      "fromSide": "bottom"
+    },
+    {
+      "from": "predict",
+      "to": "input",
+      "label": "forced latency",
+      "classification": "future",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "interp",
+      "to": "clamp",
+      "label": "pushed forward",
+      "classification": "guard",
+      "variant": "security",
+      "route": "straight"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The four, oldest to newest",
+      "items": [
+        "Interpolation tick — what you see of everyone else",
+        "Snapshot arrival tick — the newest server state actually in hand",
+        "Server tick on the client — the tick prediction is aiming at",
+        "Input target tick — the tick your keypress is stamped with"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What collapses four into three",
+      "items": [
+        "Input target equals predicted plus the effective input latency",
+        "Effective latency is zero by default, so the two coincide and you see three",
+        "It is not zero when forced input latency is configured above zero",
+        "It is also not zero when ping exceeds the maximum predict ahead time, which raises it for you"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Neither client clock is read from the server",
+      "items": [
+        "The client keeps an estimate of the tick it is about to receive next",
+        "Both of its clocks are derived from that estimate, in opposite directions",
+        "Each has its own rate multiplier, nudged a fraction of the error per frame",
+        "So the clocks are servo loops, not counters, and they are allowed to run slightly fast or slow"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The inversion nobody expects",
+      "items": [
+        "Enough forced latency pushes the predicted tick behind the interpolation tick",
+        "Netcode does not let the order invert",
+        "It drags the interpolation target forward to meet the predicted tick",
+        "The interpolation window silently lengthens, so tuning one knob moves the other"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Baking Is a Compile Step",
+    "subtitle": "A source language, a dependency-tracked front end, whole-program passes, a strip, and an object file you ship",
+    "output": "diagrams/16-baking.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1180,
+      640
+    ],
+    "views": [
+      {
+        "id": "frontend",
+        "label": "The front end",
+        "focus": [
+          "go",
+          "dep",
+          "baker"
+        ],
+        "note": "One baker per authoring component, and every read it makes is recorded as the key that decides whether it re-runs."
+      },
+      {
+        "id": "passes",
+        "label": "The whole-scene passes",
+        "focus": [
+          "baker",
+          "bsys",
+          "strip"
+        ],
+        "note": "Bakers cannot see each other. The systems that run after them can see everything at once."
+      },
+      {
+        "id": "artifact",
+        "label": "The object file",
+        "focus": [
+          "strip",
+          "file"
+        ],
+        "note": "What ships is a serialized chunk image, one file per section, with no authoring objects left in it."
+      },
+      {
+        "id": "runtime",
+        "label": "Nothing bakes at runtime",
+        "focus": [
+          "file",
+          "load"
+        ],
+        "note": "The player contains no bakers. If a value is wrong at runtime, it was already wrong before the build."
+      }
+    ]
+  },
+  "stages": [
+    {
+      "label": "source"
+    },
+    {
+      "label": "front end"
+    },
+    {
+      "label": "whole-scene passes"
+    },
+    {
+      "label": "the artifact"
+    },
+    {
+      "label": "runtime"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "go",
+      "type": "external",
+      "label": "GameObject",
+      "sublabel": "components you can see and drag",
+      "tag": "the source language",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "dep",
+      "type": "security",
+      "label": "Dependency record",
+      "sublabel": "every value the baker touched",
+      "tag": "the incremental key",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "baker",
+      "type": "backend",
+      "label": "Baker",
+      "sublabel": "one per authoring component",
+      "tag": "cannot see its neighbours",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "bsys",
+      "type": "backend",
+      "label": "Baking systems",
+      "sublabel": "queries over the whole scene",
+      "tag": "after every baker",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "strip",
+      "type": "security",
+      "label": "Strip pass",
+      "sublabel": "temporary types removed",
+      "tag": "always last",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "file",
+      "type": "database",
+      "label": "Entity section file",
+      "sublabel": "chunk image, one file per section",
+      "tag": "the object file",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "load",
+      "type": "frontend",
+      "label": "Runtime load",
+      "sublabel": "read, patch, move in",
+      "tag": "no baker exists here",
+      "stage": 4,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "go",
+      "to": "baker",
+      "label": "per component",
+      "classification": "authoring",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -38
+    },
+    {
+      "from": "go",
+      "to": "dep",
+      "label": "every read",
+      "classification": "tracked"
+    },
+    {
+      "from": "dep",
+      "to": "baker",
+      "label": "skip if same",
+      "variant": "dashed"
+    },
+    {
+      "from": "baker",
+      "to": "bsys",
+      "label": "throwaway world",
+      "classification": "intermediate",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "bsys",
+      "to": "strip",
+      "label": "then"
+    },
+    {
+      "from": "strip",
+      "to": "file",
+      "label": "per section",
+      "classification": "artifact",
+      "variant": "emphasis"
+    },
+    {
+      "from": "file",
+      "to": "load",
+      "label": "then move",
+      "classification": "artifact",
+      "variant": "emphasis",
+      "route": "straight"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The passes, in the order they run",
+      "items": [
+        "Pre-baking group, for cleanup before anything is read · Baking/BakingUtility.cs:142",
+        "Every baker, one per authoring component, in a transient world · :200",
+        "Transform baking, then the ordinary baking systems · :151, :157",
+        "Post-baking, then the strip pass that deletes the scaffolding · :181, :187"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Why a baker cannot look around",
+      "items": [
+        "A baker only sees the component it was given, plus anything it explicitly asks for",
+        "Every such ask is recorded, and that record is what decides whether it re-runs",
+        "Read something without declaring it and your edit silently changes nothing",
+        "Anything that needs the whole scene belongs in a baking system, not a baker"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The strip pass is the linker's dead-code pass",
+      "items": [
+        "Every type marked temporary is queried and removed before serialization · Baking/BakingStripSystem.cs:42",
+        "So scaffolding components exist during the bake and never reach the player",
+        "The baking groups are all marked disable-auto-creation; they exist only in the baking world",
+        "Which is why nothing on this map can be inspected at runtime"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Sections are the output units",
+      "items": [
+        "A shared component partitions the baked entities into numbered sections",
+        "Each section is moved into a private world and serialized on its own",
+        "Section zero is the one that always loads; the rest are separately requestable",
+        "That partition is decided at bake time, so streaming granularity is a compile-time choice"
+      ]
+    }
+  ]
+}

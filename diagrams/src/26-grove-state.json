@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Grove State Is the RAM",
+    "subtitle": "The graph image is ROM shared by every entity, so anything a node remembers has to live somewhere else — a hash map inside a buffer on the entity",
+    "output": "diagrams/26-grove-state.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "split",
+        "label": "Read-only, and writable",
+        "focus": [
+          "blob",
+          "buffer"
+        ],
+        "note": "One image, thousands of entities. Nothing in the image can be per-entity, so none of it is."
+      },
+      {
+        "id": "key",
+        "label": "Why the key is so wide",
+        "focus": [
+          "key",
+          "map"
+        ],
+        "note": "Graph, then owner scope, then a local number. Two graphs on one entity never collide."
+      },
+      {
+        "id": "inside",
+        "label": "Inside the buffer",
+        "focus": [
+          "map",
+          "arena"
+        ],
+        "note": "Buckets, keys, sizes and a bump-allocated value arena, all inside one dynamic buffer."
+      },
+      {
+        "id": "who",
+        "label": "Who writes to it",
+        "focus": [
+          "node",
+          "canopy"
+        ],
+        "note": "Nodes keep their own memory here. So does the state machine — its cursor is just another key."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "blob",
+      "type": "cloud",
+      "label": "The graph image",
+      "sublabel": "structure, constants, wiring",
+      "tag": "ROM · shared",
+      "pos": [
+        60,
+        60
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "node",
+      "type": "backend",
+      "label": "A node's method",
+      "sublabel": "static, holds nothing",
+      "tag": "runs per entity",
+      "pos": [
+        60,
+        300
+      ],
+      "size": [
+        250,
+        68
+      ]
+    },
+    {
+      "id": "ctx",
+      "type": "frontend",
+      "label": "Context handle",
+      "sublabel": "the buffers for this chunk",
+      "tag": "refreshed per chunk",
+      "pos": [
+        400,
+        300
+      ],
+      "size": [
+        240,
+        68
+      ]
+    },
+    {
+      "id": "key",
+      "type": "security",
+      "label": "The key",
+      "sublabel": "graph · scope · local number",
+      "tag": "four 64-bit words",
+      "pos": [
+        400,
+        540
+      ],
+      "size": [
+        240,
+        68
+      ]
+    },
+    {
+      "id": "buffer",
+      "type": "database",
+      "label": "Buffer on the entity",
+      "sublabel": "moves with the entity, saves with it",
+      "tag": "RAM · per entity",
+      "pos": [
+        760,
+        60
+      ],
+      "size": [
+        260,
+        68
+      ]
+    },
+    {
+      "id": "map",
+      "type": "database",
+      "label": "Buckets and keys",
+      "sublabel": "an open hash map, laid out by offset",
+      "tag": "no allocator",
+      "pos": [
+        760,
+        300
+      ],
+      "size": [
+        260,
+        68
+      ]
+    },
+    {
+      "id": "arena",
+      "type": "database",
+      "label": "Value arena",
+      "sublabel": "bump-allocated, size stored per entry",
+      "tag": "values differ in type",
+      "pos": [
+        760,
+        540
+      ],
+      "size": [
+        260,
+        68
+      ]
+    },
+    {
+      "id": "canopy",
+      "type": "external",
+      "label": "The machine's cursor",
+      "sublabel": "active leaf · history · version",
+      "tag": "reserved high keys",
+      "pos": [
+        1110,
+        300
+      ],
+      "size": [
+        240,
+        68
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one dynamic buffer · header, buckets, keys, sizes and values in a single allocation",
+      "wraps": [
+        "buffer",
+        "map",
+        "arena"
+      ],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    {
+      "from": "blob",
+      "to": "node",
+      "label": "decode",
+      "variant": "dashed",
+      "labelDy": 90
+    },
+    {
+      "from": "node",
+      "to": "ctx",
+      "label": "asks"
+    },
+    {
+      "from": "ctx",
+      "to": "buffer",
+      "label": "this entity's row",
+      "variant": "emphasis"
+    },
+    {
+      "from": "key",
+      "to": "map",
+      "label": "built per read",
+      "variant": "security"
+    },
+    {
+      "from": "buffer",
+      "to": "map"
+    },
+    {
+      "from": "map",
+      "to": "arena",
+      "label": "by offset",
+      "labelDy": 90
+    },
+    {
+      "from": "map",
+      "to": "canopy",
+      "label": "same map",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The split, and why it exists",
+      "items": [
+        "The image is one blob shared by every entity running that graph",
+        "So a node cannot own a field — there is exactly one copy of the node",
+        "Everything remembered lives in one buffer · Grove BovineLabs.Grove/Core/GroveState.cs:13",
+        "Declared untyped · Core BovineLabs.Core/Iterators/DynamicHashMap/IDynamicUntypedHashMap.cs:13"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Untyped means the value size varies",
+      "items": [
+        "Each entry's size is stored beside it as a small integer",
+        "Core BovineLabs.Core/Iterators/DynamicHashMap/DynamicUntypedHashMapHelper.cs:92",
+        "Values are bump allocated into a data region in the same buffer · same file:319",
+        "So one map holds a bool next to a snapshot next to a node id"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What the key protects you from",
+      "items": [
+        "Graph id, scope id and two more words · Grove BovineLabs.Grove/Core/GroveStateKey.cs:12",
+        "Graph id first, so two graphs on one entity cannot alias",
+        "Scope id next, so two copies of one node keep separate memory",
+        "Tear a graph down by that first word · Grove BovineLabs.Grove/Core/GraphStateUtil.cs:60"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The state machine is a tenant, not a landlord",
+      "items": [
+        "Canopy keeps its active leaf here too · Canopy BovineLabs.Canopy.Data/CanopyStateStorage.cs:15",
+        "Plus per-parent history and a transition version · same file:14 and :16",
+        "Those keys count down from the top of the number space",
+        "So the executor's whole query is this buffer · Canopy BovineLabs.Canopy/CanopyStateMachineExecutor.cs:25"
+      ]
+    }
+  ]
+}

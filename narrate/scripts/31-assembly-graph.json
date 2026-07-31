@@ -1,0 +1,102 @@
+{
+  "id": "31-assembly-graph",
+  "title": "Three Assemblies, One AND Gate",
+  "map": "diagrams/31-assembly-graph.html",
+  "blurb": "Our own three assembly definitions, and the seven-input AND that deletes one without printing anything.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "The build system is a circuit",
+      "focus": null,
+      "text": "This map is the smallest one in the book and it describes the failure that cost the most hours. Unity compiles one library per assembly definition file, and that file is a linker script with a gate in it. The gate is an AND across every symbol in a list. All inputs high, the assembly compiles. One input low, the assembly does not compile. Not partially. At all. And the gate has no output pin you can probe, because nothing is logged when it evaluates false."
+    },
+    {
+      "id": "vdef",
+      "title": "Packages become symbols",
+      "focus": "vdef",
+      "text": "First, where the inputs come from. A version define says: if this package is installed, define this symbol. Ours declare seven of them, one per package we care about. The scope is the thing to notice. A version define applies to the assembly that declares it, and nowhere else. Symbols do not inherit through references. That is why the same block of seven entries is copy pasted into every assembly definition in this project and in every one in the BovineLabs stack. It is not laziness. There is no other way to do it."
+    },
+    {
+      "id": "gate",
+      "title": "The seven-input AND",
+      "focus": "constraint",
+      "text": "Then the constraint list. Seven symbols in ours: two for the graph packages, one for netcode, three for the Unity services, one for the platform toolkit. Every one of them must be defined or the assembly is skipped. There is no OR. There is no partial compilation. We hit this by stripping the package manifest to a minimum and discovering that an entire BovineLabs assembly containing sessions, ownership and approval had quietly stopped existing. Five of its six required symbols were unsatisfied."
+    },
+    {
+      "id": "symptom",
+      "title": "The symptom points at the wrong file",
+      "focus": "missing",
+      "text": "Here is why it costs hours rather than minutes. The assembly that did not compile produces no error. The error you get is a type not found, in your own file, on your own line. Which looks exactly like a missing import. So you check your imports, then the spelling, then the namespace, then you start doubting the package version. The one thing you do not check is whether a completely different assembly, that you did not edit, silently ceased to exist. The probe is one shell command: list the compiled assemblies folder and look for the name."
+    },
+    {
+      "id": "three",
+      "title": "Why three and not one",
+      "focus": "authoring",
+      "text": "The second trap is what forced the three way split. Our runtime assembly once referenced an editor only assembly. In the editor everything compiled and everything worked. In a player build the editor symbol is undefined, that assembly does not exist, and the reference silently drops, taking every type we used with it. So it cannot fail until the day you make your first build, at which point it looks like a catastrophic regression rather than a boundary violation you introduced weeks earlier."
+    },
+    {
+      "id": "layers",
+      "title": "The rule, stated as three boxes",
+      "focus": "editor",
+      "text": "Components, systems and contexts go in the runtime assembly, which builds for all platforms and takes only the package constraints. Settings assets and bakers that touch authoring types go in the authoring assembly, which adds the editor symbol on top. Menu items and graph construction go in the editor assembly, which is restricted to the editor platform outright. References point upward only: editor may reference authoring, authoring may reference runtime, and nothing runtime is ever allowed to reach down. That is the whole contract, and it turns a build day surprise into a compile error."
+    }
+  ],
+  "nodes": {
+    "vdef": {
+      "short": "If this package is installed, define this symbol — for this one assembly only.",
+      "deep": "Ours declare seven, one per package the project depends on, each with an empty version expression meaning any version will do. The scope is the trap: symbols do not inherit through assembly references, so every assembly definition must declare its own copy of the block, and forgetting one gives you an inactive conditional block that compiles cleanly.",
+      "types": [
+        "ICustomBootstrap",
+        "BovineLabsBootstrap"
+      ]
+    },
+    "constraint": {
+      "short": "Seven symbols, all required. It is an AND, not a preference.",
+      "deep": "Unity evaluates the list before compiling. All present, the assembly is built. One absent, it is skipped in its entirety and no diagnostic is emitted. There is no OR operator and no partial mode. The negation prefix exists, which makes it possible to write mutually exclusive assemblies, and that is the only escape hatch there is.",
+      "types": [
+        "BovineLabsBootstrap",
+        "Worlds"
+      ]
+    },
+    "missing": {
+      "short": "One symbol short and the assembly is not compiled. Nothing is logged.",
+      "deep": "No error, no warning, no library file. Every type inside it stops existing. What you see instead is a type not found error in your own source, which sends you hunting through your imports for an hour. The only reliable check is to list the compiled assemblies folder and look for the name.",
+      "types": [
+        "BovineLabsBootstrap"
+      ]
+    },
+    "runtime": {
+      "short": "Components, systems and contexts. All platforms, unsafe code allowed.",
+      "deep": "It references the graph packages, netcode, transforms, collections and the input system, and it is the only one of the three that ships in a player build. Because it builds for every platform, anything it references must also build for every platform, which is exactly the constraint that forced the split.",
+      "types": [
+        "NerveStateMachine",
+        "ClientConnectionInput",
+        "WorldSystemFilterFlags",
+        "Worlds"
+      ],
+      "goto": "diagrams/19-netcode-worlds.html",
+      "gotoLabel": "The worlds these systems land in"
+    },
+    "authoring": {
+      "short": "Settings assets and bakers. The same seven symbols plus the editor one.",
+      "deep": "It is not restricted by platform list; it is restricted by the editor symbol in its constraints, which amounts to the same thing and is the idiom the sample uses. It references the runtime assembly, never the other way round. Anything here that leaks into runtime code is a build day failure waiting to happen.",
+      "types": [
+        "SettingsBase",
+        "ISettings",
+        "NerveStateMachine"
+      ],
+      "goto": "diagrams/42-which-world.html",
+      "gotoLabel": "What baking turns these into"
+    },
+    "editor": {
+      "short": "Menu items and graph construction, restricted to the editor platform outright.",
+      "deep": "This one uses the platform include list rather than a symbol, and it references both of the others plus every editor side package assembly. It is where the client state graph asset is actually constructed. Nothing in it can ever be reached from a running player, which is the point.",
+      "types": [
+        "NerveStateMachine",
+        "ISettings"
+      ],
+      "goto": "diagrams/04-clientgraph.html",
+      "gotoLabel": "The graph this assembly builds"
+    }
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "What Is Resident, and When",
+    "subtitle": "One component is the whole switch. A section loads in a private world nobody else can see, then arrives all at once",
+    "output": "diagrams/17-subscene-streaming.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "viewBox": [1040, 700],
+    "views": [
+      {
+        "id": "switch",
+        "label": "One component is the switch",
+        "focus": ["ask", "resolve"],
+        "note": "Adding the request component asks for a load. Removing it asks for an unload. There is no other verb."
+      },
+      {
+        "id": "elsewhere",
+        "label": "It loads somewhere else",
+        "focus": ["stream", "after"],
+        "note": "Deserialization happens in a separate streaming world with its own system list, so your world never sees a half-built section."
+      },
+      {
+        "id": "arrival",
+        "label": "Arrival is a move, not a copy",
+        "focus": ["after", "live"],
+        "note": "One bulk move brings the whole section across, which is why entities appear in a single frame rather than trickling in."
+      },
+      {
+        "id": "leaving",
+        "label": "Leaving is a query",
+        "focus": ["live", "gone"],
+        "note": "Every entity from a section carries a tag naming it, so unloading is one filtered destroy."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "one section" },
+    { "id": "off", "label": "not resident" }
+  ],
+  "states": [
+    {
+      "id": "ask",
+      "type": "start",
+      "label": "Request added",
+      "sublabel": "on the scene entity",
+      "lane": "main",
+      "col": 0,
+      "step": "01",
+      "tag": "the only switch"
+    },
+    {
+      "id": "resolve",
+      "type": "active",
+      "label": "Header read",
+      "sublabel": "one entity per section",
+      "lane": "main",
+      "col": 1,
+      "step": "02",
+      "tag": "sections known, nothing loaded"
+    },
+    {
+      "id": "stream",
+      "type": "waiting",
+      "label": "Streaming world",
+      "sublabel": "a private world, not yours",
+      "lane": "main",
+      "col": 2,
+      "step": "03",
+      "tag": "four in flight"
+    },
+    {
+      "id": "after",
+      "type": "active",
+      "label": "Process after load",
+      "sublabel": "systems that live only there",
+      "lane": "main",
+      "col": 3,
+      "step": "04",
+      "tag": "its own filter flag"
+    },
+    {
+      "id": "live",
+      "type": "success",
+      "label": "Resident",
+      "sublabel": "moved in, tagged, queryable",
+      "lane": "main",
+      "col": 4,
+      "step": "05",
+      "tag": "one world per update"
+    },
+    {
+      "id": "gone",
+      "type": "failure",
+      "label": "Request removed",
+      "sublabel": "destroyed by tag",
+      "lane": "off",
+      "col": 2,
+      "tag": "reversible"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "t1",
+      "from": "ask",
+      "to": "resolve",
+      "variant": "emphasis"
+    },
+    {
+      "id": "t2",
+      "from": "resolve",
+      "to": "stream",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "id": "t3",
+      "from": "stream",
+      "to": "after",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "id": "t4",
+      "from": "after",
+      "to": "live",
+      "label": "bulk move",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": 56
+    },
+    {
+      "id": "t5",
+      "from": "live",
+      "to": "gone",
+      "variant": "security"
+    },
+    {
+      "id": "t6",
+      "from": "gone",
+      "to": "resolve",
+      "label": "add it back",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Two entities you never authored",
+      "items": [
+        "The scene entity holds the request and a buffer of resolved section entities",
+        "One section entity is created per section named in the header",
+        "The request propagates from the scene entity down to the section entities unless auto-load is disabled",
+        "Section zero is the one that always comes with the scene; the rest can be asked for individually"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "It is deserialized somewhere else on purpose",
+      "items": [
+        "Each in-flight section gets its own world flagged as streaming · Unity.Scenes/SceneSectionStreamingSystem.cs:227",
+        "Four stream slots exist by default · :76",
+        "That world is populated only with process-after-load systems · :240",
+        "System entities are forbidden there, and the code throws if it finds one · :331"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Arrival is one bulk move",
+      "items": [
+        "The whole section is moved from the streaming world into yours in a single operation · :335",
+        "By default one world is moved per update, so arrivals are serialized · :71",
+        "That is why a section appears all at once instead of trickling in",
+        "And why the frame it arrives on is the expensive one"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Unloading is a filtered destroy",
+      "items": [
+        "Every entity from a section carries a shared tag naming its section entity",
+        "Unload sets that tag as a filter and destroys the matching query · :893, :895",
+        "Nothing walks a list of loaded entities; the archetype filter does the walking",
+        "Add the request component back and the same section streams in again"
+      ]
+    }
+  ]
+}

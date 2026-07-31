@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "UI Without a Round Trip",
+    "subtitle": "There is no per-frame sync pass. A comparison inside a generated setter decides whether the managed world hears about the write at all",
+    "output": "diagrams/29-anchor-ui.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "write",
+        "label": "The write itself",
+        "focus": [
+          "sys",
+          "set"
+        ],
+        "note": "A system assigns a field on a plain unmanaged struct. That is the entire author-facing API."
+      },
+      {
+        "id": "gate",
+        "label": "The comparison is the mechanism",
+        "focus": [
+          "gate",
+          "tramp"
+        ],
+        "note": "Equal values stop here. No allocation, no call, no boundary crossing — the common case costs a compare."
+      },
+      {
+        "id": "identity",
+        "label": "How it finds the object",
+        "focus": [
+          "ptr",
+          "vm"
+        ],
+        "note": "The struct is pinned, so its address is stable, and the address is the key into a table of view models."
+      },
+      {
+        "id": "paint",
+        "label": "And then the element",
+        "focus": [
+          "vm",
+          "ui"
+        ],
+        "note": "From here it is ordinary UI Toolkit binding. Nothing about the element knows an entity exists."
+      }
+    ],
+    "viewBox": [
+      1260,
+      700
+    ]
+  },
+  "stages": [
+    {
+      "label": "a system writes"
+    },
+    {
+      "label": "the setter"
+    },
+    {
+      "label": "the filter"
+    },
+    {
+      "label": "the crossing"
+    },
+    {
+      "label": "managed"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "sys",
+      "type": "backend",
+      "label": "Burst system",
+      "sublabel": "one main-thread write",
+      "tag": "never from a job",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "attr",
+      "type": "cloud",
+      "label": "One attribute",
+      "sublabel": "on a private field",
+      "tag": "compile time",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "set",
+      "type": "backend",
+      "label": "Generated setter",
+      "sublabel": "the only way in",
+      "tag": "no dirty flag",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "Compare",
+      "sublabel": "old value against new",
+      "tag": "equal, so nothing",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "ptr",
+      "type": "database",
+      "label": "A pinned address",
+      "sublabel": "the struct, held still",
+      "tag": "the identity",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "tramp",
+      "type": "messagebus",
+      "label": "Out of Burst",
+      "sublabel": "a function pointer",
+      "tag": "only on a change",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "vm",
+      "type": "cloud",
+      "label": "The view model",
+      "sublabel": "looked up by address",
+      "tag": "managed",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "ui",
+      "type": "external",
+      "label": "The element",
+      "sublabel": "reads the property, redraws",
+      "tag": "plain UI Toolkit",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "sys",
+      "to": "set",
+      "label": "assigns",
+      "classification": "unmanaged",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -26
+    },
+    {
+      "from": "attr",
+      "to": "set",
+      "label": "generated",
+      "classification": "codegen",
+      "variant": "dashed"
+    },
+    {
+      "from": "set",
+      "to": "gate",
+      "label": "old and new",
+      "classification": "unmanaged",
+      "variant": "emphasis"
+    },
+    {
+      "from": "gate",
+      "to": "tramp",
+      "label": "different",
+      "classification": "notify",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -26
+    },
+    {
+      "from": "ptr",
+      "to": "tramp",
+      "label": "which object",
+      "classification": "identity",
+      "variant": "dashed"
+    },
+    {
+      "from": "tramp",
+      "to": "vm",
+      "label": "one call",
+      "classification": "managed",
+      "variant": "emphasis"
+    },
+    {
+      "from": "vm",
+      "to": "ui",
+      "label": "property changed",
+      "classification": "managed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What is actually per frame",
+      "items": [
+        "Nothing scans anything. There is no diff pass and no flush queue",
+        "An unchanged write costs one compare · Anchor BovineLabs.Anchor/Binding/BindingObjectNotifyDataExtensions.cs:34",
+        "It returns immediately when the values match · same file:36",
+        "So an idle screen with fifty bound fields does fifty compares and stops"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The setter you never wrote",
+      "items": [
+        "One attribute on a private field · Anchor BovineLabs.Anchor/Contracts/SystemPropertyAttribute.cs:13",
+        "A generator emits the property around it · Anchor SourceGenerator~/SystemPropertyGenerator.cs:19",
+        "Its setter is hard-wired to the compare-and-notify call · same file:177",
+        "Which is why there is no way to write the field and skip the check"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Why the object has to be pinned",
+      "items": [
+        "The unmanaged data sits on a small managed box · Anchor BovineLabs.Anchor/App/SystemObservableObject.cs:77",
+        "Pinning gives it a stable address · Anchor BovineLabs.Anchor/Binding/IBindingObjectNotify`T.cs:25",
+        "That address is the dictionary key back · Anchor BovineLabs.Anchor/Binding/BurstObjectNotify.cs:44",
+        "The system's handle is that raw pointer · Anchor BovineLabs.Anchor/Utility/UIHelper.cs:23 and :59"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Where the managed half starts",
+      "items": [
+        "The view model raises the ordinary notifications · Anchor BovineLabs.Anchor/MVVM/ObservableObject.cs:17",
+        "Its ECS-facing base owns the unmanaged value · Anchor BovineLabs.Anchor/App/SystemObservableObject.cs:25",
+        "From there UI Toolkit binding takes over, and knows nothing about entities",
+        "The systems live in a presentation group of their own · Anchor BovineLabs.Anchor/UISystemGroup.cs:15"
+      ]
+    }
+  ]
+}
