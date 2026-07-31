@@ -108,7 +108,7 @@
 
 <div class="cap">
   <div class="who"><span class="lvl" id="lvl"></span><span id="who">ready</span></div>
-  <div class="say" id="say">Move your pointer over any box in the diagram. It will tell you what that piece does. Click it for the version with the reasoning.</div>
+  <div class="say" id="say">Move your pointer over any box in the diagram. It will tell you what that piece does, and dim everything else so you can see it. Click it for the version with the reasoning.</div>
   <div class="act">
     <button id="deeper" class="pri" hidden>Go deeper ↓</button>
     <button id="stop" hidden>Stop</button>
@@ -165,12 +165,28 @@
     focusNode(id);
   }
 
+  // Highlight WITHOUT opening the map's own passport card — that card is anchored to the
+  // node and would cover the exact thing you are hovering. Dim the rest instead.
   function focusNode(id){
     try {
-      const w = frame.contentWindow;
-      if (w && w.location.hash.indexOf("focus=" + id) === -1) w.location.hash = "focus=" + id;
+      const doc = frame.contentDocument; if (!doc) return;
+      if (!doc.getElementById("tc-hi-style")) {
+        const st = doc.createElement("style"); st.id = "tc-hi-style";
+        st.textContent =
+          'svg[data-tc-dim="1"] [data-node-id]{transition:opacity .16s ease}' +
+          'svg[data-tc-dim="1"] [data-node-id]:not([data-tc-hi="1"]){opacity:.32}' +
+          '@media (prefers-reduced-motion: reduce){svg[data-tc-dim="1"] [data-node-id]{transition:none}}';
+        (doc.head || doc.documentElement).appendChild(st);
+      }
+      const svg = doc.querySelector("svg"); if (!svg) return;
+      svg.querySelectorAll('[data-tc-hi="1"]').forEach((n) => n.removeAttribute("data-tc-hi"));
+      const g = id && svg.querySelector('[data-node-id="' + id + '"]');
+      if (g) { g.setAttribute("data-tc-hi", "1"); svg.setAttribute("data-tc-dim", "1"); }
+      else svg.removeAttribute("data-tc-dim");
     } catch(_) {}
   }
+
+  function clearFocus(){ focusNode(null); }
 
   function renderNodes(){
     const seen = store.seen[lesson.id] || {};
@@ -205,11 +221,12 @@
         clearTimeout(hoverT);
         hoverT = setTimeout(() => { tourOn = false; speakNode(id, false); }, 160);
       }, true);
+      svg.addEventListener("pointerleave", () => { clearTimeout(hoverT); clearFocus(); }, true);
       svg.addEventListener("click", (ev) => {
         const g = ev.target && ev.target.closest && ev.target.closest("[data-node-id]");
         if (!g) return;
         const id = g.getAttribute("data-node-id");
-        if (lesson.nodes[id]) { tourOn = false; speakNode(id, true); }
+        if (lesson.nodes[id]) { tourOn = false; speakNode(id, true); clearFocus(); }
       }, true);
     } catch(_) {}
   }
@@ -257,7 +274,7 @@
     au.playbackRate = SPEEDS[speedIdx];
   });
   $("reset").addEventListener("click", () => { store.clear(); renderNodes(); });
-  $("stop").addEventListener("click", () => { tourOn = false; au.pause(); $("lvl").classList.remove("on"); $("stop").hidden = true; });
+  $("stop").addEventListener("click", () => { tourOn = false; au.pause(); $("lvl").classList.remove("on"); $("stop").hidden = true; clearFocus(); });
   $("deeper").addEventListener("click", () => { if (curNode) speakNode(curNode, true); });
 
   document.addEventListener("keydown", (e) => {
