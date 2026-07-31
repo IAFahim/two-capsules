@@ -95,6 +95,8 @@
     <h3 id="lessonTitle">Loading</h3>
     <p class="sub" id="lessonBlurb"></p>
     <div class="prog"><i id="progBar"></i></div>
+    <p class="sub" id="bindState" style="margin:-6px 0 12px;font-size:.74rem">loading diagram…</p>
+    <p class="sub" id="unlockNote" hidden style="margin:-6px 0 12px;font-size:.74rem;color:var(--warn)">Click anywhere once to let the browser play voice.</p>
     <div class="nodes" id="nodeList"></div>
     <button class="tourbtn" id="tour">▶ Take the guided tour</button>
     <ul class="hintlist">
@@ -133,6 +135,16 @@
   };
   const muted = () => $("mute").getAttribute("aria-pressed") === "true";
 
+  // Browsers block audio until the page has seen a real user gesture. Hovering is not
+  // one. So we unlock on the first click or key press and say so until then.
+  let unlocked = false;
+  function unlock(){
+    if (unlocked) return; unlocked = true;
+    au.muted = true; au.play().then(() => { au.pause(); au.muted = false; }).catch(() => { au.muted = false; });
+    const b = $("unlockNote"); if (b) b.hidden = true;
+  }
+  ["pointerdown", "keydown"].forEach((e) => document.addEventListener(e, unlock, { once: false, capture: true }));
+
   // ---------- speaking ----------
   function say(who, text, opts = {}) {
     $("who").textContent = who;
@@ -146,7 +158,8 @@
     if (!opts.audio || muted()) { $("lvl").classList.remove("on"); $("stop").hidden = true; return; }
     au.src = "narrate/" + opts.audio;
     au.playbackRate = SPEEDS[speedIdx];
-    au.play().then(() => { $("lvl").classList.add("on"); $("stop").hidden = false; }).catch(() => {});
+    au.play().then(() => { $("lvl").classList.add("on"); $("stop").hidden = false; })
+             .catch(() => { const b = $("unlockNote"); if (b && !unlocked) b.hidden = false; });
   }
   au.addEventListener("ended", () => {
     $("lvl").classList.remove("on"); $("stop").hidden = true;
@@ -198,7 +211,8 @@
       b.innerHTML = '<span class="dot"></span><span class="nm"></span>';
       b.querySelector(".nm").textContent = id;
       if (lesson.nodes[id].deep) { const t = document.createElement("span"); t.className = "deep"; t.textContent = "2 levels"; b.append(t); }
-      b.addEventListener("click", () => { tourOn = false; speakNode(id, seen[id] && curNode === id); });
+      b.addEventListener("mouseenter", () => { if (id !== curNode) { tourOn = false; speakNode(id, false); } });
+      b.addEventListener("click", () => { tourOn = false; speakNode(id, curNode === id); });
       list.append(b);
     });
     const done = ids.filter((i) => seen[i]).length;
@@ -207,30 +221,63 @@
   }
 
   // ---------- hover binding into the map ----------
+  let bound = 0, bindTries = 0, bindTimer = null;
+
+  function status(msg){ const el = $("bindState"); if (el) el.textContent = msg; }
+
   function bindHover(){
-    try {
-      const doc = frame.contentDocument;
-      if (!doc || doc === boundDoc) return;
-      boundDoc = doc;
-      const svg = doc.querySelector("svg"); if (!svg) return;
-      svg.addEventListener("pointerover", (ev) => {
-        const g = ev.target && ev.target.closest && ev.target.closest("[data-node-id]");
-        if (!g) return;
-        const id = g.getAttribute("data-node-id");
-        if (!lesson.nodes[id] || id === curNode) return;
-        clearTimeout(hoverT);
-        hoverT = setTimeout(() => { tourOn = false; speakNode(id, false); }, 160);
-      }, true);
-      svg.addEventListener("pointerleave", () => { clearTimeout(hoverT); clearFocus(); }, true);
-      svg.addEventListener("click", (ev) => {
-        const g = ev.target && ev.target.closest && ev.target.closest("[data-node-id]");
-        if (!g) return;
-        const id = g.getAttribute("data-node-id");
-        if (lesson.nodes[id]) { tourOn = false; speakNode(id, true); clearFocus(); }
-      }, true);
-    } catch(_) {}
+    let doc = null;
+    try { doc = frame.contentDocument; } catch(_) { status("blocked: open this page over http, not file://"); return; }
+    if (!doc) return;
+    const svg = doc.querySelector("svg");
+    const groups = svg ? svg.querySelectorAll("[data-node-id]") : [];
+    if (!groups.length) return;                      // not painted yet — retry
+    if (doc === boundDoc) return;
+    boundDoc = doc;
+    bound = 0;
+
+    // Direct listeners on each node beat delegation: archify overlays invisible hit
+    // targets for relationships, and those can swallow a delegated pointerover.
+    groups.forEach((g) => {
+      const id = g.getAttribute("data-node-id");
+      if (!lesson.nodes[id]) return;
+      bound++;
+      g.style.cursor = "pointer";
+      const enter = () => { if (id === curNode) return; clearTimeout(hoverT);
+                            hoverT = setTimeout(() => { tourOn = false; speakNode(id, false); }, 150); };
+      g.addEventListener("pointerenter", enter);
+      g.addEventListener("mouseover", enter);
+      g.addEventListener("focus", enter);            // keyboard Tab works too
+      g.addEventListener("click", () => { tourOn = false; speakNode(id, true); clearFocus(); });
+    });
+
+    // Delegated fallback, in case a node is repainted later.
+    svg.addEventListener("pointerover", (ev) => {
+      const g = ev.target && ev.target.closest && ev.target.closest("[data-node-id]");
+      if (!g) return;
+      const id = g.getAttribute("data-node-id");
+      if (!lesson.nodes[id] || id === curNode) return;
+      clearTimeout(hoverT);
+      hoverT = setTimeout(() => { tourOn = false; speakNode(id, false); }, 150);
+    }, true);
+    svg.addEventListener("pointerleave", () => { clearTimeout(hoverT); clearFocus(); }, true);
+
+    status(bound + " boxes ready — hover one");
   }
-  frame.addEventListener("load", () => { boundDoc = null; setTimeout(bindHover, 350); setTimeout(bindHover, 1200); });
+
+  function startBinding(){
+    clearInterval(bindTimer); bindTries = 0; bound = 0; boundDoc = null;
+    status("loading diagram…");
+    bindTimer = setInterval(() => {
+      bindHover();
+      if (bound || ++bindTries > 40) {
+        clearInterval(bindTimer);
+        if (!bound) status("could not reach the diagram — use the list below");
+      }
+    }, 250);
+  }
+
+  frame.addEventListener("load", startBinding);
 
   // ---------- guided tour ----------
   function nextTourStep(){
@@ -252,6 +299,7 @@
     lesson = man.lessons.find((l) => l.id === id) || man.lessons[0];
     curNode = null; tourOn = false; boundDoc = null;
     frame.src = lesson.map;
+    startBinding();
     $("lessonTitle").textContent = lesson.title;
     document.querySelectorAll("#maps button").forEach((b) =>
       b.setAttribute("aria-selected", b.dataset.id === lesson.id ? "true" : "false"));
