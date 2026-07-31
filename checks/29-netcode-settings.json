@@ -1,0 +1,114 @@
+{
+  "id": "29-netcode-settings",
+  "title": "Every knob in NetCode",
+  "source": {
+    "chapter": "29-netcode-settings"
+  },
+  "checks": [
+    {
+      "id": "ownersendtype-and-the-healthbar",
+      "kind": "predict",
+      "setup": "Bandwidth pass. Ammo, cooldowns and health are per-player state, and only the owner needs to know their own numbers, so you set the send type on that component to owner-only. Both a saving and an anti-cheat win: information you never send cannot be extracted.\n\nIt ships. Your own HUD is perfect. Two weeks later a designer adds floating health bars over other players' heads, and every one of them reads full health regardless of what the player has taken. No error. The health component is present on those ghosts on your client.",
+      "ask": "What is in that component on a non-owned ghost, why is it present at all, and what is the design question you now have to answer honestly?",
+      "rightIf": [
+        "says the component exists on the ghost but its data is never sent to non-owners, so it holds whatever it baked or spawned with",
+        "concludes the health bar is reading a stale default rather than a replicated value",
+        "notes there is no error because a component with default data is indistinguishable from a component with real data",
+        "identifies the design question: whether other players are *supposed* to know each other's health, which is a game-design and anti-cheat decision, not a bug"
+      ],
+      "answer": "The component is on the ghost — the prefab says so — but nothing ever writes to it on a client that does not own the ghost, so it sits at whatever value it started life with. Full health, forever, for everyone else. Nothing errors because a struct full of defaults looks exactly like a struct full of data.\n\nThe important part is that this is not a bug to fix by flipping the setting back. You made a deliberate decision that other clients do not learn this value, and the health bar is a feature request to reverse it. Reversing it costs bandwidth per ghost per update and hands every client a number a cheating client can read off the wire, which for health is usually acceptable and for ammo or cooldowns is usually not. If the answer is \"they should see a bar but not a number\", replicate a coarse quantized fraction to everyone and keep the exact value owner-only — a separate field with a different audience, which is exactly what the per-component send controls are for.\n\nThe general trap: owner-only replication turns \"I did not receive this\" into \"I received a plausible default\", and only your own client is in a position to notice the difference.",
+      "because": "Not sending a field does not remove it; it freezes it. A never-updated component is a stale value wearing a live component's clothes.",
+      "goDeeper": {
+        "chapter": "29-netcode-settings",
+        "types": [
+          "GhostComponentAttribute",
+          "GhostFieldAttribute",
+          "GhostOwner"
+        ]
+      }
+    },
+    {
+      "id": "command-slack-raised-globally",
+      "kind": "predict",
+      "setup": "Players on bad connections report inputs being eaten. You confirm it: their command age climbs, commands arrive after the tick they were for, and the server extrapolates.\n\nThe fix is right there in the settings — `TargetCommandSlack` controls how far ahead the client runs, and running further ahead means more margin for a late command. You raise it substantially and ship it as the project default. The eaten inputs stop, for everyone, immediately.",
+      "ask": "What did every player just pay for that, including the ones on a clean connection who never had the problem? Name both the direct cost and what it does to rollback depth.",
+      "rightIf": [
+        "says the slack is the jitter margin — the client generates a command early enough that it beats the server simulating that tick",
+        "concludes raising it genuinely fixes late commands, because the margin now exceeds the jitter",
+        "identifies the direct cost as added latency between an input and the world's response to it: your own capsule still reacts instantly because you predict it, but anything the server has to confirm arrives later",
+        "notes that a shipped default is paid by every client, including those whose jitter never needed the margin",
+        "identifies the second cost: a longer lead means more ticks of state are speculative, so any correction spans more ticks and replays are deeper"
+      ],
+      "answer": "The lead is a jitter budget and you bought more of it. That does fix the dropped commands — the margin now covers the arrival spread — and it is the correct lever. It is just not free, and it is not free for the people who did not need it.\n\nThe direct cost is that the client is now running further ahead of confirmed server state. Your own capsule still responds in zero frames, because you predict it locally and always did — that part does not change and is why the setting feels harmless in testing. What gets later is everything the server has to confirm: another player reacting to you, a door opening, a hit registering. You widened the gap between acting and finding out whether it worked.\n\nThe second cost is that more of your simulated state is now speculative. A correction describes a tick that is further behind your predicted tick than it used to be, so the replay covers more ticks — and rollback cost is ticks replayed times the cost of your predicted systems. You made every correction more expensive for everybody in order to make bad connections stop losing commands.\n\nWhich is a defensible trade for players who need it and pure loss for players who do not. If the setting can be adaptive, that is the shape of the real answer; if it must be a single value, at least know that you chose it on behalf of the majority who were fine.",
+      "because": "The prediction lead is a jitter absorber, and every absorber costs latency. Widening it for the worst connection charges the rent to every connection.",
+      "goDeeper": {
+        "chapter": "29-netcode-settings",
+        "types": [
+          "ClientTickRate",
+          "NetworkTime",
+          "PredictedGhost"
+        ]
+      }
+    },
+    {
+      "id": "maxsendentities-obsolete",
+      "kind": "choice",
+      "setup": "Snapshots are over budget at 300 ghosts. You inherit a bandwidth-tuning system from an older branch; it sets `GhostSendSystemData.MaxSendEntities` with a comment reading \"hard cap on ghosts per snapshot\", and every tutorial you find while searching says the same thing.\n\nYou drop it from 300 to 120 and re-measure. Nothing changes. Not \"a little\" — the byte counts are identical, the same ghosts are in the packet, and the field is definitely being written on the server every frame.",
+      "ask": "What is going on?",
+      "options": [
+        {
+          "text": "The field is obsolete and non-functional in this NetCode version; the send scheduler thinks in chunks, so the working knobs are MaxSendChunks and MaxIterateChunks.",
+          "right": true,
+          "why": "The field carries `[Obsolete(\"No longer functional!...\")]` and `[ReadOnly]` in the installed netcode source, so the value is written and never read. The more useful half of the correction is *why* it was retired: the send scheduler's unit of work is a chunk. Priority, the iteration caps, the relevancy fast path and static optimization all operate per chunk, so a knob denominated in entities was the wrong shape for the machine it was tuning."
+        },
+        {
+          "text": "The cap applies per chunk rather than per snapshot, so with 300 ghosts across few chunks it never binds.",
+          "right": false,
+          "why": "Chunk-thinking is the right instinct and it is why the real knobs are chunk-shaped — but this specific field is not a per-chunk cap, it is a dead field. Being right about the model and wrong about the mechanism will still cost you an afternoon of measuring a value that is not read."
+        },
+        {
+          "text": "You need to set it on the connection entity rather than the singleton for it to take effect.",
+          "right": false,
+          "why": "There genuinely is a per-connection override for snapshot size, so this is a real mechanism applied to the wrong field. Worth knowing about for actual bandwidth capping per client — but it will not resuscitate a field that is not read anywhere."
+        },
+        {
+          "text": "Importance scaling runs after the cap, so high-importance ghosts are re-added past the limit.",
+          "right": false,
+          "why": "Ordering in the send pipeline really does matter and there really is a cap-before-relevancy ordering trap in there — but nothing re-adds entities past a cap. Inventing a plausible ordering to explain a null result is how you end up with a mental model that predicts nothing falsifiable."
+        }
+      ],
+      "answer": "The field is obsolete and does nothing in this version — written, never read. The scheduler's unit is the chunk, so the levers that work are the chunk-shaped ones.\n\nWorth taking the second lesson too: a comment, a tutorial and your own reasonable expectation all agreed, and all three were describing a version of the package that no longer exists. When a setting produces a byte-for-byte identical result, stop tuning it and go read the field.",
+      "because": "The scheduler sorts and fills by chunk. A knob denominated in entities is measuring in units the machine does not use.",
+      "goDeeper": {
+        "chapter": "29-netcode-settings",
+        "types": [
+          "GhostSendSystemData",
+          "GhostSendSystem"
+        ]
+      }
+    },
+    {
+      "id": "developing-without-emulation",
+      "kind": "predict",
+      "setup": "Team norm: develop on the LAN, test with emulation before each milestone. It seems efficient — emulation makes iteration feel sluggish, and the milestone test catches the network bugs.\n\nMilestone week is reliably terrible. The same categories of bug show up every time: capsules moving too far, one-shot effects firing several times, values drifting, other players stuttering. Each one takes days because it was written weeks ago and nobody remembers the change.",
+      "ask": "What do those four bug categories have in common, and why does the milestone-testing schedule specifically maximise the cost of finding them?",
+      "rightIf": [
+        "identifies the common factor: all four are invisible when the replay depth is one tick and the snapshot arrival is regular",
+        "names the LAN as the environment that pins replay depth at 1 and jitter at ~0, so the buggy path never executes",
+        "concludes the bugs are not caught late by chance — the daily environment structurally cannot produce them",
+        "explains the cost curve: debugging cost scales with how long ago the change was made and how much code was built on top of it",
+        "names the fix: emulation on by default (a realistic RTT and a couple of percent loss) as the daily setting"
+      ],
+      "answer": "All four live on code paths that a perfect connection never takes. Rollback replay depth on a LAN is one tick, so a query missing its per-tick enable integrates exactly once and looks correct. Partial-tick repetition is minimal at matched frame and tick rates, so an ungated one-shot fires once. Snapshot arrival is metronomic, so an under-sized interpolation buffer never underruns. Divergence needs replayed ticks to accumulate in. The LAN is not a lenient test environment; it is an environment in which those bugs do not exist.\n\nAnd the schedule is what makes it expensive. Every one of these is a five-minute fix on the day it is written and a multi-day archaeology project three weeks later with a fortnight of code stacked on top. You did not save iteration time, you deferred it at a bad exchange rate.\n\nA realistic RTT and a couple of percent loss as the daily setting surfaces every one of these while it is still cheap. The sluggishness is not a cost, it is the target platform.",
+      "because": "A LAN-perfect connection does not test the system leniently, it removes the branches. The bugs are not intermittent; they are unreachable until the network is real.",
+      "goDeeper": {
+        "chapter": "29-netcode-settings",
+        "types": [
+          "Simulate",
+          "NetworkTime",
+          "ClientTickRate"
+        ]
+      }
+    }
+  ]
+}

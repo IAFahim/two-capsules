@@ -1,0 +1,102 @@
+{
+  "id": "17-prediction",
+  "title": "Prediction and rollback",
+  "source": {"chapter": "17-prediction", "map": "diagrams/02-keypress.html"},
+  "checks": [
+    {
+      "id": "simulate-omitted",
+      "kind": "predict",
+      "setup": "Your movement system runs in the prediction group and iterates predicted ghosts. The query is:\n\n    SystemAPI.Query<RefRO<PlayerMoveInput>, RefRW<LocalTransform>>()\n             .WithAll<GhostOwner>()\n\nNo `Simulate`. It compiles, it runs, and on a LAN with zero loss the capsule moves exactly as designed. Code review passes it twice.",
+      "ask": "On a client that has just received a correction six ticks old, how far does the capsule move during that frame, and why?",
+      "rightIf": [
+        "names the replay loop: the prediction group runs your system once per replayed tick, not once per frame",
+        "says without Simulate the query matches on every one of those iterations",
+        "concludes the capsule integrates roughly six times too far in that one frame",
+        "notes it looks perfect on a clean connection because a clean connection replays one tick",
+        "identifies Simulate as the per-tick enable that decides which entities integrate on this pass"
+      ],
+      "answer": "The prediction group replays every tick in the rollback range, running your systems each time — that is the whole mechanism. `Simulate` is how NetCode says which entities are supposed to integrate on *this* pass: before each replayed tick it enables the tag on exactly those ghosts and disables it on the rest. Drop it from the query and your system integrates every predicted entity on every pass, so a six-tick correction moves the capsule six ticks' worth of distance in one frame and then the next snapshot corrects it back. The result is a capsule that surges forward and snaps back in proportion to how bad the network is.\n\nThe cruelty is the failure profile: perfect on a LAN, perfect in the editor, perfect in every test you can run at your desk, and progressively worse the worse the connection gets. It is the single most common NetCode bug and it only manifests under exactly the conditions that are hardest to reproduce. Develop with emulation on and it shows up on day one instead of in a playtest.",
+      "because": "Simulate is a clock enable line. The clock is running for every tick in the rollback range; the enable decides who latches this edge.",
+      "goDeeper": {"chapter": "17-prediction", "node": "predict", "types": ["Simulate", "PredictedGhost", "PredictedSimulationSystemGroup"]}
+    },
+    {
+      "id": "two-implementations",
+      "kind": "predict",
+      "setup": "The movement system is shared: one system, filtered to both ClientSimulation and ServerSimulation. Someone profiles the client and notices the friction calculation is the expensive part of a system that runs several times per frame during replay. Since the server is authoritative anyway, they gate it:\n\n    if (isServer) ApplyFriction(ref velocity, surface);\n\nThe client is cheaper. Movement still feels identical — friction is subtle. Playtests are fine on a LAN.",
+      "ask": "What does the player experience once there is real latency, and why does the amount of latency change the severity rather than the presence of the bug?",
+      "rightIf": [
+        "says the client and server are now running different rules, so their states diverge every tick by construction",
+        "concludes the server's correction disagrees with the prediction continuously, not occasionally",
+        "describes the symptom: constant rollbacks, so the capsule is permanently being pulled back toward the server's slower value",
+        "explains the latency relationship: the correction is always ~RTT old, so more latency means more ticks of divergence accumulate before the correction lands, so the snap is bigger",
+        "notes 'the same code must run on both sides' is what makes prediction possible at all"
+      ],
+      "answer": "You made prediction structurally impossible. Prediction works because the client runs the server's rules and is therefore usually right; two implementations means the client is *never* right, so every snapshot is a mismatch and every frame contains a rollback. The player feels a capsule that is constantly being dragged backwards, because the client is the one without friction and always ends up ahead of where the server puts it.\n\nLatency scales the severity rather than causing it. The correction you receive describes a tick that is roughly RTT old, so the divergence has had that many ticks to accumulate before it is corrected — at 20 ms RTT the snap is small enough to look like jitter, at 150 ms it is a visible yank. Which means the LAN playtest is not a weak test of this bug, it is a test that structurally cannot find it.\n\nThere is no client version and no server version. One rule, executed twice. Optimising one side of that pair is not an optimisation, it is a desync with a performance win attached.",
+      "because": "Two implementations means two behaviours means permanent divergence. The client is not predicting the server if it is not running the server's code.",
+      "goDeeper": {"chapter": "17-prediction", "node": "predict", "types": ["WorldSystemFilterAttribute", "PredictedGhost"]}
+    },
+    {
+      "id": "predicted-set-grew",
+      "kind": "predict",
+      "setup": "Launch build. Predicted set: two capsules, and predicted movement costs about 0.15 ms per tick. Fine.\n\nSix months later, physics-driven crates. They need to feel responsive when you push them, so their ghost mode is set to Predicted. Sixty of them per arena. Predicted simulation now costs about 2 ms per tick.\n\nFrame time on a LAN: unchanged, comfortable, 3 ms of headroom. Telemetry from real players: a specific, reproducible hitch, always at the same moment.",
+      "ask": "When exactly does the hitch happen, how big is it, and why did the LAN never show it?",
+      "rightIf": [
+        "states the cost model: rollback cost = ticks to replay x cost of predicted systems",
+        "computes an example: a ~200 ms latency spike at 60 Hz is roughly 12 replayed ticks",
+        "concludes 12 x 2 ms is about 24 ms of prediction work in a single frame — a dropped frame or several",
+        "identifies the trigger as a latency spike or packet loss burst, not a busy scene",
+        "explains the LAN result: a clean connection replays one tick, so you only ever measured the best case"
+      ],
+      "answer": "The hitch happens on the frame a large correction arrives, and it is roughly (ticks replayed) x (cost of your predicted systems). A 200 ms spike at 60 Hz means about 12 ticks to replay, and at 2 ms each that is ~24 ms of simulation in one frame on top of everything else — you drop the frame, maybe several. It is perfectly reproducible for the player because their connection reliably hiccups and perfectly invisible to you because yours does not.\n\nThe LAN measured steady-state cost, and steady state is one tick per frame. The number that matters is the *product*, and you only ever see the second factor at your desk. That is why the engineering answer is the same as it is for a deep pipeline: keep the predicted set small, keep predicted systems cheap, and do not predict what does not need to feel instant. Sixty crates that a player touches once a minute are sixty entities paying full replay cost on every correction, for responsiveness nobody is currently feeling.",
+      "because": "Rollback is a pipeline flush. Deeper pipeline, more expensive flush — and the flush cost is paid entirely in the frame where you have the least room for it.",
+      "goDeeper": {"chapter": "17-prediction", "node": "predict", "types": ["PredictedGhost", "PredictedSimulationSystemGroup", "ClientTickRate"]}
+    },
+    {
+      "id": "score-in-prediction",
+      "kind": "predict",
+      "setup": "Pickups. Server-authoritative, but you want the score number on the HUD to pop the instant the player touches one, so the increment lives in a predicted system:\n\n    if (Overlaps(player, pickup)) { score.Value += 1; ecb.DestroyEntity(pickup); }\n\nThe same system, same filter, runs on the server too. In testing the score is correct. In a playtest with 4% loss, players report the score \"counting up on its own\" for a moment and then correcting.",
+      "ask": "Trace what happens on the client and on the server for a single pickup during a five-tick replay. Where do the extra points come from, and why is the server's count still right?",
+      "rightIf": [
+        "says the prediction group runs the system once per replayed tick on the client, so the overlap condition can be evaluated several times for the same real tick",
+        "identifies score as a non-idempotent side effect: += is not recoverable from the same input",
+        "notes the client's predicted state for the ghost is restored before replay, but the increment has already left its mark wherever it was written if it is not part of predicted state",
+        "concludes the server evaluates each tick exactly once, so its count is correct and the client's is the one drifting",
+        "names IsFirstTimeFullyPredictingTick, or moving the score to server-authoritative replicated state, as the fix"
+      ],
+      "answer": "The server runs the prediction group once per tick, forward, forever — its count is right by construction. The client runs it once per replayed tick, so during a five-tick rollback the overlap test is evaluated five times for the same moment in game time, and each pass adds another point. Whether the extras survive depends on whether the score is part of the state that gets restored before replay: if it is predicted state, the restore wipes them and you see a flicker; if it lives anywhere outside that (a HUD singleton, a static, a UI field) the restore never touches it and the increments simply accumulate until the next snapshot overwrites it.\n\nEither way the player watches the number climb and then correct, which reads as the game being confused about the rules. `+=` is not idempotent per tick, and everything in the prediction group has to be. Gate it on `IsFirstTimeFullyPredictingTick`, or accept the round trip and let the score be plain replicated server state — a score that arrives 40 ms late is not a feel problem, and a score that lies is.",
+      "because": "Anything inside prediction can run many times for the same tick. Integrating a transform survives that; accumulating into a counter counts every pass.",
+      "goDeeper": {"chapter": "17-prediction", "node": "predict", "types": ["NetworkTime", "Simulate", "PredictedGhost"]}
+    },
+    {
+      "id": "continuous-large-rollbacks",
+      "kind": "choice",
+      "setup": "Play Mode Tools, prediction stats: ticks-per-frame is sitting at 6-9, sustained, on a connection with 30 ms RTT and no measurable loss. Small rollbacks every few seconds would be normal. This is not that — it is continuous, and it is on every client including one on the same machine as the server.",
+      "ask": "Which of these is the most productive first hypothesis?",
+      "options": [
+        {
+          "text": "A predicted system is producing different results on the two sides — missing Simulate, uninitialised state, or floating-point non-determinism — so the prediction is genuinely diverging.",
+          "right": true,
+          "why": "Sustained ticks-per-frame above 1 means the client is being corrected constantly, and a client on the same machine as the server rules out the network entirely. That leaves the simulation itself: a query missing Simulate, state that starts at different values on the two sides, or math that does not reproduce. It is the right first hypothesis precisely because the evidence has already eliminated the network."
+        },
+        {
+          "text": "The interpolation delay is too small, so the client is running out of snapshots to bracket with.",
+          "right": false,
+          "why": "Interpolation and prediction are different halves of the system with different failure modes. Underrun makes *other* entities teleport; it has no bearing on how many ticks your own predicted entity replays. Reaching for this means you have not yet separated the two clocks in your head, which is the single most useful thing to fix about a NetCode mental model."
+        },
+        {
+          "text": "Quantization is too coarse, so the dequantized server value never matches the prediction.",
+          "right": false,
+          "why": "This is a genuinely real cause of continuous micro-rollbacks and belongs on the list — but it produces a *tremble*, corrections of sub-grid magnitude every tick. It does not produce 6-9 replayed ticks per frame, because the correction is always for a very recent tick. The magnitude of the symptom tells you which of the two you are looking at."
+        },
+        {
+          "text": "The server is overloaded and batching ticks, so corrections arrive in clumps.",
+          "right": false,
+          "why": "Worth checking, and it would show as the batching warning rather than as prediction stats. But it would also affect all clients in proportion to server load, and it would come and go with load — whereas this is steady on every client including a local one. Steady means structural."
+        }
+      ],
+      "answer": "Small rollbacks every few seconds are normal and healthy. Sustained multi-tick replay on a good connection means the two simulations genuinely disagree, and a co-located client removes the network from the suspect list. Look at systems missing Simulate, at state that is not initialised identically on both sides, and at math that does not reproduce across machines.",
+      "because": "A rollback is the server disagreeing with you. Continuous rollbacks mean you are continuously wrong, and on a clean connection that is a property of your code, not the wire.",
+      "goDeeper": {"chapter": "17-prediction", "node": "predict", "types": ["Simulate", "PredictedGhost", "NetworkTime"]}
+    }
+  ]
+}

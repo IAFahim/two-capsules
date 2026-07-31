@@ -38,35 +38,79 @@
   "nodes": {
     "input": {
       "short": "The Input System, holding managed keyboard state.",
-      "deep": "Managed memory means Burst cannot touch it. That is why the system reading it is deliberately not Burst compiled — and that is a correct decision, not a compromise. Read devices on the managed side, write a plain struct, and let every downstream system be fast."
+      "deep": "Managed memory means Burst cannot touch it. That is why the system reading it is deliberately not Burst compiled — and that is a correct decision, not a compromise. Read devices on the managed side, write a plain struct, and let every downstream system be fast.",
+      "types": [
+        "PlayerInput",
+        "IInputComponentData",
+        "InputBufferData"
+      ]
     },
     "client": {
       "short": "The client world. It predicts your capsule, renders everything, and owns nothing.",
-      "deep": "It runs ahead of the server by roughly half the round trip, so its commands land just in time. It draws your capsule at that predicted tick and everyone else's at an interpolated tick in the past. Two different clocks, on one screen, deliberately."
+      "deep": "It runs ahead of the server by roughly half the round trip, so its commands land just in time. It draws your capsule at that predicted tick and everyone else's at an interpolated tick in the past. Two different clocks, on one screen, deliberately.",
+      "types": [
+        "ClientServerBootstrap",
+        "WorldSystemFilterFlags",
+        "PredictedSimulationSystemGroup",
+        "NetworkTime"
+      ]
     },
     "server": {
       "short": "The server world. It holds the truth and decides what each client may know.",
-      "deep": "It is inside its own boundary on this map because it is the only world allowed to write authoritative state. It also decides relevancy, which is a security boundary as much as a bandwidth one: information you never send cannot be extracted by a modified client."
+      "deep": "It is inside its own boundary on this map because it is the only world allowed to write authoritative state. It also decides relevancy, which is a security boundary as much as a bandwidth one: information you never send cannot be extracted by a modified client.",
+      "types": [
+        "GhostSendSystem",
+        "SimulationSystemGroup",
+        "NetworkStreamDriver",
+        "NetworkStreamInGame"
+      ]
     },
     "service": {
       "short": "The service world outlives everything and owns the application state graph.",
-      "deep": "It is created at startup and never destroyed. Because it survives world transitions, it is the right home for anything that must outlive a match: authentication, analytics, and the state machine that decides whether you are in the menu or in a game."
+      "deep": "It is created at startup and never destroyed. Because it survives world transitions, it is the right home for anything that must outlive a match: authentication, analytics, and the state machine that decides whether you are in the menu or in a game.",
+      "types": [
+        "NetworkStreamConnection",
+        "NetworkId",
+        "ConnectionApproved"
+      ]
     },
     "bootstrap": {
       "short": "The bootstrap decides which worlds exist and what they are called.",
-      "deep": "It implements Unity's custom bootstrap hook. The important consequence is that world creation is an explicit decision made by a graph node, not a side effect of entering play mode. That is also why a virtual player with the wrong play type will build a second server world and fail to bind the port."
+      "deep": "It implements Unity's custom bootstrap hook. The important consequence is that world creation is an explicit decision made by a graph node, not a side effect of entering play mode. That is also why a virtual player with the wrong play type will build a second server world and fail to bind the port.",
+      "types": [
+        "ICustomBootstrap",
+        "ClientServerBootstrap",
+        "World",
+        "WorldUnmanaged"
+      ]
     },
     "gpu": {
       "short": "Entities Graphics uploads matrices to the GPU and issues batched draws.",
-      "deep": "The rule worth carrying: presentation reads simulation and never the reverse. If you ever feed a smoothed or interpolated visual value back into simulation, you have built a feedback loop between what is true and what is drawn, and it will diverge."
+      "deep": "The rule worth carrying: presentation reads simulation and never the reverse. If you ever feed a smoothed or interpolated visual value back into simulation, you have built a feedback loop between what is true and what is drawn, and it will diverge.",
+      "types": [
+        "LocalToWorld",
+        "RenderMeshArray",
+        "EntitiesGraphicsSystem"
+      ]
     },
     "settings": {
       "short": "A settings asset is a scriptable object that bakes into an entity.",
-      "deep": "It is the bridge between a designer's number in the inspector and blittable data in a chunk. The world it lands in is decided by an attribute on the class, which a utility reads to insert the asset into the right authoring prefab. Never hand edit that array."
+      "deep": "It is the bridge between a designer's number in the inspector and blittable data in a chunk. The world it lands in is decided by an attribute on the class, which a utility reads to insert the asset into the right authoring prefab. Never hand edit that array.",
+      "types": [
+        "ClientServerTickRate",
+        "ClientTickRate",
+        "GhostSendSystemData"
+      ]
     },
     "subscenes": {
       "short": "A sub scene set maps scenes to worlds using load flags.",
-      "deep": "This is the routing table. A scene listed with the client flag loads into client worlds; the server flag, server worlds. When an entity you expected is missing from a world, walk this path backwards — asset, prefab, scene, set, flag — and you will find the broken link."
+      "deep": "This is the routing table. A scene listed with the client flag loads into client worlds; the server flag, server worlds. When an entity you expected is missing from a world, walk this path backwards — asset, prefab, scene, set, flag — and you will find the broken link.",
+      "types": [
+        "SceneSystem",
+        "RequestSceneLoaded",
+        "SubScene",
+        "EntitySceneReference"
+      ]
     }
   }
 }

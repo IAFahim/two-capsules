@@ -65,6 +65,13 @@
   .cap .who{font-size:.68rem;text-transform:uppercase;letter-spacing:.13em;color:var(--muted);white-space:nowrap;padding-top:3px;min-width:96px}
   .cap .say{flex:1;font-size:.98rem;line-height:1.5;max-width:88ch}
   .cap .say .more{display:block;margin-top:7px;font-size:.8rem;color:var(--muted)}
+  .cap{flex-wrap:wrap}
+  .apis{flex-basis:100%;margin:9px 0 0 110px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .apis::before{content:"in the source";font-size:.62rem;text-transform:uppercase;letter-spacing:.11em;color:var(--muted);margin-right:2px}
+  .apis .api{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.74rem;
+             border:1px solid var(--line);border-radius:7px;padding:2px 8px;color:var(--muted);text-decoration:none}
+  a.api:hover{border-color:var(--a);color:var(--a)}
+  @media (max-width:760px){ .apis{margin-left:0} }
   .cap .act{display:flex;gap:6px;flex:none}
   .cap .act button{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:.82rem}
   .cap .act button:hover{border-color:var(--a)}
@@ -85,6 +92,7 @@
     <button id="mute" aria-pressed="false" title="Mute narration (M)">🔊 Voice</button>
     <button id="speed" title="Playback speed">1.0×</button>
     <button id="reset" title="Forget what I've explored">Reset</button>
+    <a class="tools" href="reference.html" style="border:1px solid var(--line);border-radius:9px;padding:6px 11px;font-size:.82rem">Reference ↗</a>
     <a class="tools" href="index.html" style="border:1px solid var(--line);border-radius:9px;padding:6px 11px;font-size:.82rem">Book ↗</a>
   </div>
 </div>
@@ -111,7 +119,9 @@
 <div class="cap">
   <div class="who"><span class="lvl" id="lvl"></span><span id="who">ready</span></div>
   <div class="say" id="say">Move your pointer over any box in the diagram. It will tell you what that piece does, and dim everything else so you can see it. Click it for the version with the reasoning.</div>
+  <div class="apis" id="api" hidden></div>
   <div class="act">
+    <button id="goto" class="pri" hidden></button>
     <button id="deeper" class="pri" hidden>Go deeper ↓</button>
     <button id="stop" hidden>Stop</button>
   </div>
@@ -151,6 +161,8 @@
     $("say").innerHTML = "";
     $("say").append(document.createTextNode(text));
     if (opts.hint) { const s = document.createElement("span"); s.className = "more"; s.textContent = opts.hint; $("say").append(s); }
+    apiChips(opts.types);
+    travel(opts.goto, opts.gotoLabel);
     $("deeper").hidden = !opts.deep;
     lastSpoken = { who, text, opts };
 
@@ -166,6 +178,43 @@
     if (tourOn) setTimeout(nextTourStep, 450);
   });
 
+  // ---------- the real API behind a box ----------
+  // Narration is spoken, so it never says a type name out loud. But the moment you
+  // understand a box you want the actual thing — so every box can carry the types it
+  // is made of, resolved against the generated index and offered as links.
+  let apiIndex = null;   // bare name -> reference id
+  fetch("reference/search.json").then(r => r.json()).then(s => {
+    apiIndex = {};
+    for (const row of s.rows) if (!(row[1] in apiIndex)) apiIndex[row[1]] = row[0];
+  }).catch(() => {});
+
+  // A node may continue into another map. Stay inside the narrated explorer when that
+  // map is a lesson we know about; only leave the page when it isn't.
+  function travel(target, label){
+    const b = $("goto");
+    b.hidden = !target;
+    if (!target) return;
+    const dest = man.lessons.find((l) => l.map === target);
+    b.textContent = (label || (dest ? dest.title : "Go there")) + " →";
+    b.onclick = () => dest ? loadLesson(dest.id) : window.open(target, "_blank", "noopener");
+  }
+
+  function apiChips(types){
+    const box = $("api");
+    box.innerHTML = "";
+    box.hidden = !(types && types.length);
+    if (box.hidden) return;
+    for (const t of types){
+      const id = apiIndex && apiIndex[t];
+      const el = document.createElement(id ? "a" : "span");
+      el.className = "api";
+      el.textContent = t;
+      if (id){ el.href = "reference.html#" + encodeURIComponent(id); el.target = "_blank"; el.rel = "noopener"; }
+      else el.style.opacity = ".55";
+      box.append(el);
+    }
+  }
+
   // ---------- nodes ----------
   function nodeIds(){ return Object.keys(lesson.nodes || {}); }
 
@@ -173,8 +222,8 @@
     const n = lesson.nodes[id]; if (!n) return;
     curNode = id;
     store.mark(lesson.id, id); renderNodes();
-    if (deep && n.deep) say(id, n.deep, { audio: n.audioDeep, deep: false });
-    else say(id, n.short, { audio: n.audio, deep: !!n.deep, hint: n.deep ? "Click the box again — or press Go deeper — for why it is built this way." : "" });
+    if (deep && n.deep) say(id, n.deep, { audio: n.audioDeep, deep: false, types: n.types, goto: n.goto, gotoLabel: n.gotoLabel });
+    else say(id, n.short, { audio: n.audio, deep: !!n.deep, types: n.types, goto: n.goto, gotoLabel: n.gotoLabel, hint: n.deep ? "Click the box again — or press Go deeper — for why it is built this way." : "" });
     focusNode(id);
   }
 
@@ -344,7 +393,12 @@
       b.addEventListener("click", () => loadLesson(l.id));
       maps.append(b);
     });
-    loadLesson((location.hash || "").replace("#", "") || m.lessons[0].id);
+    // Accept #<lessonId>, ?map=<diagram path>, or fall back to the world map.
+    const q = new URLSearchParams(location.search).get("map");
+    const byMap = q && m.lessons.find((l) => l.map === q || l.map.endsWith(q));
+    const world = m.lessons.find((l) => l.id === "00-world");
+    loadLesson((location.hash || "").replace("#", "") ||
+               (byMap && byMap.id) || (world && world.id) || m.lessons[0].id);
   }).catch(() => {
     say("no narration yet", "The manifest is missing. Run tools/gen_narration.py to build the voice clips, or read the maps directly from the book index.", {});
   });

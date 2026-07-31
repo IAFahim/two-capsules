@@ -1,0 +1,68 @@
+{
+  "id": "36-ghost-codegen",
+  "title": "Ghost serializer codegen",
+  "map": "diagrams/36-ghost-codegen.html",
+  "blurb": "Attributes and templates become compiled function pointers in a descriptor table.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "It happens at compile time",
+      "focus": null,
+      "text": "Replication in this stack has no runtime reflection cost, and the reason is that none of it happens at runtime. A Roslyn generator runs during C sharp compilation, once per assembly, sweeping every syntax tree and sorting candidates into buckets. By the time a world exists, the serialization code is already compiled machine code with a Burst function pointer attached to it."
+    },
+    {
+      "id": "inputs",
+      "title": "Attributes are the schema, templates are the shapes",
+      "focus": "attrs",
+      "text": "Three attributes carry the declaration. One goes on fields and carries quantization, smoothing, composite change tracking, a sub type selector, and a send flag. One goes on the type and carries prefab type, send optimisation, owner send type, and whether children replicate. The third goes on the type and simply says: replicate the enabled flag as well as the fields. Alongside them sit the templates, one per supported field type, in quantized and unquantized variants."
+    },
+    {
+      "id": "emit",
+      "title": "What comes out",
+      "focus": "ser",
+      "text": "For each replicated component the generator produces a struct with a private snapshot layout and eight methods. Copy to snapshot applies quantization. Calculate change mask compares against a baseline. Predict delta derives a predicted baseline. Serialize writes only changed fields. Deserialize reads them back. Copy from snapshot dequantizes and interpolates. Restore from backup handles rollback. And a report method feeds the prediction error debugger."
+    },
+    {
+      "id": "registry",
+      "title": "A descriptor table, not a lookup",
+      "focus": "state",
+      "text": "One registration system per assembly hands each serializer's descriptor to a collection, which ends up as a dynamic buffer on the ghost collection entity. Each entry carries sizes, mask bit counts, routing rules, and a small set of function pointers. Dispatch at runtime is an index into that buffer followed by an indirect call, exactly like a driver jump table. Nothing is looked up by name at any point after startup."
+    },
+    {
+      "id": "encoder",
+      "title": "Predict, then encode the residual",
+      "focus": "wire",
+      "text": "Serialization does not delta against the previous value. It deltas against a prediction of the current value, derived from three baselines using fractions in sixteenths, falling back to the newest baseline whenever the extrapolation would be worse. The residual is then written through an entropy model, so a near zero delta costs a handful of bits. A body moving at constant velocity is almost free on the wire. It is the same structure as a lossless audio codec."
+    }
+  ],
+  "nodes": {
+    "attrs": {
+      "short": "The three attributes that declare what replicates and how.",
+      "deep": "Quantization defaults to negative one, meaning unset. Composite change tracking is off, so every inner field of a nested struct gets its own change bit. Smoothing defaults to clamp. Send data defaults to true, and the maximum smoothing distance defaults to zero, which disables the snap check entirely."
+    },
+    "templates": {
+      "short": "One code template per supported field type, quantized or not.",
+      "deep": "They ship as additional files inside the package, and there are separate templates for the quantized and unquantized form of every floating point type, including the quaternion and every fixed string size. A custom sub type is how you point a field at a template of your own."
+    },
+    "gen": {
+      "short": "A Roslyn generator running once per assembly during compilation.",
+      "deep": "It registers a syntax receiver that sorts candidates into seven buckets: components, remote procedure calls, commands, inputs, variants, ghost behaviours, and remotes. If an assembly does not reference the netcode package, the generator skips it entirely, and your attributes do nothing at all, with no error, because nothing ran."
+    },
+    "ser": {
+      "short": "The emitted serializer struct for one component.",
+      "deep": "Its snapshot layout begins with a tick, then the change mask words, then the enabled bit mask words, then the component data, all aligned. Each replicated field contributes one change bit by default, and the composite option collapses a nested struct down to a single bit for the whole struct."
+    },
+    "reg": {
+      "short": "One generated registration system per assembly.",
+      "deep": "It is ordered into the serializer collection group and created before the default variant group, so that variants can override which serializer a component actually uses. Its whole job is to call add serializer once for each descriptor the generator produced in that assembly."
+    },
+    "state": {
+      "short": "The descriptor: sizes, masks, routing rules, and function pointers.",
+      "deep": "It carries three hashes used for identity and protocol versioning, the component type, the in memory size and the on the wire size, the change mask bit count, whether the enabled bit is serialized, and the routing rules taken from the component attribute. Then it carries the pointers into the generated code."
+    },
+    "wire": {
+      "short": "The send path, calling into the generated code by index.",
+      "deep": "It compares quantized integers rather than floats when building the change mask, which is the real reason quantization saves bandwidth: quantized values compare equal far more often, and an unchanged field costs only its mask bit. Set quantization too coarse, though, and prediction can never agree with the dequantized server value, so you roll back every single tick."
+    }
+  }
+}

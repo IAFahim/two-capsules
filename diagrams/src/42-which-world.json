@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Which world am I in?",
+    "subtitle": "One authored prefab, several worlds, and the integer that correlates them",
+    "output": "diagrams/42-which-world.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "territory",
+        "label": "The live worlds",
+        "focus": ["bootstrap", "serverworld", "clientworld", "thinclient"],
+        "note": "The bootstrap decides which worlds exist and which filter flags populate each one."
+      },
+      {
+        "id": "variants",
+        "label": "One prefab, per-world variants",
+        "focus": ["bakeworld", "prefab", "strip"],
+        "note": "Baking emits removal lists; each world strips its own copy before instantiating."
+      },
+      {
+        "id": "correlation",
+        "label": "What actually crosses",
+        "focus": ["serverworld", "wire", "clientworld"],
+        "note": "No entity reference crosses. A ghost id and a prefab index do."
+      }
+    ],
+    "viewBox": [1180, 720]
+  },
+  "components": [
+    {
+      "id": "bakeworld",
+      "type": "cloud",
+      "label": "Baking world",
+      "sublabel": "transient, disposed",
+      "tag": "BakingSystem",
+      "pos": [60, 70],
+      "size": [190, 80]
+    },
+    {
+      "id": "prefab",
+      "type": "database",
+      "label": "Ghost prefab",
+      "sublabel": "plus per-world removal lists",
+      "tag": "GhostPrefabType",
+      "pos": [370, 70],
+      "size": [210, 80]
+    },
+    {
+      "id": "strip",
+      "type": "security",
+      "label": "Runtime strip",
+      "sublabel": "picks the list for this world",
+      "tag": "before first instance",
+      "pos": [700, 70],
+      "size": [210, 80]
+    },
+    {
+      "id": "bootstrap",
+      "type": "security",
+      "label": "Bootstrap",
+      "sublabel": "ICustomBootstrap",
+      "tag": "decides what exists",
+      "pos": [60, 340],
+      "size": [190, 84]
+    },
+    {
+      "id": "serverworld",
+      "type": "backend",
+      "label": "ServerWorld",
+      "sublabel": "simulates, never renders",
+      "tag": "ServerSimulation",
+      "pos": [370, 340],
+      "size": [210, 84]
+    },
+    {
+      "id": "wire",
+      "type": "messagebus",
+      "label": "Snapshot",
+      "sublabel": "ghost id + prefab index",
+      "tag": "an integer",
+      "pos": [700, 340],
+      "size": [210, 84]
+    },
+    {
+      "id": "clientworld",
+      "type": "frontend",
+      "label": "ClientWorld",
+      "sublabel": "predicts and renders",
+      "tag": "+ Presentation",
+      "pos": [1010, 340],
+      "size": [130, 84]
+    },
+    {
+      "id": "thinclient",
+      "type": "external",
+      "label": "ThinClientWorld",
+      "sublabel": "input and a socket",
+      "tag": "no physics",
+      "pos": [370, 590],
+      "size": [210, 80]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "security-group",
+      "label": "authority",
+      "wraps": ["serverworld"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "bake",
+      "from": "bakeworld",
+      "to": "prefab",
+      "label": "bake once"
+    },
+    {
+      "id": "lists",
+      "from": "prefab",
+      "to": "strip",
+      "label": "edit lists"
+    },
+    {
+      "id": "srvvariant",
+      "from": "strip",
+      "to": "serverworld",
+      "label": "server variant",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "clivariant",
+      "from": "strip",
+      "to": "clientworld",
+      "label": "client variant",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "makeserver",
+      "from": "bootstrap",
+      "to": "serverworld",
+      "label": "ServerSimulation",
+      "variant": "emphasis"
+    },
+    {
+      "id": "makethin",
+      "from": "bootstrap",
+      "to": "thinclient",
+      "label": "ThinClientSimulation",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "snapshot",
+      "from": "serverworld",
+      "to": "wire",
+      "label": "truth",
+      "variant": "emphasis"
+    },
+    {
+      "id": "lookup",
+      "from": "wire",
+      "to": "clientworld",
+      "label": "local instantiate",
+      "variant": "emphasis"
+    },
+    {
+      "id": "commands",
+      "from": "thinclient",
+      "to": "serverworld",
+      "label": "input only",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What Default expands to",
+      "items": [
+        "Populating a world: LocalSimulation plus Presentation",
+        "Classifying a system: the parent group's child default",
+        "No parent group: local, server and client simulation",
+        "Unity Physics carries exactly that last set"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Simulation is not presentation",
+      "items": [
+        "The server computes every transform, including physics",
+        "It was populated without the Presentation flag",
+        "A headless server is a complete simulation, not a partial one"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Nothing is attached",
+      "items": [
+        "Two entities, two address spaces, no reference between them",
+        "The wire carries a ghost id and a prefab index",
+        "Both worlds baked the same prefab, so both know what the index names",
+        "Ghost ids are recycled; the unique key adds the spawn tick"
+      ]
+    }
+  ]
+}

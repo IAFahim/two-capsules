@@ -1,0 +1,113 @@
+{
+  "id": "38-profiling",
+  "title": "The Measurement Plane",
+  "map": "diagrams/38-profiling.html",
+  "blurb": "Four bottlenecks that look identical from outside, and the counters that separate them.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Four problems, one symptom",
+      "focus": null,
+      "text": "Netcode has four bottlenecks: serialization work on the server, bandwidth on the wire, prediction replay on the client, and the quality of the link itself. From the outside they all look the same, because the game gets worse when there are more players. Reaching for a central processing unit profiler when you have a bandwidth problem is how weeks disappear."
+    },
+    {
+      "id": "gate",
+      "title": "None of this exists in a release build",
+      "focus": "collector",
+      "text": "Every metric component and every counter here is wrapped in a compile time condition. In a release player without the debug define, the types do not exist and nothing is emitted. The collector also gates itself on the profiler being enabled, and it creates its own singleton entity. If you had already made one to read metrics from your own code, it destroys yours and warns you."
+    },
+    {
+      "id": "shapes",
+      "title": "The same numbers, two shapes",
+      "focus": "singletons",
+      "text": "The collector publishes in two forms. One is ordinary entity components you can read from your own system: round trip time, jitter, command age, snapshot size in bits, per ghost type instance counts and sizes. The other is profiler counters in the network category, which is what the profiler window graphs. Read the components when you want a number. Read the counters when you want a shape over time."
+    },
+    {
+      "id": "thresholds",
+      "title": "The only two defined bad values",
+      "focus": "modules",
+      "text": "This chapter refuses to tell you what a bad millisecond looks like, because that was never measured here. But the package itself defines exactly two thresholds. Compression efficiency below seventy percent is flagged as poor. A snapshot approaching ninety percent of the maximum message size is flagged as reaching the ceiling. Those are the package's numbers, not invented ones."
+    },
+    {
+      "id": "prediction",
+      "title": "Counting prediction ticks",
+      "focus": "client",
+      "text": "Rollback cost is predicted entities multiplied by replayed ticks, and both terms are readable. Network time exposes how many predicted ticks have run this frame and how many the loop expects. It even prints them together in one string, which makes it the cheapest prediction probe you will ever write. Batching replayed ticks saves time and costs simulation accuracy, because one step with a larger delta is not the same as several small ones."
+    },
+    {
+      "id": "probe",
+      "title": "The dashboard that survives a build",
+      "focus": "hud",
+      "text": "The fastest netcode instrument is not a window. Query the network metrics, the snapshot metrics, and the network time in one client system, and log one line per second. Four numbers separate all four bottlenecks, and unlike a profiler window they keep working in a headless build on a real server."
+    }
+  ],
+  "nodes": {
+    "server": {
+      "short": "Emits snapshot sizes, chunk counts, and per ghost serialization timings.",
+      "deep": "This is also where the named profiler markers live. Prioritize chunks covers gathering and sorting per connection, relevancy covers per entity evaluation, and there is a marker for the static optimization check. There is an option to add a marker per component inside serialization, which costs performance and is meant to be turned on, read, and turned off.",
+      "types": [
+        "GhostSendSystem",
+        "ProfilerMarker",
+        "GhostSendSystemData",
+        "GhostSerializationMetrics"
+      ]
+    },
+    "client": {
+      "short": "Emits round trip time, jitter, snapshot age, and prediction error magnitudes.",
+      "deep": "Prediction errors are reported as a buffer of magnitudes paired with a buffer of names, joined only by index. Read one without the other and you have numbers attached to nothing. The client is also where you count predicted ticks per frame, which is the client side cost term.",
+      "types": [
+        "NetworkTime",
+        "PredictedGhost",
+        "PredictionErrorMetrics",
+        "PredictionErrorNames"
+      ]
+    },
+    "collector": {
+      "short": "One system per world that gathers stats and publishes them twice.",
+      "deep": "It only runs while the profiler is enabled, and it cleans up when the profiler is switched off. It creates a singleton entity named metrics monitor carrying six required component types. Server worlds get instance count and snapshot size counters; client worlds get those plus jitter and round trip time.",
+      "types": [
+        "GhostMetricsMonitor",
+        "ProfilerCounterValue",
+        "ProfilerCategory"
+      ]
+    },
+    "counters": {
+      "short": "Profiler counters in the network category: bytes, counts, and nanoseconds.",
+      "deep": "Snapshot size is published in bytes, converted from a bit total. Round trip time and jitter are stored in milliseconds on the component and multiplied by one million for the nanosecond unit the counter declares. If you want milliseconds, read the component rather than the counter.",
+      "types": [
+        "ProfilerCounterValue",
+        "ProfilerCategory",
+        "ProfilerMarkerDataUnit"
+      ]
+    },
+    "singletons": {
+      "short": "Ordinary entity components holding every metric the collector gathered.",
+      "deep": "Network metrics carries round trip time, jitter, command age, and the minimum and maximum snapshot age. Snapshot metrics carries total size in bits, total ghost count, and despawn counts. Ghost metrics is a buffer with one entry per ghost type, holding instance count, size in bits, and chunk count on the server.",
+      "types": [
+        "NetworkMetrics",
+        "SnapshotMetrics",
+        "GhostMetrics",
+        "GhostNames"
+      ]
+    },
+    "modules": {
+      "short": "Two profiler modules, one for the client world and one for the server world.",
+      "deep": "The per tick view breaks a snapshot into rows with size, percentage of the snapshot, instance count, compression efficiency, and average size per instance. Two rows are not ghost types at all: snapshot overhead for spawns and prefab lists, and ghost prefab overhead for identifiers, spawn ticks, and baselines. Note that the older browser based network debugger is marked deprecated in this version.",
+      "types": [
+        "ProfilerModule",
+        "ProfilerModuleMetadata",
+        "ProfilerCounterDescriptor"
+      ]
+    },
+    "hud": {
+      "short": "Your own system reading the metric components and logging a line.",
+      "deep": "Four numbers are enough to separate the four bottlenecks: round trip time, jitter, snapshot bits, and predicted ticks per frame. Because these are plain components, this probe compiles into a development build and keeps reporting from a real server under real load, which no editor window can do.",
+      "types": [
+        "NetworkMetrics",
+        "SnapshotMetrics",
+        "NetworkTime",
+        "CommandArrivalStatistics"
+      ]
+    }
+  }
+}

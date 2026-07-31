@@ -1,0 +1,68 @@
+{
+  "id": "08-grove",
+  "title": "Grove: a virtual machine for gameplay logic",
+  "source": {"chapter": "08-grove"},
+  "checks": [
+    {
+      "id": "context-copied-by-value",
+      "kind": "predict",
+      "setup": "Your driver system gathers this tick's facts and hands them to the graph. Someone tidies the method so the setup reads top-to-bottom, facts first:\n\n    var connection = GatherConnectionFacts(ref state);\n\n    execution.Context.Connection = connection;      // facts\n    var execution = executor.GetExecution(ref state); // then run\n    executor.Run(ref state, ref execution);\n\n(assume it is reordered so it compiles — the assignment happens before GetExecution). The graph runs. Every node executes. Nothing throws, nothing logs, the state machine sits in `connecting` forever and the connection never goes in-game.",
+      "ask": "Why does every node see a zeroed connection, and what is the ordering rule?",
+      "rightIf": [
+        "says GetExecution returns a copy of the context by value, not a reference to it",
+        "explains that GetExecution also runs the context's Update, which overwrites the fields you set",
+        "concludes the assignment must happen after GetExecution and before Run",
+        "notes the failure is silent because a zeroed connection is a valid-looking 'not ready yet' to every node that reads it"
+      ],
+      "answer": "The context is a struct and `GetExecution` hands you a copy of it, freshly updated. Anything you wrote into the context before that call is either overwritten by the update or written to a different copy than the one the run will read — either way it is gone. So every node sees a default-constructed connection: not known, no network id, not in game. The nodes do exactly the right thing with that input, which is hold and wait, and the gate correctly refuses to open. Nothing is broken, nothing complains, and the machine waits forever for facts it was never handed. Assign after `GetExecution`, before `Run`.",
+      "because": "The context is the VM's register file, and you get a copy of it. Writing to the register file before it is loaded is writing to the wrong file.",
+      "goDeeper": {"chapter": "08-grove", "types": ["GroveState", "NerveStateMachine"]}
+    },
+    {
+      "id": "node-state-in-the-blob",
+      "kind": "predict",
+      "setup": "You write a node with a cooldown. The obvious place to keep the remaining time is the node's own Data struct — it is already there, it is already per-node, and in the editor you can even see the field.\n\n    struct CooldownData { public float Remaining; }   // your node's Data struct\n\nWith one entity running the graph it behaves perfectly. You add a second entity running the same graph and the cooldown becomes shared between them: whoever fires first blocks the other. Then you notice it also does not survive a reload of the subscene.",
+      "ask": "Where does the node's Data actually live, and where should per-entity memory go?",
+      "rightIf": [
+        "says the Data struct lives inline in the baked blob image, which is read-only and shared across every entity running that graph",
+        "concludes there is exactly one copy of Remaining no matter how many entities run the graph",
+        "names DynamicBuffer<GroveState> as the per-entity writable memory, keyed per node",
+        "notes the blob is rebuilt from authoring at bake, which is why nothing you wrote there survives"
+      ],
+      "answer": "The Data struct is not the node's variables — it is the node's *instruction operand*, baked into a single contiguous blob asset and shared read-only by every entity that runs the graph. There is one `Remaining` in the whole world, and every entity is stomping on the same bytes. It also does not survive a reload because the blob is regenerated from authoring, so your runtime writes were never anything the bake step intended to preserve. Per-entity memory is `DynamicBuffer<GroveState>` on the entity — a small hash map keyed by (graph, node, local key) — which is exactly how a node remembers \"I already sent this request for this connection\" without a static anywhere in sight.",
+      "because": "The blob is ROM and GroveState is RAM. It is a Harvard architecture, and writing your variables into the instruction image is the same mistake there as it is on a microcontroller.",
+      "goDeeper": {"chapter": "08-grove", "types": ["GroveState", "BlobAssetReference", "GraphData"]}
+    },
+    {
+      "id": "opcode-collision",
+      "kind": "choice",
+      "setup": "You are adding your own nodes to the VM, in your own package, alongside Nerve's. Nerve's execution types are negative, offset into a reserved band. You pick your opcodes the way you would pick enum values anywhere else: start at 0 and count up, because they are yours and nothing else is in your enum.\n\nIt bakes. It runs. One of your nodes executes somebody else's code.",
+      "ask": "What is the mechanism, and what does the enum offset in Nerve's execution types buy?",
+      "options": [
+        {
+          "text": "The generated dispatch is one switch over an integer opcode shared by every package extending the VM. Overlapping integers are the same case label, so whoever the generator emits first wins and the other node silently dispatches to it.",
+          "right": true,
+          "why": "The opcode is the whole identity of a node at runtime — the blob holds an integer and the generated switch turns it into a static call. Nerve's negative offset is a namespace allocation, exactly like carving out an ISA extension range so two vendors can extend the same instruction set without colliding. Pick your own band and stay in it."
+        },
+        {
+          "text": "Baking resolves nodes by their C# type name, so identical opcodes are fine as long as the type names differ.",
+          "right": false,
+          "why": "A blob cannot hold a type reference or a delegate — that is the constraint the whole design is built around. Names exist at author time and are gone by runtime; what survives into the image is an integer. If you believe names survive, you will also expect a rename to break things at runtime, and it will not."
+        },
+        {
+          "text": "The source generator detects the duplicate and emits a compile error, so the failure must be something else.",
+          "right": false,
+          "why": "This is what you want to be true and it is worth checking in your own version. But you should not design on the assumption that a generator scanning attributes across independently-compiled assemblies sees every opcode at once. Ranges are the defence that does not depend on the tooling noticing."
+        },
+        {
+          "text": "The switch falls through to a default case and the node simply does nothing.",
+          "right": false,
+          "why": "Doing nothing would be the merciful failure. The problem is that your integer is a *valid* case label — someone else's — so the dispatch is a successful jump to the wrong handler, which then reinterprets your node's payload bytes as its own Data struct. That is not a no-op; that is a type confusion with a jump table."
+        }
+      ],
+      "answer": "At runtime a node is an integer and a payload. The generated switch is a jump table over that integer, and two packages that both claim 0 have both claimed the same table entry. Nerve's negative offset is not stylistic — it is a reserved opcode band, the same device an ISA uses so two extensions can coexist.",
+      "because": "Dispatch is a jump table, not a lookup by name. Opcode allocation is a shared resource, and shared resources need ranges.",
+      "goDeeper": {"chapter": "08-grove", "types": ["GraphData", "BlobArray"]}
+    }
+  ]
+}

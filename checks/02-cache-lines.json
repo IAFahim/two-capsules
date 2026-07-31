@@ -1,0 +1,51 @@
+{
+  "id": "02-cache-lines",
+  "title": "Cache lines all the way down",
+  "source": {"chapter": "02-cache-lines", "map": "diagrams/01-machine.html"},
+  "checks": [
+    {
+      "id": "flag-as-structural-change",
+      "kind": "predict",
+      "setup": "A capsule can be stunned. You model it the obvious way: an empty tag component `Stunned`, added with an EntityCommandBuffer when the stun lands and removed when it expires. Stuns are short — a third of a second — and common: in a fight, most capsules are gaining or losing the tag several times a second. Two capsules: flawless. Two hundred: the frame time graph grows teeth, and the profiler blames nothing in particular.",
+      "ask": "What is the actual cost you added, and what is the same idea implemented so that it costs nothing?",
+      "rightIf": [
+        "identifies that adding or removing a component moves the entity to a chunk of a different archetype",
+        "says that move is a memcpy of every component on the entity plus bookkeeping — not just the tag",
+        "notes it also invalidates raw pointers, which is why the change is deferred through a command buffer and played back at a sync point",
+        "names enableable components as the fix: the chunk header carries a bitmask, disabling flips a bit and the entity stays put"
+      ],
+      "answer": "A tag component is not free real estate. The archetype is the set of component types, and every chunk belongs to exactly one archetype — so adding `Stunned` means the entity cannot stay where it is. It is copied, every component of it, into a chunk of the archetype that includes `Stunned`, and the hole it left is backfilled. Two hundred capsules toggling several times a second is a few hundred whole-entity memcpys per second plus the sync point where the command buffer plays back, and none of it shows up as a hot function because it is spread across allocator bookkeeping. Make `Stunned` an enableable component and the cost becomes one bit flip in the chunk header — the entity never moves, queries respect the mask, and the profiler goes quiet.",
+      "because": "Structural change is a memory move, not a flag write. Enableable components exist precisely because moving 16 KiB of neighbours to store one boolean is absurd.",
+      "goDeeper": {"chapter": "02-cache-lines", "node": "client", "types": ["EntityCommandBuffer", "ComponentType", "Simulate"]}
+    },
+    {
+      "id": "change-filter-never-fires",
+      "kind": "predict",
+      "setup": "Ten thousand ambient props. You add `WithChangeFilter<LocalTransform>()` to the system that rebuilds their render bounds, expecting it to skip nearly every chunk, because almost nothing moves.\n\nThe filter skips nothing. Every chunk is processed every frame. Digging, you find one other system that runs earlier and queries the same props with `RefRW<LocalTransform>` — it reads the transform, decides in almost every case to do nothing, and writes back only in the rare case it cares about.",
+      "ask": "Why does the change filter see every chunk as dirty, and what exactly would you change?",
+      "rightIf": [
+        "says the chunk change version is bumped when a system takes write access, not when a value actually changes",
+        "concludes RefRW marks the chunk dirty whether or not anything was written",
+        "names the fix as splitting the access: query RefRO and only take write access on the entities that need it (a second query, a lookup, or an enableable gate)"
+      ],
+      "answer": "The version is a coarse dirty bit and it is set by intent, not by outcome. Every chunk carries a `uint` per component type, and it is bumped the moment a system acquires write access to that type in that chunk — nobody diffs the values. `RefRW<LocalTransform>` on the earlier system therefore dirties every chunk it touches, every frame, and your change filter downstream correctly reports that yes, these chunks changed. The fix is to stop asking for write access you almost never use: read with `RefRO`, and route the rare writer through a second query, a component lookup, or an enableable tag so it only acquires write access on the chunks it will actually write.",
+      "because": "It is a dirty bit per cache line, except the granularity is a chunk and the thing that sets it is the type of your reference, not the value you stored.",
+      "goDeeper": {"chapter": "02-cache-lines", "node": "client", "types": ["LocalTransform", "EntityQuery"]}
+    },
+    {
+      "id": "entity-reference-chase",
+      "kind": "predict",
+      "setup": "Every projectile stores `public Entity Shooter;` so its damage system can credit the kill. Twenty thousand projectiles, one component lookup per projectile per tick to read the shooter's team and score. The code is clean, bursted, and the query is over one tight archetype. It is also four times slower than the movement system that touches the same twenty thousand entities.",
+      "ask": "Why is it slower, given both systems iterate the same number of entities in the same chunks?",
+      "rightIf": [
+        "says a component cannot hold a class reference, so it holds an Entity handle and you look it up",
+        "identifies that the lookup is a random access into some other chunk — the exact thing the layout was designed to avoid",
+        "notes the movement system streams contiguous memory and the prefetcher hides it, while the lookup defeats the prefetcher",
+        "suggests denormalising the needed value onto the projectile (copy team/owner id at spawn) rather than chasing the handle every tick"
+      ],
+      "answer": "Both systems walk the same contiguous arrays. The difference is what happens inside the loop: the movement system reads and writes structs that are already in the cache line the prefetcher pulled in, while the damage system takes an `Entity`, resolves it to a chunk somewhere else in memory, and reads one field. That is a pointer chase with extra steps, and twenty thousand of them per tick is twenty thousand chances to miss. The handle is not a reference; it is an index plus a version, and resolving it costs a random access. If the shooter's team never changes during the projectile's life, copy it onto the projectile at spawn — one write at spawn instead of twenty thousand chases per tick.",
+      "because": "The bill for struct-of-arrays is that there are no references. An Entity handle buys you safe indirection at exactly the price you switched to ECS to stop paying.",
+      "goDeeper": {"chapter": "02-cache-lines", "node": "client", "types": ["EntityQuery", "ComponentType"]}
+    }
+  ]
+}

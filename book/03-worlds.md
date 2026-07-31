@@ -30,6 +30,8 @@ flowchart TB
 `ServiceWorld` is the one that outlives everything — it owns the state graph that says
 "we are in Menu" or "we are in Game", and it is what creates and destroys the others.
 
+Chapter 42 is the definitive account: every world netcode can build, what `WorldSystemFilterFlags.Default` really expands to, and which world to reason about when debugging what.
+
 > **🔬 Probe** — see them live:
 > ```csharp
 > foreach (var w in World.All) Debug.Log($"{w.Name} flags={w.Flags}");

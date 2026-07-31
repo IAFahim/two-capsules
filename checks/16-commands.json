@@ -1,0 +1,85 @@
+{
+  "id": "16-commands",
+  "title": "Commands: input on the wire",
+  "source": {"chapter": "16-commands", "map": "diagrams/02-keypress.html"},
+  "checks": [
+    {
+      "id": "missing-ghostownerislocal",
+      "kind": "predict",
+      "setup": "The input gather system writes WASD into the input component:\n\n    foreach (var input in SystemAPI.Query<RefRW<PlayerMoveInput>>())\n        input.ValueRW.Move = move;\n\nSomeone deleted `.WithAll<GhostOwnerIsLocal>()` while refactoring, on the grounds that the client only has one player anyway. Two-player test. Nothing errors. Your own capsule moves exactly as before.",
+      "ask": "What does the other player's capsule do on *your* screen, what does it do on *their* screen, and what does the server think?",
+      "rightIf": [
+        "says the query now matches every ghost with the input component in your world, including other players' capsules",
+        "concludes on your screen the other capsule responds to your keys",
+        "identifies that only your own capsule's input is sent — the other capsule is not yours, so what you wrote into it is never transmitted",
+        "concludes the other capsule fights: it moves on your keys and is corrected back by every snapshot, i.e. rubber-bands",
+        "states the server and the other player see nothing wrong at all"
+      ],
+      "answer": "You are now writing your keyboard into every capsule in your client world, including the one belonging to the other player. But writing input into an entity is not the same as owning it: only the ghost you own has its input routed onto the wire, so what you wrote into the other capsule never leaves your machine. Meanwhile that capsule is Interpolated (or predicted-but-not-by-you) and the server keeps sending its real position — so on your screen it lurches in your direction and gets yanked back on every snapshot. Classic rubber-band, and it is entirely local hallucination.\n\nThe other player sees a perfectly normal game. The server sees a perfectly normal game. Only you see it, only on your machine, and only when someone else is connected — which is why it survives every single-player test you run.\n\n`GhostOwnerIsLocal` is the tag NetCode adds to ghosts whose owner id matches yours. It is not a filter for tidiness; it is the boundary between \"my intent\" and \"someone else's entity\".",
+      "because": "Input is intent about yourself. Writing intent into an entity you do not own produces a local fiction that the wire immediately contradicts.",
+      "goDeeper": {"chapter": "16-commands", "node": "gather", "types": ["GhostOwnerIsLocal", "GhostOwner", "IInputComponentData"]}
+    },
+    {
+      "id": "reading-input-outside-the-buffer",
+      "kind": "predict",
+      "setup": "Movement reads `PlayerMoveInput` inside the prediction group, correctly tagged with `Simulate`. So far so good.\n\nA new dodge system also needs the input. Rather than read the component, the author caches it once per frame in a system that runs in `GhostInputSystemGroup` — right where the keyboard is read — and stashes it in a singleton the dodge system reads during prediction. \"Same value, one fewer lookup.\"\n\nSmooth on a LAN. Under 5% packet loss the dodge sometimes fires several times from one tap, and sometimes triggers a dodge the player never asked for.",
+      "ask": "What does the cached singleton contain during a rollback, and what is the ring buffer doing that the cache is not?",
+      "rightIf": [
+        "says the cached value is *this frame's* input — one value, the newest",
+        "identifies that during a rollback the prediction group replays many past ticks in one frame",
+        "concludes every replayed tick sees the current input rather than the input that actually belonged to that tick",
+        "names the mechanism that does it correctly: the command ring buffer is stamped per tick, and a group inside prediction re-materialises the right tick's input before your systems run",
+        "explains the phantom dodge: a tap during a replay window is applied to every replayed tick"
+      ],
+      "answer": "The singleton holds one value: what the keyboard says right now. The prediction group, on a frame where a correction arrived, replays ticks 100 through 110 — and your dodge system sees the *current* input on all eleven of them. Tap dodge during a replay window and you dodge eleven times; hold nothing and a stale cache can still fire one. The failure only appears under loss because loss is what produces multi-tick replays.\n\nThe ring buffer is not a lookup you can optimise away. Input is stored per tick, and a group that runs first inside the prediction loop copies the slot for *the tick currently being simulated* back into the component. That is the entire reason your movement system can read a plain component and be correct during a replay without knowing it is in one. Bypass it and you have removed the time-travel machinery while keeping the time travel.",
+      "because": "During replay, \"now\" is a variable. The command buffer is indexed by tick for the same reason a scope is triggered on an edge and not on a wall clock.",
+      "goDeeper": {"chapter": "16-commands", "node": "ring", "types": ["InputBufferData", "CopyCommandBufferToInputSystemGroup", "ICommandData"]}
+    },
+    {
+      "id": "sending-results-not-intent",
+      "kind": "predict",
+      "setup": "An optimisation proposal, argued well: the client already computes its predicted position every tick. Sending `Move` means the server recomputes the identical thing, and any disagreement between the two costs a rollback. So send the answer instead:\n\n    public struct PlayerMoveInput : IInputComponentData {\n        public float3 Position;   // was: float2 Move\n    }\n\nThe server writes the received position onto the capsule. Rollbacks drop to zero. Latency feel is unchanged. Bandwidth is comparable. Every test passes, including the two-player one.",
+      "ask": "What did you just build, and what is now true about the prediction system that nobody will notice for months?",
+      "rightIf": [
+        "names it: client authority — the server obeys whatever position a client sends",
+        "concludes a modified client can write any position, so speed, teleport, and wall-clip are now features of the protocol",
+        "notes the server has no rule left to disagree with, which is why rollbacks went to zero",
+        "identifies that zero rollbacks is not a success signal here — it means the authoritative simulation stopped being authoritative"
+      ],
+      "answer": "You removed the server's opinion. Rollbacks went to zero because a rollback is the server disagreeing with the client, and there is nothing left to disagree about — the server is no longer simulating movement, it is transcribing it. That is client authority, and it is the hole every cheat engine walks through: a modified client sends whatever position it likes, at whatever rate it likes, and the server relays it to everyone as truth. No packet is malformed. No check fires. The protocol is behaving exactly as designed.\n\nThe subtle part is that the metric improved. \"Rollbacks dropped to zero\" reads as a win on any dashboard, and it is the precise fingerprint of having deleted the authority model. Send intent — a direction, a button, a desire — and let the server decide what it produces. The client writes exactly one thing: what it wants. Everything else it receives.",
+      "because": "Prediction is speculative execution and the server is the resolution unit. Send it results and you have removed the resolution unit while keeping the speculation.",
+      "goDeeper": {"chapter": "16-commands", "node": "srvmove", "types": ["IInputComponentData", "GhostOwner"]}
+    },
+    {
+      "id": "routing-not-configured",
+      "kind": "choice",
+      "setup": "A new pawn type. It has the input component, it is a ghost, it has an owner, and the client's gather system writes into it correctly — you can see the values with the entity inspector on the client. It predicts and moves smoothly on the client.\n\nThe server never moves it. Not late, not wrong: not at all. The server's copy of the input component is all zeros. Nothing is logged on either side.",
+      "ask": "Where do you look first?",
+      "options": [
+        {
+          "text": "Command routing — whether this ghost is a legal command target for this connection at all.",
+          "right": true,
+          "why": "The client is happily predicting with input the server has no reason to associate with that entity. Routing is what tells NetCode \"commands from this connection belong to that entity\": either the automatic path (the prefab opts in and NetCode routes to ghosts you own) or the explicit one (the connection entity points at a specific entity). A new pawn type that was copied without the opt-in is exactly this failure, and it produces zeros on the server with no diagnostic."
+        },
+        {
+          "text": "The input component is not registered for serialization, so it is not on the wire.",
+          "right": false,
+          "why": "Reasonable, and worth ten seconds of checking — but the serializer, buffer type and send/receive systems are generated for you from the input interface. If that had failed you would have a compile-time or codegen problem, not a silent runtime zero. Believing the codegen is missing sends you reading generated files instead of checking one checkbox."
+        },
+        {
+          "text": "The server's movement system is missing from ServerSimulation, so it never runs.",
+          "right": false,
+          "why": "This produces the same top-level symptom — server does not move it — which is why it is worth ruling out, and the way to rule it out is right there in the evidence: the server's *input component* is zero. If the movement system were simply absent, the received input would still be non-zero. Read what the data says before you read what the code says."
+        },
+        {
+          "text": "The client is predicting a ghost the server has not spawned yet, so there is nothing to move.",
+          "right": false,
+          "why": "If the ghost did not exist on the server you would have no server-side entity to inspect at all, and no snapshots to keep the client's copy alive. The presence of a server-side entity with a zeroed input component rules this out — but it is a real failure mode in predicted spawning, so the instinct is not wasted, just misapplied here."
+        }
+      ],
+      "answer": "Input reaching the client's own entity proves gathering works. Input not reaching the server's copy of that entity proves routing does not. The two mechanisms are the automatic one (opt in on the prefab, NetCode routes to ghosts you own) and the manual one (point the connection at one specific entity) — and a new pawn type usually just missed the opt-in.",
+      "because": "Gathering and routing are separate stages. The client can predict perfectly with input the wire was never told to carry.",
+      "goDeeper": {"chapter": "16-commands", "node": "send", "types": ["AutoCommandTarget", "CommandTarget", "GhostOwner"]}
+    }
+  ]
+}

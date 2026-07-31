@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Ghost serializer codegen",
+    "subtitle": "Attributes and templates become compiled function pointers in a descriptor table",
+    "output": "diagrams/36-ghost-codegen.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "inputs",
+        "label": "What the generator reads",
+        "focus": [
+          "attrs",
+          "templates",
+          "gen"
+        ],
+        "note": "Your attributes are the schema. The templates are the code shapes, one per field type."
+      },
+      {
+        "id": "emit",
+        "label": "What it emits",
+        "focus": [
+          "gen",
+          "ser",
+          "reg"
+        ],
+        "note": "A serializer struct per component, and one registration system per assembly."
+      },
+      {
+        "id": "dispatch",
+        "label": "How the runtime dispatches",
+        "focus": [
+          "state",
+          "wire"
+        ],
+        "note": "Index into a buffer, then an indirect call. No reflection after startup."
+      }
+    ],
+    "viewBox": [
+      1120,
+      620
+    ]
+  },
+  "stages": [
+    {
+      "label": "your source"
+    },
+    {
+      "label": "compile time"
+    },
+    {
+      "label": "emitted code"
+    },
+    {
+      "label": "registry"
+    },
+    {
+      "label": "runtime"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "attrs",
+      "type": "frontend",
+      "label": "Ghost attributes",
+      "sublabel": "field, component, enabled bit",
+      "tag": "the schema",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "templates",
+      "type": "database",
+      "label": "Type templates",
+      "sublabel": "quantized and unquantized",
+      "tag": "one per type",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "gen",
+      "type": "security",
+      "label": "Source generator",
+      "sublabel": "Roslyn, once per assembly",
+      "tag": "skips unreferenced",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "ser",
+      "type": "backend",
+      "label": "Serializer struct",
+      "sublabel": "copy, mask, predict, encode",
+      "tag": "Burst compiled",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "reg",
+      "type": "frontend",
+      "label": "Registration",
+      "sublabel": "one system per assembly",
+      "tag": "runs at startup",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "state",
+      "type": "database",
+      "label": "Serializer state",
+      "sublabel": "sizes, masks, function pointers",
+      "tag": "descriptor table",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "wire",
+      "type": "messagebus",
+      "label": "GhostSendSystem",
+      "sublabel": "change mask, delta, entropy code",
+      "tag": "indirect call",
+      "stage": 4,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "attrs",
+      "to": "gen",
+      "label": "declared fields",
+      "classification": "schema",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "templates",
+      "to": "gen",
+      "label": "code shapes",
+      "classification": "schema"
+    },
+    {
+      "from": "gen",
+      "to": "ser",
+      "label": "emitted struct",
+      "classification": "generated",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "gen",
+      "to": "reg",
+      "label": "emitted system",
+      "classification": "generated"
+    },
+    {
+      "from": "ser",
+      "to": "state",
+      "label": "entry points",
+      "classification": "generated",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "reg",
+      "to": "state",
+      "label": "AddSerializer",
+      "classification": "generated"
+    },
+    {
+      "from": "state",
+      "to": "wire",
+      "label": "dispatch",
+      "classification": "runtime",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Why there is no reflection",
+      "items": [
+        "The generator runs during C# compilation, not during baking",
+        "By the time a world exists, serialization is already machine code",
+        "Dispatch is an index into a buffer plus an indirect call",
+        "An assembly that does not reference NetCode is skipped, silently"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Quantization is a compression trick",
+      "items": [
+        "Copy to snapshot rounds value times scale into an integer",
+        "The change mask then compares integers, not floats",
+        "Values that jitter in the last decimal place compare equal and cost nothing",
+        "Too coarse and prediction can never agree, so you roll back every tick"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The delta is against a prediction",
+      "items": [
+        "Three baselines are kept, and a predictor extrapolates from the trend",
+        "It falls back to the newest baseline when the extrapolation is worse",
+        "The residual is entropy coded, so near-zero costs a handful of bits",
+        "Constant velocity is therefore almost free on the wire"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Read it yourself",
+      "items": [
+        "Create the source generator analyzer config from the Assets menu",
+        "Turn on write files to disk, then open the generated folder",
+        "Serialize is one guarded packed write per field, in plain C sharp",
+        "That is the entire wire format for that component"
+      ]
+    }
+  ]
+}

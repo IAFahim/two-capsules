@@ -1,0 +1,68 @@
+{
+  "id": "33-predicted-physics",
+  "title": "Predicted physics",
+  "map": "diagrams/33-predicted-physics.html",
+  "blurb": "A rigid body solver re-clocked onto the prediction tick, and the two things that correct it.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "The same solver, a different clock",
+      "focus": null,
+      "text": "Nothing about the physics solver changes when you make it predicted. What changes is the clock feeding it. It used to be driven by a wall clock accumulator that ticked once per frame. It is now driven by the prediction tick, which can issue ten edges in a single frame after a correction arrives. Everything on this map is a consequence of that one substitution."
+    },
+    {
+      "id": "relocate",
+      "title": "Physics is moved, not called",
+      "focus": "clock",
+      "text": "At the first world update, a configuration system walks the fixed step group, finds the physics group and every system ordered around it, and moves the whole set into the predicted fixed step group. Then it removes itself from the update list, because the move only needs to happen once. If you wrote a system that orders itself relative to physics inside the fixed step group, it is now in a different group from the thing it was ordering against, and it will silently run at the wrong time."
+    },
+    {
+      "id": "gate",
+      "title": "Two gates, and both must open",
+      "focus": "gate",
+      "text": "A rate manager decides whether the physics group runs at all. By default it demands an entity that is both a predicted ghost and has a physics velocity, unless lag compensation is switched on. Above that sits a second gate: on the client the prediction loop itself only runs when predicted ghosts exist. This pair is the mechanism behind the most common complaint in the forums, where a raycast against static level geometry returns nothing because the collision world was never built."
+    },
+    {
+      "id": "restore",
+      "title": "What a rollback actually puts back",
+      "focus": "snapshot",
+      "text": "There is nothing physics specific about the restore. When a snapshot arrives, the update system copies the server's fields into the components. When no snapshot arrives, the prediction backup restores the last full tick. Both paths copy back only the fields that are actually replicated. Mass, gravity factor, and collider blobs are not replicated, so they are never restored, and a mutation you make to one inside the prediction loop is applied once per replayed tick and never undone."
+    },
+    {
+      "id": "cost",
+      "title": "The price, stated plainly",
+      "focus": "backup",
+      "text": "Rollback cost is predicted entities multiplied by replayed ticks, and physics multiplies both terms. A solve is broadphase, narrowphase, and a constraint pass over every body in the predicted world, repeated for each replayed tick. Batching replayed ticks is the emergency valve, and it is a real accuracy loss, because a batched step pushes a larger delta through the solver and contacts resolve differently. Shrink the predicted set before you reach for batching."
+    }
+  ],
+  "nodes": {
+    "clock": {
+      "short": "The prediction group, issuing one tick edge per simulated tick.",
+      "deep": "On the server it advances once per frame. On the client it can advance many times in one frame, replaying every tick since the last correction. Everything downstream inherits that behaviour, including the solver, which is why physics had to be moved into this group in the first place."
+    },
+    "gate": {
+      "short": "The rate manager that decides whether physics runs this tick.",
+      "deep": "It has three modes. The default requires a predicted ghost carrying a physics velocity. A relaxed mode accepts any entity with a velocity or a collider. The third mode always runs. In every mode, when nothing matches and lag compensation is the only reason to run, physics runs only on the first time a tick is fully predicted."
+    },
+    "solver": {
+      "short": "The physics group, relocated out of the fixed step group at startup.",
+      "deep": "Its timestep is one over the simulation tick rate, multiplied by a configurable ratio that defaults to one. It never runs on a partial tick, so a rigid body's transform advances at most once per simulation tick no matter how fast you render. Anything smoother than that has to come from graphical smoothing."
+    },
+    "snapshot": {
+      "short": "The authoritative correction, copied out of the received snapshot.",
+      "deep": "It writes only the fields that carry a ghost field attribute. For a physics body that means the transform and the linear and angular velocity, the latter quantized to one thousandth of a unit per second. Correcting position without correcting velocity would leave the client re-diverging immediately from the same wrong momentum."
+    },
+    "bodies": {
+      "short": "The predicted rigid bodies, which must all be ghosts.",
+      "deep": "A dynamic body that is not a ghost cannot be rolled back, so it would be simulated forward several times per frame and never corrected. A validation system finds them and logs an error naming the offending entities, or moves them to another physics world index if you configured one."
+    },
+    "smooth": {
+      "short": "The render pose between two simulation ticks.",
+      "deep": "The package restricts the graphical smoothing component to predicted prefab variants, so that interpolated clients do not have physics smoothing fighting the snapshot interpolation that is already positioning the body. Smoothing writes a render pose and must never be read back into simulation, because that is a feedback loop that diverges."
+    },
+    "backup": {
+      "short": "A memory copy of the predicted state after the last full tick.",
+      "deep": "It exists so prediction can continue when no new server data has arrived, and it doubles as the reference for prediction error reporting and for smoothing the correction. The copy is of the whole component, but the restore touches only the replicated portion, which preserves any local state you keep beside it."
+    }
+  }
+}

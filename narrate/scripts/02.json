@@ -44,31 +44,70 @@
   "nodes": {
     "gather": {
       "short": "Reads the keyboard and writes a direction onto the capsule you own.",
-      "deep": "It filters on ghost owner is local, a tag NetCode adds to ghosts whose owner id matches yours. Without that filter you would write your input into every player's capsule in your world. It is also not Burst compiled, because the keyboard is managed."
+      "deep": "It filters on ghost owner is local, a tag NetCode adds to ghosts whose owner id matches yours. Without that filter you would write your input into every player's capsule in your world. It is also not Burst compiled, because the keyboard is managed.",
+      "types": [
+        "PlayerInput",
+        "IInputComponentData",
+        "GhostOwnerIsLocal",
+        "GhostOwner"
+      ]
     },
     "ring": {
       "short": "A ring of about sixty four ticks, each slot stamped with its tick.",
-      "deep": "History, not a single value. The server needs several ticks to tolerate loss, and rollback needs to replay the exact input of each replayed tick. A circular buffer with a timestamp per slot, where the consumer reads by timestamp rather than position."
+      "deep": "History, not a single value. The server needs several ticks to tolerate loss, and rollback needs to replay the exact input of each replayed tick. A circular buffer with a timestamp per slot, where the consumer reads by timestamp rather than position.",
+      "types": [
+        "InputBufferData",
+        "ICommandData",
+        "DynamicBuffer",
+        "NetworkTick"
+      ]
     },
     "send": {
       "short": "Sends the last several ticks in one unreliable packet.",
-      "deep": "The redundancy lives in the payload rather than the protocol, which is why input feels solid on a lossy link while positions still visibly hitch. A retransmit would arrive too late to matter, so nothing is retransmitted."
+      "deep": "The redundancy lives in the payload rather than the protocol, which is why input feels solid on a lossy link while positions still visibly hitch. A retransmit would arrive too late to matter, so nothing is retransmitted.",
+      "types": [
+        "CommandSendSystemGroup",
+        "AutoCommandTarget",
+        "CopyInputToCommandBufferSystemGroup"
+      ]
     },
     "predict": {
       "short": "The client's copy of the movement rule, running inside prediction.",
-      "deep": "It only touches entities whose simulate bit is enabled for the tick being simulated. Simulate is a clock enable line: the clock is running, and that bit decides who latches this edge. Omit it and a ten tick replay moves your capsule ten times too far."
+      "deep": "It only touches entities whose simulate bit is enabled for the tick being simulated. Simulate is a clock enable line: the clock is running, and that bit decides who latches this edge. Omit it and a ten tick replay moves your capsule ten times too far.",
+      "types": [
+        "PredictedSimulationSystemGroup",
+        "Simulate",
+        "PredictedGhost",
+        "NetworkTime"
+      ]
     },
     "srvmove": {
       "short": "The server's copy of that same system. Same code, same constants.",
-      "deep": "One world filter names both client and server simulation, so there is literally one implementation. Two would mean two behaviours, and two behaviours mean permanent disagreement. This is what server authoritative with client prediction means in practice."
+      "deep": "One world filter names both client and server simulation, so there is literally one implementation. Two would mean two behaviours, and two behaviours mean permanent disagreement. This is what server authoritative with client prediction means in practice.",
+      "types": [
+        "WorldSystemFilterFlags",
+        "SimulationSystemGroup",
+        "Simulate"
+      ]
     },
     "ghostsend": {
       "short": "Delta compresses truth against each connection's acknowledged baseline.",
-      "deep": "Every client has acknowledged a different tick, so the server remembers what each one knows and encodes against that. It then sorts by importance and fills a packet until the maximum size. A snapshot is not the world; it is as much of the world as fits, prioritised."
+      "deep": "Every client has acknowledged a different tick, so the server remembers what each one knows and encodes against that. It then sorts by importance and fills a packet until the maximum size. A snapshot is not the world; it is as much of the world as fits, prioritised.",
+      "types": [
+        "GhostSendSystem",
+        "GhostSendSystemData",
+        "GhostImportance",
+        "SnapshotData"
+      ]
     },
     "gpu": {
       "short": "Your capsule is drawn ahead of the server; everyone else's, behind it.",
-      "deep": "That is not a bug, it is the entire trade made explicit. You need your own capsule to answer instantly, and you need theirs to be smooth. Prediction buys the first, interpolation buys the second, and nobody renders the server's actual present."
+      "deep": "That is not a bug, it is the entire trade made explicit. You need your own capsule to answer instantly, and you need theirs to be smooth. Prediction buys the first, interpolation buys the second, and nobody renders the server's actual present.",
+      "types": [
+        "LocalToWorld",
+        "LocalTransform",
+        "SmoothingAction"
+      ]
     }
   }
 }

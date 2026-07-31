@@ -1,0 +1,262 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Two Clock Domains",
+    "subtitle": "Every ghost on a client lives in the server's past or the client's future — and ownership picks which",
+    "output": "diagrams/41-clock-domains.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "selector",
+        "label": "Ownership is the selector",
+        "focus": [
+          "authoring",
+          "owner"
+        ],
+        "note": "One prefab, one dropdown, and the same entity lands in different time domains on different machines."
+      },
+      {
+        "id": "past",
+        "label": "The past: a delay line",
+        "focus": [
+          "buffer",
+          "interp"
+        ],
+        "note": "Snapshots go into a ring; the read pointer trails the write pointer by a fixed delay. Late, never wrong."
+      },
+      {
+        "id": "future",
+        "label": "The future: speculative execution",
+        "focus": [
+          "replay",
+          "predict"
+        ],
+        "note": "Restore to the last confirmed tick, resimulate to now, every frame. Fast, often wrong, always corrected."
+      },
+      {
+        "id": "contagion",
+        "label": "The contagion rule",
+        "focus": [
+          "interp",
+          "predict"
+        ],
+        "note": "Two entities in different time domains cannot interact correctly. Contact spreads prediction."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "authoring",
+      "type": "cloud",
+      "label": "GhostAuthoringComponent",
+      "sublabel": "DefaultGhostMode · SupportedGhostModes",
+      "tag": "bake time",
+      "pos": [
+        332,
+        50
+      ],
+      "size": [
+        240,
+        68
+      ]
+    },
+    {
+      "id": "server",
+      "type": "backend",
+      "label": "Server tick T",
+      "sublabel": "the only real present",
+      "tag": "authority",
+      "pos": [
+        40,
+        330
+      ],
+      "size": [
+        180,
+        68
+      ]
+    },
+    {
+      "id": "owner",
+      "type": "security",
+      "label": "GhostOwner",
+      "sublabel": "is this NetworkId mine?",
+      "tag": "1 predicted, N−1 interpolated",
+      "pos": [
+        340,
+        330
+      ],
+      "size": [
+        224,
+        68
+      ]
+    },
+    {
+      "id": "buffer",
+      "type": "database",
+      "label": "Snapshot ring",
+      "sublabel": "write pointer = newest tick",
+      "tag": "32 slots",
+      "pos": [
+        680,
+        160
+      ],
+      "size": [
+        200,
+        68
+      ]
+    },
+    {
+      "id": "interp",
+      "type": "frontend",
+      "label": "Interpolated",
+      "sublabel": "never simulated on the client",
+      "tag": "cost ≈ 0",
+      "pos": [
+        1010,
+        160
+      ],
+      "size": [
+        200,
+        68
+      ]
+    },
+    {
+      "id": "replay",
+      "type": "backend",
+      "label": "Restore + replay",
+      "sublabel": "rewind to the snapshot tick",
+      "tag": "every frame",
+      "pos": [
+        680,
+        500
+      ],
+      "size": [
+        200,
+        68
+      ]
+    },
+    {
+      "id": "predict",
+      "type": "frontend",
+      "label": "Predicted",
+      "sublabel": "simulated ahead of the server",
+      "tag": "ticks × entities",
+      "pos": [
+        1010,
+        500
+      ],
+      "size": [
+        200,
+        68
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "the server's past · a delay line · late, never wrong",
+      "wraps": [
+        "buffer",
+        "interp"
+      ],
+      "pad": 22
+    },
+    {
+      "kind": "region",
+      "label": "the client's future · speculative execution · fast, often wrong",
+      "wraps": [
+        "replay",
+        "predict"
+      ],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    {
+      "from": "authoring",
+      "to": "owner",
+      "label": "mode + mask",
+      "variant": "dashed",
+      "labelDy": 120
+    },
+    {
+      "from": "server",
+      "to": "owner",
+      "label": "snapshot",
+      "variant": "emphasis"
+    },
+    {
+      "from": "owner",
+      "to": "buffer",
+      "label": "not mine",
+      "variant": "emphasis"
+    },
+    {
+      "from": "owner",
+      "to": "replay",
+      "label": "mine",
+      "variant": "emphasis"
+    },
+    {
+      "from": "buffer",
+      "to": "interp",
+      "label": "2 ticks late"
+    },
+    {
+      "from": "replay",
+      "to": "predict",
+      "label": "resimulate"
+    },
+    {
+      "from": "interp",
+      "to": "predict",
+      "label": "contact forces conversion",
+      "variant": "security",
+      "labelDy": 148
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Two domains, one sentence each",
+      "items": [
+        "Interpolated: the entity lives in the server's past, played back from a buffer",
+        "Predicted: the entity lives in the client's future, resimulated every frame",
+        "OwnerPredicted: the owning client predicts it, every other client interpolates it",
+        "So one prefab sits in different time domains on different machines"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The contagion rule",
+      "items": [
+        "A predicted entity cannot correctly interact with an interpolated one",
+        "They are not simulating the same instant — one is ahead, one is behind",
+        "Anything a predicted entity touches must itself be predicted",
+        "This is why predicting one thing quietly ends up predicting a whole subsystem"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What each mode costs per frame",
+      "items": [
+        "Interpolated: two buffer reads and a lerp, no gameplay systems run",
+        "Predicted: ticks_behind × predicted entities × your predicted systems",
+        "OwnerPredicted: one entity pays the replay bill, N−1 pay almost nothing",
+        "The replay count is the same for every predicted ghost, so the set size is the knob"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The defaults you inherit",
+      "items": [
+        "DefaultGhostMode = Interpolated · Runtime/Authoring/BaseGhostSettings.cs:97",
+        "SupportedGhostModes = All · BaseGhostSettings.cs:102",
+        "OptimizationMode = Dynamic · BaseGhostSettings.cs:108",
+        "Importance = 1, clamped to a minimum of 1 · BaseGhostSettings.cs:115"
+      ]
+    }
+  ]
+}

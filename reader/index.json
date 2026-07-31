@@ -17,7 +17,7 @@
   {
     "slug": "03-worlds",
     "title": "03 \u00b7 Worlds: six machines in one process",
-    "blocks": 15
+    "blocks": 16
   },
   {
     "slug": "04-burst-and-jobs",
@@ -72,7 +72,7 @@
   {
     "slug": "14-ghosts",
     "title": "14 \u00b7 Ghosts: replicating state",
-    "blocks": 14
+    "blocks": 15
   },
   {
     "slug": "15-the-tick",
@@ -92,7 +92,7 @@
   {
     "slug": "18-interpolation",
     "title": "18 \u00b7 Interpolation",
-    "blocks": 17
+    "blocks": 18
   },
   {
     "slug": "19-connection-lifecycle",
@@ -147,7 +147,7 @@
   {
     "slug": "29-netcode-settings",
     "title": "29 \u00b7 Every knob in NetCode",
-    "blocks": 18
+    "blocks": 19
   },
   {
     "slug": "30-feel",
@@ -163,5 +163,60 @@
     "slug": "32-tying-it-together",
     "title": "32 \u00b7 Tying it together",
     "blocks": 12
+  },
+  {
+    "slug": "33-predicted-physics",
+    "title": "33 \u00b7 Predicted physics",
+    "blocks": 30
+  },
+  {
+    "slug": "34-predicted-spawning",
+    "title": "34 \u00b7 Predicted spawning",
+    "blocks": 29
+  },
+  {
+    "slug": "35-lag-compensation",
+    "title": "35 \u00b7 Lag compensation",
+    "blocks": 33
+  },
+  {
+    "slug": "36-ghost-codegen",
+    "title": "36 \u00b7 Ghost serializer code generation",
+    "blocks": 34
+  },
+  {
+    "slug": "37-interest-management",
+    "title": "37 \u00b7 Interest management: scale and relevancy",
+    "blocks": 34
+  },
+  {
+    "slug": "38-profiling",
+    "title": "38 \u00b7 Profiling for real",
+    "blocks": 31
+  },
+  {
+    "slug": "39-connection-topologies",
+    "title": "39 \u00b7 Connection topologies",
+    "blocks": 34
+  },
+  {
+    "slug": "40-cheat-surface",
+    "title": "40 \u00b7 The cheat surface",
+    "blocks": 34
+  },
+  {
+    "slug": "41-clock-domains",
+    "title": "41 \u00b7 Clock domains: choosing a ghost mode",
+    "blocks": 26
+  },
+  {
+    "slug": "42-which-world",
+    "title": "42 \u00b7 Which world am I in?",
+    "blocks": 57
+  },
+  {
+    "slug": "43-physics-on-the-server",
+    "title": "43 \u00b7 Physics on the server",
+    "blocks": 42
   }
 ]

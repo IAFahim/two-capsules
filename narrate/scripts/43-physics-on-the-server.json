@@ -1,0 +1,81 @@
+{
+  "id": "43-physics-on-the-server",
+  "title": "Physics on the server",
+  "map": "diagrams/43-physics-on-the-server.html",
+  "blurb": "Where the solver actually lives, what the tick does to it, and the budget you sign up for when everything is a rigid body.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "The solver has no world filter",
+      "focus": null,
+      "text": "Open the physics package and search it for world filter attributes. The runtime has none. The only ones in the whole package are on baking systems and debug display systems. The physics group carries exactly one attribute, saying which group it updates in, and nothing about where it is allowed to exist. That silence is the answer to the question. An unfiltered system resolves to the default flag, the default flag is replaced by the parent group's child default, and a chain that ends at the root simulation group falls through to a hard coded fallback: local, server and client simulation. So the solver runs in the single player world, the client world and the server world. It does not run in a thin client."
+    },
+    {
+      "id": "reclock",
+      "title": "Netcode re-clocks the whole group",
+      "focus": "predict",
+      "text": "Physics normally runs in the fixed step group, driven by an accumulator against wall clock time. That is the wrong clock for prediction, because prediction needs to run the same tick several times. So netcode moves it, on the client and on the server both. The move is a transitive closure, not a list: it seeds a set with the physics group, then repeatedly scans the fixed step group adding any system whose ordering attributes name something already in the set, looping until a full pass adds nothing. Think of it as a clock domain crossing. The logic is untouched. Only the clock feeding it is swapped, from a wall clock at one edge per frame to a prediction tick that can issue many edges in a single frame."
+    },
+    {
+      "id": "free",
+      "title": "Static bodies are free",
+      "focus": "staticbake",
+      "text": "The physics world is built from two queries. Dynamic bodies are entities that have a velocity. Static bodies are entities that have a collider and no velocity. The export system writes back exactly two component types, a transform and a velocity, so a static body never has anything written to it and never changes. And the validation system that complains about non ghost dynamic bodies only matches entities that have a velocity, so a static collider never trips it. The rule that falls out is where the bandwidth is won in a physics game: a body baked into a subscene that never moves needs no ghost, no snapshot and no prediction. Both worlds baked it from the same data, so both already agree."
+    },
+    {
+      "id": "contagion",
+      "title": "The contagion rule, and the arithmetic",
+      "focus": "predict",
+      "text": "A predicted body and an interpolated body are in different time domains. One is ahead of the server, one is behind it. They are never simultaneously correct, so a contact between them is a contact between two different moments, and it resolves differently on every machine. In a game where everything is physical that rule propagates. If the player can push a crate, the crate is predicted. If the crate can knock a barrel, the barrel is predicted. The predicted set is the transitive closure of what can be touched by something predicted. Now the arithmetic. The server steps once per tick, sixty times a second by default. The client steps once per tick it is replaying, and the replay depth is roughly round trip time converted to ticks. On an ordinary connection that is around eight solves per rendered frame where the server does one. The server's cost scales with body count. The client's scales with body count times replay depth."
+    },
+    {
+      "id": "wire",
+      "title": "What actually replicates",
+      "focus": "interp",
+      "text": "The package ships two default variants for physics and they are the entire contract. Velocity is replicated, linear and angular, quantized to a thousandth of a unit, and only sent to clients that are predicting the ghost. Graphical smoothing is restricted to server and predicted client versions, which is a deletion rather than an addition, so that an interpolated client does not have physics smoothing fighting the snapshot interpolation already positioning the body. That table is complete, and the completeness is the point. Mass, gravity factor, damping and colliders appear nowhere in the netcode runtime. They are not replicated, and therefore they are never rolled back. Mutate one inside the prediction loop and the mutation applies once per replayed tick and is never undone."
+    },
+    {
+      "id": "escape",
+      "title": "The second physics world",
+      "focus": "otherworld",
+      "text": "The predicted physics world can only contain things that roll back, so a dynamic body that is not a ghost is an error. If you want ragdolls, debris or cosmetic impacts, and in a physics heavy game you will, they have to leave the default index. Set the non ghost world index in the netcode physics config, give the prefabs a matching index, and the validation system stops complaining while the predicted world stays small. The config is baked from a component in a subscene, and when it is absent the rate manager falls through to a default initialised struct, which is enum value zero, which is the narrowest of the three run modes. No config is not everything on. It is the most restrictive gate."
+    }
+  ],
+  "nodes": {
+    "authored": {
+      "short": "A shape plus a motion type, authored before any world exists.",
+      "deep": "Two authoring stacks bake to the same runtime components. The hybrid path bakes Unity's own rigid body and collider components. The custom path adds its own body and shape behaviours plus joints, motors and material tags. Never mix them on one body hierarchy: mixing double bakes, drops colliders, or produces conflicting motion types.",
+      "types": []
+    },
+    "moves": {
+      "short": "The only question that matters first: does this body have a velocity?",
+      "deep": "This is not a design preference, it is the query the physics world build actually runs. Bodies with a velocity go into the dynamic set. Bodies with a collider and no velocity go into the static set. Everything downstream on this map follows from which side of that query a body lands on.",
+      "types": []
+    },
+    "staticbake": {
+      "short": "Baked level geometry. No ghost, no snapshot, no prediction, no cost beyond broadphase.",
+      "deep": "Start here and justify every promotion out of it. The export step writes back only transforms and velocities, so a static body is never written to at runtime and cannot drift. Both worlds baked it from the same subscene, so they already agree without a single byte on the wire.",
+      "types": []
+    },
+    "touch": {
+      "short": "Can a player reach this body, directly or through a chain of contacts?",
+      "deep": "The answer is transitive, and that is the expensive part. A body the player can push must be predicted. Anything that body can hit must also be predicted, or the contact happens between two different moments. Draw the closure honestly before you count the budget, because the closure is usually larger than the intuition.",
+      "types": []
+    },
+    "interp": {
+      "short": "The server solves, the client interpolates, the client's solver is never involved.",
+      "deep": "This is the cheapest replicated option and it is under used. Anything dynamic the local player cannot touch belongs here: distant props, vehicles you only watch, machinery. Netcode strips physics graphical smoothing from the interpolated variant precisely so smoothing does not fight the snapshot interpolation.",
+      "types": ["GhostSendType", "GhostPrefabType"]
+    },
+    "predict": {
+      "short": "The same rule executed in both worlds, and re-executed on every replayed tick.",
+      "deep": "Each predicted body costs a full broadphase, narrowphase and constraint solve per replayed tick, not a transform integration. Raising substeps or solver iterations multiplies against replay depth, which is why both are the wrong first knob under prediction. Fix the predicted body count first.",
+      "types": ["PredictedGhost", "PredictedFixedStepSimulationSystemGroup", "ClientTickRate"]
+    },
+    "otherworld": {
+      "short": "A second physics index for dynamic bodies that are not ghosts.",
+      "deep": "The predicted world can only hold things that roll back, so a dynamic non ghost left in the default index is flagged as an error naming the offending entities. Configure the alternate index and the same bodies become legal client only debris. This is the only way to have ragdolls in a predicted physics game without failing validation.",
+      "types": ["PredictedPhysicsNonGhostWorld", "NetCodePhysicsConfig", "PhysicGroupRunMode"]
+    }
+  }
+}

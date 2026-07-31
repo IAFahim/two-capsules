@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "The Territory",
+    "subtitle": "Six regions between a cache line and two capsules on a screen — start anywhere, but the ground is on the left",
+    "output": "diagrams/00-world.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "ground",
+        "label": "Start on the ground",
+        "focus": [
+          "chunk",
+          "machine"
+        ],
+        "note": "Memory first. Everything above here is a consequence of how sixteen kilobytes are arranged."
+      },
+      {
+        "id": "wire",
+        "label": "Follow the wire",
+        "focus": [
+          "machine",
+          "wire",
+          "clocks"
+        ],
+        "note": "One direction leaves the process. Everything that comes back is somebody else's past."
+      },
+      {
+        "id": "hard",
+        "label": "Where it gets hard",
+        "focus": [
+          "clocks",
+          "rollback",
+          "adversary"
+        ],
+        "note": "Prediction, rollback, and the assumption that the machine on the other end is lying to you."
+      },
+      {
+        "id": "unmapped",
+        "label": "Not surveyed yet",
+        "focus": [
+          "loop",
+          "stack"
+        ],
+        "note": "Two regions with chapters but no maps. The white space on an atlas is an invitation."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "chunk",
+      "type": "database",
+      "label": "The chunk",
+      "sublabel": "16 KiB, one allocation, one stride",
+      "tag": "I · the machine underneath",
+      "pos": [
+        60,
+        330
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "machine",
+      "type": "backend",
+      "label": "The machine",
+      "sublabel": "worlds, jobs, one process",
+      "tag": "I · the machine underneath",
+      "pos": [
+        360,
+        330
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "loop",
+      "type": "cloud",
+      "label": "The update loop",
+      "sublabel": "bootstrap, groups, baking",
+      "tag": "II · unmapped",
+      "pos": [
+        360,
+        90
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "stack",
+      "type": "cloud",
+      "label": "The stack we build on",
+      "sublabel": "Core, Grove, Canopy, Nerve",
+      "tag": "V · unmapped",
+      "pos": [
+        660,
+        90
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "wire",
+      "type": "messagebus",
+      "label": "The wire",
+      "sublabel": "intent out, snapshots back",
+      "tag": "III · the wire",
+      "pos": [
+        660,
+        330
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "clocks",
+      "type": "frontend",
+      "label": "Two clock domains",
+      "sublabel": "the past, the future, and ownership",
+      "tag": "III · the wire",
+      "pos": [
+        960,
+        330
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "rollback",
+      "type": "backend",
+      "label": "The rollback loop",
+      "sublabel": "restore, replay, carry on",
+      "tag": "III · the wire",
+      "pos": [
+        1260,
+        330
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "adversary",
+      "type": "security",
+      "label": "Load and the adversary",
+      "sublabel": "physics, lag compensation, cheats",
+      "tag": "IV · feel and scale",
+      "pos": [
+        960,
+        570
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "capsules",
+      "type": "frontend",
+      "label": "Our two capsules",
+      "sublabel": "the smallest thing that is really a game",
+      "tag": "VI · the destination",
+      "pos": [
+        1260,
+        570
+      ],
+      "size": [
+        200,
+        70
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "forty maps planned · twelve on the ground · the empty regions are an invitation",
+      "wraps": [
+        "chunk",
+        "machine",
+        "loop",
+        "stack",
+        "wire",
+        "clocks",
+        "rollback",
+        "adversary",
+        "capsules"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "chunk",
+      "to": "machine",
+      "label": "zoom out",
+      "variant": "emphasis"
+    },
+    {
+      "from": "machine",
+      "to": "wire",
+      "label": "outward",
+      "variant": "emphasis"
+    },
+    {
+      "from": "wire",
+      "to": "clocks",
+      "label": "which now?",
+      "variant": "emphasis"
+    },
+    {
+      "from": "clocks",
+      "to": "rollback",
+      "label": "on a miss",
+      "variant": "emphasis"
+    },
+    {
+      "from": "machine",
+      "to": "loop",
+      "label": "who ticks it",
+      "variant": "dashed",
+      "labelDy": 100
+    },
+    {
+      "from": "loop",
+      "to": "stack",
+      "label": "built on top",
+      "variant": "dashed"
+    },
+    {
+      "from": "clocks",
+      "to": "adversary",
+      "label": "under load",
+      "labelDy": 100
+    },
+    {
+      "from": "rollback",
+      "to": "capsules",
+      "label": "all of it, running",
+      "labelDy": 100
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How to walk this",
+      "items": [
+        "Left to right is roughly bottom to top: memory, engine, network, game",
+        "Nothing here is a prerequisite for anything else — the arrows are roads, not gates",
+        "If you already think in cache lines, the chunk is the fastest way in",
+        "If you want the surprise first, go straight to the two clock domains"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The three facts the whole territory rests on",
+      "items": [
+        "Data lives in fixed-size chunks and is read by stride, never by pointer",
+        "The client sends intent and the server sends truth, and nothing else crosses",
+        "Nobody on either screen is looking at the present, and that is deliberate"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Two regions with no maps yet",
+      "items": [
+        "II · world, systems, update loop — bootstrap, system groups, baking, blobs",
+        "V · the BovineLabs stack — Grove as a bytecode virtual machine, Canopy, Nerve",
+        "Both have chapters. Neither has been drawn.",
+        "The atlas lists forty. That gap is the honest state of the work."
+      ]
+    }
+  ]
+}

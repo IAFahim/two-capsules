@@ -98,13 +98,23 @@ precision no one can see. Match it to your world scale, not to a habit.
 
 | Knob | Where | Effect |
 |---|---|---|
-| `GhostSendSystemData.MaxSendEntities` | server | hard cap on ghosts per snapshot |
-| `MaxSendChunks` | server | cap on chunks visited |
-| `MinSendImportance` | server | floor below which a ghost waits |
+| `GhostSendSystemData.MaxSendChunks` | server | cap on chunks actually serialised into a snapshot |
+| `MaxIterateChunks` | server | cap on chunks the scheduler will even look at |
+| `MinSendImportance` | server | floor below which a **chunk** waits, applied *before* importance scaling |
 | `FirstSendImportanceMultiplier` | server | boosts newly-spawned ghosts so they appear fast |
 | `IrrelevantImportanceDownScale` | server | how hard to deprioritise the barely-relevant |
+| `BaseGhostSettings.MaxSendRate` | per prefab | ceiling on how often this ghost type may be sent at all |
+| `UseSingleBaseline` | per prefab | skip multi-baseline delta search — cheaper CPU, worse compression |
 | `GhostImportance` | per ghost | your own scoring function (distance, team, threat) |
 | `GhostRelevancy` | per connection | binary in/out — the ghost does not exist for them |
+
+> **💀 The scheduler thinks in chunks, not entities.** `MaxSendEntities` used to be the
+> obvious knob and no longer works — in netcode 6.6 it carries
+> `[Obsolete("No longer functional!…")]` and `[ReadOnly]` at
+> `Runtime/Snapshot/GhostSendSystem.cs:242`. Reach for `MaxSendChunks` and `MaxIterateChunks`
+> instead, and note that `MinSendImportance` gates a whole chunk, not one ghost. If your
+> mental model is "cap the entity count," you will set a field that silently does nothing.
+> Chapter 37 covers the chunk scheduler properly.
 
 **Importance vs relevancy** is the distinction to internalise:
 

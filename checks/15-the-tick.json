@@ -1,0 +1,86 @@
+{
+  "id": "15-the-tick",
+  "title": "The tick",
+  "source": {"chapter": "15-the-tick", "map": "diagrams/02-keypress.html"},
+  "checks": [
+    {
+      "id": "one-shot-in-the-prediction-group",
+      "kind": "predict",
+      "setup": "Firing is handled in the prediction group, next to movement, so the muzzle flash and the recoil kick land on the same tick as the shot:\n\n    if (input.Fire && cooldown <= 0) {\n        SpawnMuzzleFlash(ecb, muzzle);\n        cooldown = FireRate;\n    }\n\nQA on the office machines — all 60 Hz panels — reports nothing. QA on the one 144 Hz machine reports \"the gun sometimes fires three flashes per click\". You cannot reproduce it, and the shooting logic is obviously correct.",
+      "ask": "Why does the monitor refresh rate decide how many flashes you get?",
+      "rightIf": [
+        "says a frame can contain zero, one, or many ticks, and at 144 Hz on a 60 Hz sim most frames contain no new tick",
+        "identifies partial ticks: the prediction group simulates a fraction of a tick for presentation and throws it away",
+        "concludes the branch runs on partial ticks too, so the one-shot spawn happens several times for a single real tick",
+        "names IsFirstTimeFullyPredictingTick as the gate for one-shot side effects",
+        "notes continuous integration (moving a transform) is safe in partial ticks and one-shots are not"
+      ],
+      "answer": "At 144 Hz with a 60 Hz simulation, most frames have no new tick to run — so instead of freezing the picture, NetCode runs a *partial* tick: it simulates a fraction of a tick purely so there is something new to draw, then throws the result away and re-runs the full tick when it genuinely arrives. Your branch does not know that. It evaluates on each of those passes, and each time it spawns a flash entity that is not thrown away with the simulation state, because a spawned entity is an external side effect. Three passes over the same tick, three flashes. On a 60 Hz panel the pass count is one and the bug does not exist, which is why half your QA cannot see it.\n\nMoving a transform is fine here — it is recomputed from the same input and lands on the same value. Anything that leaves a mark outside the simulation needs the gate: `IsFirstTimeFullyPredictingTick`.\n\nEvery \"my gun fires three bullets per trigger pull\" bug is this one.",
+      "because": "The prediction group is a clock that can tick more than once per frame and can tick a fraction of a tick. Idempotent work survives that; a side effect counts every pass.",
+      "goDeeper": {"chapter": "15-the-tick", "node": "predict", "types": ["NetworkTime", "PredictedSimulationSystemGroup"]}
+    },
+    {
+      "id": "networktick-compared-raw",
+      "kind": "predict",
+      "setup": "You store the tick a projectile was fired on and expire it after 300 ticks:\n\n    if (currentTick.SerializedData > shot.FiredTick.SerializedData + 300)\n        Destroy(projectile);\n\nIt is correct. It is tested. It runs in QA for two weeks straight without a single failure, and it runs in the first playtest for about nine hours.",
+      "ask": "What happens at hour nine, why nine, and what is the comparison you should have used?",
+      "rightIf": [
+        "identifies NetworkTick as a wrapping uint, so raw comparison breaks at the wrap",
+        "says at the wrap the addition overflows / the ordering inverts, so the condition flips for everything in flight",
+        "describes the symptom: every projectile expires instantly, or none of them do, for a window around the wrap",
+        "names IsNewerThan as the comparison that understands modular distance",
+        "connects the nine hours to the counter reaching its range at the tick rate"
+      ],
+      "answer": "`NetworkTick` is a wrapping counter, and you compared it as if it were a number line. At 60 Hz a 32-bit tick counter takes a bit over two years to wrap — but a session that starts from a non-zero tick, or a 32-bit counter you truncated somewhere, or simply the moment the addition overflows, all produce the same event: the ordering inverts. For a window around that point every in-flight projectile either expires on the tick it was created or never expires at all, and then everything is fine again for another two years, which is the least debuggable failure profile a bug can have.\n\n`tick.IsNewerThan(other)` exists because this is a sequence-number comparison, the same one TCP does, and modular distance is the only correct way to order a wrapping counter. Comparing raw values works for hours and then breaks once, catastrophically.\n\n(If you named a different wrap interval than nine hours, that is fine — the interval depends on the width and the rate. What matters is that there is one, and that the failure is a single window, not a gradual drift.)",
+      "because": "A wrapping counter has no total order. It has a comparator that understands modular distance, and using `<` on it is a correctness bug with a timer on it.",
+      "goDeeper": {"chapter": "15-the-tick", "types": ["NetworkTick", "NetworkTime"]}
+    },
+    {
+      "id": "command-arrived-late",
+      "kind": "choice",
+      "setup": "A player on a 4G connection reports that inputs get \"eaten\" — they press jump, nothing happens, they press again and it works. It is intermittent, it is worse when the connection is worse, and their local capsule *does* respond instantly every time. It is only the server that misses it.\n\nYou have Play Mode Tools open on a client with emulation matching their conditions. Command age is climbing.",
+      "ask": "What is happening to those inputs?",
+      "options": [
+        {
+          "text": "The command for that tick reached the server after the server had already simulated the tick, so it was dropped and the server extrapolated from the last input it had.",
+          "right": true,
+          "why": "A command is only useful before its tick is simulated. The client's lead exists to make sure it arrives in time, and when jitter exceeds the lead the command misses its slot. Locally the client predicted with the input, so the player felt it — and then the server's correction rolled it back, which reads as the input being eaten. Rising command age is the direct measurement of the lead losing the race."
+        },
+        {
+          "text": "The input packet was lost. Unreliable transport, no retransmit, so that tick's input is simply gone.",
+          "right": false,
+          "why": "The most reasonable-sounding wrong answer, and the one that sends you to look at the transport. Each command packet carries the last few ticks of input, not just one, so a single lost packet is covered by the next one. The redundancy is in the payload precisely so that loss alone does not eat inputs — which means when an input really does vanish, loss is not the first suspect."
+        },
+        {
+          "text": "The input gathering system missed a frame, so the keypress was never written into the component.",
+          "right": false,
+          "why": "Possible in general, but ruled out by the evidence: the local capsule responded, which means the input was gathered, written, and predicted with. If gathering had missed it, the player would have felt nothing locally either. Reading the symptom carefully eliminates this before you open the input code."
+        },
+        {
+          "text": "The server is running behind and batching ticks, so several ticks merged into one step and the input got merged away.",
+          "right": false,
+          "why": "Tick batching does degrade input fidelity and this would be a real cause — on a struggling server. But it is a server-side symptom affecting all players at once, and this report is one player on one bad connection while everyone else is fine. Match the blast radius of the symptom to the blast radius of the cause."
+        }
+      ],
+      "answer": "The client runs ahead so that a command for tick T is in the server's hands before the server simulates T. Jitter eats that margin; when it runs out the command arrives to a tick that is already history and the server extrapolates instead. The local capsule felt the input because the client predicted with it, and then the correction took it away — hence \"eaten\". Look at command age before you look at your input code.",
+      "because": "The prediction lead is a jitter budget. When jitter exceeds it, the command misses its slot, and the server does not wait for anybody.",
+      "goDeeper": {"chapter": "15-the-tick", "node": "send", "types": ["NetworkTime", "ClientTickRate", "ICommandData"]}
+    },
+    {
+      "id": "doubling-the-tick-rate",
+      "kind": "predict",
+      "setup": "The game feels a touch floaty. Someone proposes doubling `SimulationTickRate` from 60 to 120 — one field, and input latency halves. The prototype confirms it: on the dev LAN it feels noticeably crisper and the server frame time is still comfortable.",
+      "ask": "Name what else doubled, and describe the specific condition under which this change makes the game worse than it was at 60.",
+      "rightIf": [
+        "lists server CPU per second of wall clock roughly doubling",
+        "notes bandwidth rises if the send rate follows the tick rate",
+        "identifies the multiplier that matters most: a correction now spans twice as many replayed ticks for the same latency spike",
+        "concludes a 200 ms hiccup that cost ~12 replayed ticks now costs ~24, so rollback cost per correction doubles",
+        "states the failure condition: the change is free on a LAN and expensive exactly when the network is bad, which is when you could least afford it"
+      ],
+      "answer": "Everything downstream of the tick multiplied, and the LAN is the one environment where you cannot see any of it. Server CPU per wall-clock second doubles. Bandwidth rises with the send rate if you let it follow. And the one that bites: rollback cost is (ticks to replay) x (cost of your predicted systems), and a fixed-duration latency spike now maps to twice as many ticks. A 200 ms spike was about 12 replayed ticks at 60 Hz; at 120 Hz it is about 24. If your predicted simulation costs 2 ms per tick, that frame went from 24 ms to 48 ms — you were dropping one frame and now you are dropping three.\n\nSo the change buys you crispness in the good case and pays for it in the bad case, and your prototype only measured the good case. Tick rate multiplies through everything, which is why it is a design decision and not a tuning knob.",
+      "because": "The tick rate is the denominator of every per-tick cost in the system, including the one you only pay when the network misbehaves.",
+      "goDeeper": {"chapter": "15-the-tick", "types": ["ClientServerTickRate", "PredictedSimulationSystemGroup"]}
+    }
+  ]
+}

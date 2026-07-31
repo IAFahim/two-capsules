@@ -1,0 +1,119 @@
+{
+  "id": "39-connection-topologies",
+  "title": "The Transport Stack",
+  "map": "diagrams/39-connection-topologies.html",
+  "blurb": "From a call to Listen down to the bytes, and where a relay actually sits.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Four independent choices",
+      "focus": null,
+      "text": "People collapse four separate decisions into one word and then argue about it. Topology is who owns the authoritative simulation. The driver store is which driver instances exist. The interface is how bytes leave the process. Reachability is whether the client can address the host at all. A relay answers the fourth question and changes nothing about the first."
+    },
+    {
+      "id": "worlds",
+      "title": "There is no client hosted mode",
+      "focus": "api",
+      "text": "The play type has exactly three values. Client and server creates both worlds in one process, which is a listen server. Client creates one world that must connect to something. Server creates one world that can only listen. What people call client hosting is simply client and server running on a player's machine, with every consequence that implies for who you are trusting."
+    },
+    {
+      "id": "ctor",
+      "title": "One property is the extension point",
+      "focus": "ctor",
+      "text": "A single static property holds the driver constructor, and swapping it is how you inject relay parameters, transport layer security, or unusual queue sizes. You do not write driver creation by hand: the default builder gives you a register helper for every combination, and you mutate the settings object before handing it over."
+    },
+    {
+      "id": "two",
+      "title": "The server holds two drivers",
+      "focus": "store",
+      "text": "A server in the editor usually registers two drivers: one using inter process communication for the client living in the same process, and one socket driver for everyone else. The client picks the in process route only when a server world already exists and the network simulator is off. That last condition is why turning the simulator on forces sockets, since there would otherwise be nothing to emulate."
+    },
+    {
+      "id": "pipes",
+      "title": "The pipeline stack",
+      "focus": "wire",
+      "text": "Each driver creates three pipelines. Unreliable sequenced carries snapshots and commands. Reliable sequenced carries remote procedure calls. A fragmenting pipeline carries snapshots too big for one message. In the editor, with the simulator on, a fourth stage is appended to all three on the client only. Each stage adds header bytes, and the send system subtracts them before deciding how big a snapshot may be."
+    },
+    {
+      "id": "relay",
+      "title": "What is not in the box",
+      "focus": "relay",
+      "text": "Search the whole transport package for hole punching or address translation traversal and you find nothing. There is a relay client that takes an endpoint, an allocation identifier, and a key. Everything that produces those values, along with matchmaking, lobbies, and hosted fleets, is a service running somewhere else. This book verified the struct and the driver parameter, and it verified nothing about the service."
+    }
+  ],
+  "nodes": {
+    "api": {
+      "short": "The singleton your game calls to listen or to connect.",
+      "deep": "It also exposes the driver store itself, so you can ask which address a given driver actually bound to. When a listen server's own player feels mysteriously laggy, that query tells you whether the local connection went over the in process driver or fell back to the loopback socket.",
+      "types": [
+        "NetworkStreamDriver",
+        "NetworkEndpoint",
+        "NetCodeConnectionEvent"
+      ]
+    },
+    "ctor": {
+      "short": "A static property you replace to control how drivers are built.",
+      "deep": "It has two methods, one for the client world and one for the server world, and it lazily defaults to a constructor that registers in process and socket drivers. Assign your own before any world is created. Relay parameters, certificates, and queue sizes are all just settings you apply before calling the register helper.",
+      "types": [
+        "INetworkStreamDriverConstructor",
+        "DefaultDriverBuilder",
+        "NetworkSettings"
+      ]
+    },
+    "store": {
+      "short": "An array of driver instances, each tagged in process or socket.",
+      "deep": "The server usually holds two, the client holds one. The order matters more than people expect: the local client only gets the fast in process driver if the server world already exists, so you must start listening before you try to connect. Get that wrong and your host player quietly routes through the loopback socket.",
+      "types": [
+        "NetworkDriverStore",
+        "TransportType",
+        "NetworkDriverInstance"
+      ]
+    },
+    "relay": {
+      "short": "An allocation from a hosted service: an endpoint, a key, a join code.",
+      "deep": "Netcode applies it as driver settings on the socket driver only. On a server the in process driver is deliberately registered without relay parameters, so the host's own player keeps the fast path while remote clients take the longer route. A relay is a reachability fix, not a topology, and it costs an extra hop of latency.",
+      "types": [
+        "RelayServerData",
+        "RelayAllocationId",
+        "RelayHMACKey"
+      ]
+    },
+    "ipc": {
+      "short": "An in process driver with no socket, no latency, and guaranteed delivery.",
+      "deep": "It is what makes a listen server's own player feel instant, and it is also what makes editor testing dishonest, because a perfect link hides exactly the class of bug that ships. Develop with the simulator on, which forces even the local client onto a real socket.",
+      "types": [
+        "IPCNetworkInterface",
+        "ClientServerBootstrap",
+        "NetworkDriver"
+      ]
+    },
+    "socket": {
+      "short": "A datagram driver, or a web socket driver when targeting a browser.",
+      "deep": "A browser client cannot open a datagram socket, so it uses web sockets, and it cannot listen at all. The default server constructor throws for that target and tells you to build a custom constructor using relay settings instead. This is the one case where reachability dictates topology.",
+      "types": [
+        "UDPNetworkInterface",
+        "WebSocketNetworkInterface",
+        "NetworkDriver"
+      ]
+    },
+    "local": {
+      "short": "The host's own player, connected through the in process driver.",
+      "deep": "It is a real connection with a real network identifier, running the whole netcode flow, just with a transport that never drops or delays anything. Whether the host's zero latency advantage is acceptable is a design decision. In a shooter it usually is not, and no configuration removes it.",
+      "types": [
+        "NetworkStreamConnection",
+        "NetworkId",
+        "NetworkStreamInGame"
+      ]
+    },
+    "wire": {
+      "short": "The three pipelines every driver creates, and the bytes they carry.",
+      "deep": "Defaults worth knowing: a maximum message size of fourteen hundred bytes, a reliable window of thirty two, a fragmentation payload capacity of sixteen kilobytes, and a thirty second disconnect timeout with a half second heartbeat. In the editor a maximum frame time is set so a breakpoint does not look like a dropped connection.",
+      "types": [
+        "UnreliableSequencedPipelineStage",
+        "ReliableSequencedPipelineStage",
+        "FragmentationPipelineStage",
+        "SimulatorPipelineStage"
+      ]
+    }
+  }
+}

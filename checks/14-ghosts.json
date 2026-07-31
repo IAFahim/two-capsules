@@ -1,0 +1,53 @@
+{
+  "id": "14-ghosts",
+  "title": "Ghosts: replicating state",
+  "source": {"chapter": "14-ghosts", "map": "diagrams/02-keypress.html"},
+  "checks": [
+    {
+      "id": "quantization-too-coarse",
+      "kind": "predict",
+      "setup": "Bandwidth review. Position is quantized at 1000 and someone points out that half a millimetre of precision on a capsule that is two metres tall is absurd. You set it to 10 — ten centimetres of error, invisible at any camera distance you ship.\n\nBandwidth drops as predicted. Your own capsule now shivers. Not stutter, not rubber-banding: a continuous fine-grained tremble, present on localhost with zero loss and zero latency, worst when you are standing still.",
+      "ask": "What is trembling, and why does standing still make it worse rather than better?",
+      "rightIf": [
+        "says the client compares its predicted value against the *dequantized* server value, so quantization error is a permanent disagreement",
+        "concludes the mismatch triggers a rollback every tick — continuous micro-corrections rather than occasional ones",
+        "notes it happens on localhost because the cause is precision, not the network",
+        "explains standing still: the client's own integration produces a stable value, so the correction snaps to the same coarse grid point repeatedly, and the offset shows as tremble instead of being masked by motion"
+      ],
+      "answer": "Quantization is applied before the comparison, not after it. The client predicts a float, the server sends an integer, and the client dequantizes that integer and asks \"is this what I predicted?\" — with a 10 cm grid the answer is essentially always no, so you get a rollback every single tick. That is not a network problem, which is why localhost does not save you; the disagreement is manufactured locally by the codec. Standing still is the worst case because your prediction converges on one stable position while the received value snaps to the nearest grid point, so the correction is a constant offset applied over and over, and constant offsets applied over and over look exactly like tremble.\n\nThe knob has a floor and a ceiling and both hurt. Too fine and you burn bits nobody can see; too coarse and you have built a rollback generator.",
+      "because": "Quantization is a lossy codec sitting inside a comparator. Anything the codec rounds away, the comparator reads as a misprediction.",
+      "goDeeper": {"chapter": "14-ghosts", "node": "ghostsend", "types": ["GhostFieldAttribute", "PredictedGhost"]}
+    },
+    {
+      "id": "snapshot-is-not-the-world",
+      "kind": "predict",
+      "setup": "Four hundred ghosts, all at default importance, 20 Hz send rate. You write a client system that assumes a ghost's replicated `Health` is current — it reads it every tick and drives a damage-flash effect from the delta.\n\nThe flash works perfectly on the two capsules in front of you. On the far side of the arena, ghosts sometimes flash twice for one hit, sometimes not at all, and sometimes flash several seconds after the sound.",
+      "ask": "What assumption about snapshots is wrong, and why does distance change the symptom?",
+      "rightIf": [
+        "says a snapshot is not the whole world — it is as much of it as fits in one packet, prioritised",
+        "concludes low-importance or distant ghosts update at a lower effective rate and can skip many ticks",
+        "explains the missed flash: two changes to Health collapse into one delta, so the intermediate value is never observed",
+        "explains the late flash: the ghost simply had not been scheduled yet",
+        "notes the fix is to send the event rather than infer it from sampling a replicated value"
+      ],
+      "answer": "You are sampling a signal that is deliberately undersampled. The server fills roughly 1200 bytes per connection per network tick, sorted by importance, and everything that does not fit waits — so a distant ghost may go many ticks between updates. Every edge that happens between two of its updates is invisible to you: two hits in that window arrive as one delta, so you flash once for two hits, and the one you do see arrives whenever the ghost's turn came round, which is why the flash trails the sound. Nothing is broken. You inferred an event from a rate-controlled state sample, and the rate control is the feature.\n\nIf you need every hit, send a hit — an event or a counter that survives being sampled — rather than diffing a value that was never promised to be continuous.",
+      "because": "The snapshot is a bus with an arbiter, not a mirror. Importance decides who spends the budget, and everyone else is not wrong, just later.",
+      "goDeeper": {"chapter": "14-ghosts", "node": "ghostsend", "types": ["GhostInstance", "GhostSendSystemData"]}
+    },
+    {
+      "id": "one-more-ghostfield",
+      "kind": "predict",
+      "setup": "Debugging a movement feel problem, you add one field to the replicated set so you can see it on the client:\n\n    [GhostField(Quantization = 1000)] public float3 Velocity;\n\nIt ships, because it was useful and nobody remembered to take it out. Two hundred ghosts of this type. No error, no warning, no measurable client CPU change, and the ghost still replicates correctly.",
+      "ask": "What did that field cost, and where does the cost show up — given it is not in the profiler and not in your frame time?",
+      "rightIf": [
+        "says the schema is generated from the prefab, so the field is now in every snapshot write for every instance of this ghost",
+        "identifies the packet budget as the shared resource: more bytes per ghost means fewer ghosts fit per packet",
+        "concludes the cost is paid by *other* ghosts, as a lower effective update rate for whatever falls below the cut",
+        "names the Network Profiler's snapshot breakdown as the place per-ghost byte cost is visible"
+      ],
+      "answer": "It costs bytes per instance per update, and the budget it spends out of is fixed — one packet per connection per network tick. So the bill does not arrive as CPU or as an error; it arrives as displacement. Every byte this ghost type takes is a byte the sort could not give to something further down the importance list, and the symptom is that some other ghost, probably a distant one you were not thinking about, now updates less often. That is a bandwidth regression that no test fails and no profiler flags, distributed across entities that have nothing to do with your change.\n\nThe Network Profiler's snapshot breakdown shows per-ghost byte cost in play mode. If a ghost is unexpectedly expensive, a field you did not mean to replicate is in the schema — and after a few months, several of them are.",
+      "because": "The prefab is the schema, and the schema is a fixed-width bus allocation. Adding a field does not make one ghost slower, it makes a different ghost later.",
+      "goDeeper": {"chapter": "14-ghosts", "node": "ghostsend", "types": ["GhostFieldAttribute", "GhostAuthoringComponent", "GhostPrefabMetaData"]}
+    }
+  ]
+}

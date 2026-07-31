@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reference · Two Capsules</title>
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#111a2d; --card:#16203a; --ink:#e9eefb; --muted:#93a4c6;
+    --line:#22304f; --a:#5eead4; --ok:#34d399; --warn:#fbbf24; --hl:rgba(94,234,212,.13);
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#fbfcfe; --panel:#fff; --card:#f4f7fb; --ink:#111a2b; --muted:#4a5a78;
+           --line:#dce3ef; --a:#0d9488; --ok:#059669; --warn:#b45309; --hl:rgba(13,148,136,.10); }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;color:var(--ink);background:var(--bg);display:grid;grid-template-rows:auto 1fr;
+       font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+  a{color:var(--a);text-decoration:none} a:hover{text-decoration:underline}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+
+  /* ---------- top ---------- */
+  .top{display:flex;gap:12px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+  .brand{font-weight:700;white-space:nowrap}
+  .brand small{display:block;font-weight:400;color:var(--muted);font-size:.7rem}
+  #q{flex:1;min-width:200px;background:var(--card);color:var(--ink);border:1px solid var(--line);
+     border-radius:10px;padding:8px 12px;font:inherit;font-size:.95rem}
+  #q:focus{outline:none;border-color:var(--a)}
+  .count{color:var(--muted);font-size:.78rem;white-space:nowrap}
+  .top a.btn{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:6px 11px;font-size:.82rem}
+  .top a.btn:hover{border-color:var(--a);text-decoration:none}
+
+  /* ---------- layout ---------- */
+  .cols{display:grid;grid-template-columns:200px minmax(240px,1fr) minmax(0,1.35fr);min-height:0}
+  .rail,.list,.detail{overflow:auto;min-height:0}
+  .rail{border-right:1px solid var(--line);background:var(--panel);padding:12px 10px 40px}
+  .list{border-right:1px solid var(--line)}
+  .detail{padding:20px 24px 60px}
+  @media (max-width:960px){
+    .cols{grid-template-columns:1fr}
+    .rail{display:none} .rail.open{display:block}
+    .list{max-height:38vh;border-right:0;border-bottom:1px solid var(--line)}
+  }
+
+  /* ---------- rail ---------- */
+  .rail h4{margin:14px 0 6px;font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .rail h4:first-child{margin-top:0}
+  .facet{display:flex;align-items:center;gap:7px;width:100%;text-align:left;padding:4px 7px;border-radius:7px;font-size:.82rem;line-height:1.3}
+  .facet:hover{background:var(--card)}
+  .facet[aria-pressed="true"]{background:var(--hl);color:var(--a)}
+  .facet .n{margin-left:auto;color:var(--muted);font-size:.7rem;font-variant-numeric:tabular-nums}
+  .facet[aria-pressed="true"] .n{color:var(--a)}
+  .dot{width:8px;height:8px;border-radius:99px;flex:none;background:var(--muted)}
+  .clearf{margin-top:12px;font-size:.75rem;color:var(--muted);text-decoration:underline}
+
+  /* ---------- list ---------- */
+  .row{display:block;width:100%;text-align:left;padding:8px 13px;border-bottom:1px solid var(--line);line-height:1.35}
+  .row:hover{background:var(--card)}
+  .row[aria-current="true"]{background:var(--hl);box-shadow:inset 3px 0 0 var(--a)}
+  .row .nm{font-family:var(--mono);font-size:.86rem}
+  .row .nm b{color:var(--a);font-weight:700}
+  .row .sub{color:var(--muted);font-size:.7rem;font-family:var(--mono);
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl;text-align:left}
+  .empty{padding:34px 20px;color:var(--muted);font-size:.9rem;text-align:center;line-height:1.6}
+
+  /* ---------- detail ---------- */
+  .detail h1{font-family:var(--mono);font-size:1.32rem;margin:0 0 3px;letter-spacing:-.01em;word-break:break-word}
+  .ns{font-family:var(--mono);font-size:.78rem;color:var(--muted);word-break:break-all}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+  .tag{font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--line);
+       border-radius:99px;padding:2px 9px;color:var(--muted)}
+  .tag.role{border-color:var(--a);color:var(--a)}
+  .doc{margin:14px 0;line-height:1.65;max-width:70ch}
+  .sig{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 13px;
+       font-family:var(--mono);font-size:.82rem;line-height:1.55;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .src{font-family:var(--mono);font-size:.76rem;color:var(--muted);margin:10px 0 0;word-break:break-all}
+  .src b{color:var(--ink);font-weight:600}
+  .detail h3{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+             margin:26px 0 8px;border-top:1px solid var(--line);padding-top:14px}
+  .mem{border-bottom:1px solid var(--line);padding:7px 0}
+  .mem code{font-family:var(--mono);font-size:.8rem;display:block;line-height:1.5;word-break:break-word}
+  .mem .md{color:var(--muted);font-size:.78rem;margin-top:3px;line-height:1.5;max-width:70ch}
+  .mem .ln{float:right;color:var(--muted);font-size:.7rem;font-family:var(--mono);margin-left:10px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);border-radius:8px;padding:3px 9px;font-family:var(--mono);font-size:.76rem}
+  .chip:hover{border-color:var(--a);color:var(--a)}
+  #memq{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;
+        padding:5px 9px;font:inherit;font-size:.78rem;margin-bottom:9px;width:100%;max-width:280px}
+  .note{border-left:3px solid var(--warn);background:var(--hl);border-radius:0 8px 8px 0;
+        padding:9px 13px;margin:14px 0;font-size:.82rem;color:var(--muted);max-width:70ch;line-height:1.55}
+  .hint{color:var(--muted);font-size:.76rem;line-height:1.7}
+  .hint kbd{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-family:var(--mono);font-size:.72rem}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand">Reference <small>every public type, verbatim from source</small></div>
+  <input id="q" type="search" placeholder="Search 3,000+ types —  GhostSendSystem, IInputComponentData, gss…" autocomplete="off" spellcheck="false" />
+  <span class="count" id="count">loading…</span>
+  <a class="btn" href="explore.html">Maps ↗</a>
+  <a class="btn" href="read.html">Read ↗</a>
+  <a class="btn" href="index.html">Index ↗</a>
+</div>
+
+<div class="cols">
+  <div class="rail" id="rail"></div>
+  <div class="list" id="list"></div>
+  <div class="detail" id="detail"></div>
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+  const PKG_COLOR = { entities:"#60a5fa", netcode:"#f472b6", "entities-graphics":"#a78bfa",
+                      core:"#34d399", grove:"#fbbf24", canopy:"#fb923c", nerve:"#22d3ee", anchor:"#c084fc" };
+
+  let rows = [], pkgs = [], links = {}, shard = {}, cur = null;
+  const on = { pkg:new Set(), kind:new Set(), role:new Set() };
+  let hits = [], sel = -1;
+
+  // ---------------- scoring ----------------
+  // exact > prefix > camel-hump initials (gss -> GhostSendSystem) > substring > namespace hit
+  function humps(name){
+    let s = ""; for (const c of name) if (c >= "A" && c <= "Z") s += c.toLowerCase();
+    return s;
+  }
+  function score(row, q, qUp){
+    const name = row[1], lname = name.toLowerCase();
+    if (lname === q) return 1000;
+    if (lname.startsWith(q)) return 800 - name.length;
+    const h = row[6] || (row[6] = humps(name));
+    if (h === q) return 700 - name.length;
+    if (h.startsWith(q)) return 600 - name.length;
+    const i = lname.indexOf(q);
+    if (i >= 0) return 400 - i - name.length / 100;
+    if ((row[2] + "." + name).toLowerCase().includes(q)) return 200 - name.length / 100;
+    if (qUp && name.includes(qUp)) return 150;
+    return -1;
+  }
+
+  function passes(row){
+    if (on.pkg.size && !on.pkg.has(row[4])) return false;
+    if (on.kind.size && !on.kind.has(row[3])) return false;
+    if (on.role.size && !(row[5] || []).some(r => on.role.has(r))) return false;
+    return true;
+  }
+
+  function search(){
+    const raw = $("q").value.trim();
+    const q = raw.toLowerCase();
+    const out = [];
+    if (!q){
+      for (const r of rows) if (passes(r)) { out.push([0, r]); if (out.length > 400) break; }
+    } else {
+      for (const r of rows){
+        if (!passes(r)) continue;
+        const s = score(r, q, raw);
+        if (s >= 0) out.push([s, r]);
+      }
+      out.sort((a,b) => b[0] - a[0] || a[1][1].length - b[1][1].length);
+    }
+    hits = out.slice(0, 400).map(x => x[1]);
+    $("count").textContent = out.length.toLocaleString() + " / " + rows.length.toLocaleString();
+    paintList(q);
+  }
+
+  function mark(name, q){
+    if (!q) return esc(name);
+    const i = name.toLowerCase().indexOf(q);
+    if (i < 0) return esc(name);
+    return esc(name.slice(0,i)) + "<b>" + esc(name.slice(i, i+q.length)) + "</b>" + esc(name.slice(i+q.length));
+  }
+
+  function paintList(q){
+    const l = $("list");
+    if (!hits.length){
+      l.innerHTML = '<div class="empty">Nothing matches.<br>Try a shorter query, or clear the filters on the left.</div>';
+      return;
+    }
+    l.innerHTML = hits.map((r,i) =>
+      '<button class="row" data-i="' + i + '"' + (cur === r[0] ? ' aria-current="true"' : '') + '>' +
+        '<div class="nm">' + mark(r[1], q) + '</div>' +
+        '<div class="sub">' + esc(r[2]) + '</div>' +
+      '</button>').join("");
+    l.querySelectorAll(".row").forEach(b =>
+      b.addEventListener("click", () => { sel = +b.dataset.i; open(hits[sel][0]); }));
+  }
+
+  // ---------------- detail ----------------
+  async function shardFor(pkgId){
+    if (shard[pkgId]) return shard[pkgId];
+    const p = pkgs.find(p => p.id === pkgId);
+    const files = (p && p.shards && p.shards.length) ? p.shards : [pkgId + ".json"];
+    const parts = await Promise.all(files.map(f => fetch("reference/" + f).then(r => r.json())));
+    const byId = {};
+    for (const part of parts) for (const t of part.types) byId[t.id] = t;
+    return (shard[pkgId] = byId);
+  }
+
+  async function open(id){
+    cur = id;
+    location.hash = encodeURIComponent(id);
+    document.querySelectorAll(".row").forEach(b =>
+      b.toggleAttribute("aria-current", hits[+b.dataset.i] && hits[+b.dataset.i][0] === id));
+    const d = $("detail");
+    d.innerHTML = '<p class="hint">loading…</p>';
+    const t = (await shardFor(id.split(":")[0]))[id];
+    if (!t){ d.innerHTML = '<p class="hint">Not found in the shard: <code>' + esc(id) + '</code></p>'; return; }
+    d.scrollTop = 0;
+    d.innerHTML = render(t);
+    const mq = $("memq");
+    if (mq) mq.addEventListener("input", () => {
+      const v = mq.value.toLowerCase();
+      d.querySelectorAll(".mem").forEach(m =>
+        m.style.display = m.textContent.toLowerCase().includes(v) ? "" : "none");
+    });
+    d.querySelectorAll("[data-goto]").forEach(c =>
+      c.addEventListener("click", () => { $("q").value = c.dataset.goto; search(); }));
+  }
+
+  function render(t){
+    const pkg = pkgs.find(p => p.id === t.pkg || p.id === (t.id || "").split(":")[0]) || {};
+    const decl = [ (t.mods || []).join(" "), t.kind, t.name + (t.generics || "") ].filter(Boolean).join(" ") +
+                 ((t.bases && t.bases.length) ? " : " + t.bases.join(", ") : "");
+    const h = [];
+
+    h.push('<h1>' + esc(t.name + (t.generics || "")) + '</h1>');
+    h.push('<div class="ns">' + esc(t.ns || "") + '</div>');
+
+    h.push('<div class="tags">');
+    h.push('<span class="tag" style="border-color:' + (PKG_COLOR[pkg.id] || "var(--line)") + '">' + esc(pkg.display || pkg.id || "") + '</span>');
+    h.push('<span class="tag">' + esc(t.kind) + '</span>');
+    for (const r of (t.roles || [])) h.push('<span class="tag role">' + esc(r) + '</span>');
+    h.push('</div>');
+
+    if ((t.attrs || []).length)
+      h.push('<div class="sig">' + t.attrs.map(a => "[" + esc(a) + "]").join("\n") + '</div>');
+
+    h.push('<div class="sig" style="margin-top:8px">' + esc(decl) + '</div>');
+
+    if (t.doc) h.push('<div class="doc">' + esc(t.doc) + '</div>');
+    else if (pkg.license === "commercial")
+      h.push('<div class="note">Documentation text is not reproduced for commercial packages. ' +
+             'The signature and location above are the API surface; open the file below to read the author\'s own notes.</div>');
+
+    const files = t.files || [t.file];
+    h.push('<p class="src">' + files.map((f,i) =>
+      '<b>' + esc(f) + '</b>:' + (Array.isArray(t.lines) ? t.lines[i] : t.line)).join('<br>') +
+      '<br>' + esc(pkg.pkg || "") + (pkg.version ? " @ " + esc(pkg.version) : "") + '</p>');
+
+    const chapters = links[t.id] || [];
+    if (chapters.length){
+      h.push('<h3>Explained in</h3><div class="chips">');
+      for (const c of chapters)
+        h.push('<a class="chip" href="read.html#' + esc(c.slug) + '">' + esc(c.title) + '</a>');
+      h.push('</div>');
+    }
+
+    if ((t.bases || []).length){
+      h.push('<h3>Inherits and implements</h3><div class="chips">');
+      for (const b of t.bases){
+        const bare = b.replace(/<.*/, "");
+        h.push('<button class="chip" data-goto="' + esc(bare) + '">' + esc(b) + '</button>');
+      }
+      h.push('</div>');
+    }
+
+    const mem = t.members || [];
+    if (mem.length){
+      const enums = t.kind === "enum";
+      h.push('<h3>' + (enums ? "Values" : "Members") + ' · ' + mem.length + '</h3>');
+      if (mem.length > 12) h.push('<input id="memq" type="search" placeholder="filter members…" />');
+      for (const m of mem){
+        h.push('<div class="mem"><span class="ln">' + (m.line || "") + '</span><code>' + esc(m.sig) + '</code>' +
+               (m.doc ? '<div class="md">' + esc(m.doc) + '</div>' : '') + '</div>');
+      }
+    }
+    return h.join("");
+  }
+
+  // ---------------- rail ----------------
+  function buildRail(){
+    const tally = (fn) => { const m = new Map(); for (const r of rows){ const v = fn(r);
+      for (const x of (Array.isArray(v) ? v : [v])) if (x) m.set(x, (m.get(x)||0)+1); } return [...m].sort((a,b)=>b[1]-a[1]); };
+    const kinds = tally(r => r[3]);
+    const roles = tally(r => r[5]);
+    const h = [];
+
+    h.push('<h4>Package</h4>');
+    for (const p of pkgs){
+      const n = rows.reduce((a,r) => a + (r[4] === p.id ? 1 : 0), 0);
+      h.push('<button class="facet" data-f="pkg" data-v="' + esc(p.id) + '">' +
+             '<span class="dot" style="background:' + (PKG_COLOR[p.id] || "var(--muted)") + '"></span>' +
+             esc(p.display || p.id) + '<span class="n">' + n.toLocaleString() + '</span></button>');
+    }
+    h.push('<h4>Role</h4>');
+    for (const [k,n] of roles)
+      h.push('<button class="facet" data-f="role" data-v="' + esc(k) + '">' + esc(k) + '<span class="n">' + n.toLocaleString() + '</span></button>');
+    h.push('<h4>Kind</h4>');
+    for (const [k,n] of kinds)
+      h.push('<button class="facet" data-f="kind" data-v="' + esc(k) + '">' + esc(k) + '<span class="n">' + n.toLocaleString() + '</span></button>');
+    h.push('<button class="clearf" id="clearf">clear filters</button>');
+
+    const rail = $("rail");
+    rail.innerHTML = h.join("");
+    rail.querySelectorAll(".facet").forEach(b => b.addEventListener("click", () => {
+      const set = on[b.dataset.f], v = b.dataset.v;
+      set.has(v) ? set.delete(v) : set.add(v);
+      b.setAttribute("aria-pressed", set.has(v) ? "true" : "false");
+      search();
+    }));
+    $("clearf").addEventListener("click", () => {
+      Object.values(on).forEach(s => s.clear());
+      rail.querySelectorAll(".facet").forEach(b => b.setAttribute("aria-pressed","false"));
+      search();
+    });
+  }
+
+  // ---------------- keys ----------------
+  $("q").addEventListener("input", search);
+  document.addEventListener("keydown", (e) => {
+    const inField = e.target.tagName === "INPUT";
+    if (e.key === "/" && !inField){ e.preventDefault(); $("q").focus(); $("q").select(); return; }
+    if (e.key === "Escape"){ $("q").value = ""; $("q").blur(); search(); return; }
+    if (e.key === "ArrowDown" || e.key === "ArrowUp"){
+      if (!hits.length) return;
+      e.preventDefault();
+      sel = Math.max(0, Math.min(hits.length - 1, sel + (e.key === "ArrowDown" ? 1 : -1)));
+      open(hits[sel][0]);
+      const el = $("list").querySelector('.row[data-i="' + sel + '"]');
+      if (el) el.scrollIntoView({block:"nearest"});
+    }
+    if (e.key === "Enter" && inField && hits.length){ sel = Math.max(0, sel); open(hits[sel][0]); }
+  });
+
+  // ---------------- boot ----------------
+  Promise.all([
+    fetch("reference/search.json").then(r => r.json()),
+    fetch("reference/packages.json").then(r => r.json()),
+    fetch("reference/links.json").then(r => r.json()).catch(() => ({})),
+  ]).then(([s, p, l]) => {
+    rows = s.rows; pkgs = p; links = l;
+    buildRail();
+    search();
+    const want = decodeURIComponent((location.hash || "").slice(1));
+    $("detail").innerHTML =
+      '<h1 style="font-family:inherit">Reach into anything</h1>' +
+      '<p class="doc">Every public type in Entities, NetCode, and the BovineLabs stack — with its real signature, ' +
+      'its attributes, its members, and the exact file and line it lives on. Filter on the left, or just type.</p>' +
+      '<p class="hint"><kbd>/</kbd> search · <kbd>↑</kbd><kbd>↓</kbd> move · <kbd>Enter</kbd> open · <kbd>Esc</kbd> clear<br><br>' +
+      'Search is fuzzy on capitals: <b>gss</b> finds GhostSendSystem, <b>iicd</b> finds IInputComponentData.</p>';
+    if (want) open(want);
+  }).catch(() => {
+    $("count").textContent = "no data";
+    $("detail").innerHTML = '<h1 style="font-family:inherit">Reference payload missing</h1>' +
+      '<p class="doc">Generate it with <code>python3 tools/extract_api.py</code>, ' +
+      'then reload. It reads the packages out of the Unity project\'s <code>Library/PackageCache</code>.</p>';
+  });
+})();
+</script>
+</body>
+</html>

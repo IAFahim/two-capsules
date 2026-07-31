@@ -1,0 +1,72 @@
+{
+  "id": "41-clock-domains",
+  "title": "Clock domains: choosing a ghost mode",
+  "source": {"chapter": "41-clock-domains", "map": "diagrams/02-keypress.html"},
+  "checks": [
+    {
+      "id": "predicted-standing-on-interpolated",
+      "kind": "predict",
+      "setup": "Your player capsule is `OwnerPredicted`, which is right — you need it to respond in zero frames.\n\nThe moving platform it rides is `Interpolated`, which also looks right: it is not player-controlled, it does not need to feel instant, and interpolation is nearly free.\n\nBoth replicate correctly. Neither logs anything. Standing on a *static* floor is flawless. Standing on the moving platform, the capsule shimmies — it slides against the platform surface, worse the faster the platform moves and worse the worse your ping is. The platform itself looks perfectly smooth.",
+      "ask": "What does the player see and why? Be specific about what time each of the two entities is drawn at.",
+      "rightIf": [
+        "says the predicted capsule is simulated ahead of the server by roughly RTT/2",
+        "says the interpolated platform is rendered behind the server by roughly RTT/2 plus the interpolation buffer",
+        "concludes the two entities are in different clock domains, separated by something like 95 ms at a 60 ms round trip",
+        "explains the slide: the capsule resolves against a platform surface that is in the past, so the surface is not where the capsule's own clock says it is",
+        "notes the error scales with platform speed (position error = speed x time offset) and with ping",
+        "identifies the fix as putting the platform in the same domain — predict it too — rather than smoothing the capsule"
+      ],
+      "answer": "The two objects are drawn at two different times and you asked them to touch. Your capsule is predicted: restored to the last confirmed tick and re-simulated forward to a tick roughly half a round trip ahead of the server. The platform is interpolated: the client never simulates it at all, it reads a delay line trailing the server by RTT/2 plus the interpolation buffer. At 60 ms round trip with a two-tick buffer at 60 Hz that gap is about 95 ms, and a platform moving at 4 m/s is therefore roughly 40 cm from where your capsule's clock believes it is. The contact resolves against the past surface and the mismatch is the shimmy. Faster platform, bigger gap. Worse ping, bigger gap. Different on every machine, because every machine has its own RTT.\n\nNeither entity is malfunctioning. Both are doing exactly what their mode promises. The bug is a hard mechanical dependency across a clock-domain boundary, and the rule is blunt: a predicted entity cannot correctly interact with an interpolated one, so anything a predicted entity touches must itself be predicted.\n\nThe wrong fix, which is the one people reach for, is to smooth the capsule. That hides the tremble and leaves the capsule resolving contacts 40 cm from where the server thinks it is, which converts a visual bug into a gameplay one.",
+      "because": "Predicted and Interpolated are two clock domains, offset by RTT/2 plus the interpolation buffer. Crossing domains is fine for looking at something and not fine for standing on it.",
+      "goDeeper": {"chapter": "41-clock-domains", "node": "predict", "types": ["PredictedGhost", "NetworkTime", "GhostAuthoringComponent"]}
+    },
+    {
+      "id": "closing-the-set",
+      "kind": "predict",
+      "setup": "You apply the rule properly. The capsule is predicted, so the crate it pushes must be predicted. You change the crate. Done.\n\nExcept the crate rests on a conveyor, and sometimes slides into a stack of barrels, and one of the barrels can knock a door open. Each of those is a separate prefab, authored by a separate person, none of which anybody thought of as \"player-adjacent\".\n\nIn the test scene — one capsule, one crate — everything is perfect.",
+      "ask": "What property of the rule did the crate-only fix miss, and what is the procedure that gets you a correct answer instead of an iterative one?",
+      "rightIf": [
+        "identifies the contagion as transitive: predicting A forces B, and B touching C forces C",
+        "concludes the predicted set is a connected component of the interaction graph, not a list of individual decisions",
+        "says the procedure is to enumerate everything a predicted entity can touch and repeat until the list stops growing",
+        "notes that if the list does not stop growing you are building a fully predicted game and should decide that deliberately",
+        "may note the empty test scene structurally cannot reveal it, because the interactions are what propagate the requirement"
+      ],
+      "answer": "You treated contagion as one hop. It is transitive, and the correct object is not a list but a connected component: start at the predicted entity, follow every interaction edge, and keep following until nothing new joins. Crate, conveyor, barrels, door — and the moment physics is involved, every dynamic body sharing the physics world, because a non-ghost dynamic body cannot be rolled back at all.\n\nFixing one hop at a time means shipping, discovering the next hop in a playtest, fixing it, shipping, and repeating — with each round of shimmy reported as a fresh unexplained bug rather than as the same bug. And the test scene cannot help, because the edges are exactly what is missing from it.\n\nDraw the interaction graph before you touch the dropdown. If closing the set gives you a handful of entities, you have an `OwnerPredicted` game with some predicted props. If it swallows the level, you have a fully predicted game — which is a legitimate thing to build, at a known cost, on purpose. The failure is discovering which of those you built after you shipped.",
+      "because": "Prediction propagates along contact. The predicted set is a connected component of the interaction graph, and the only lever you actually control is how big that component is.",
+      "goDeeper": {"chapter": "41-clock-domains", "node": "predict", "types": ["PredictedGhost", "GhostAuthoringComponent", "PredictedSimulationSystemGroup"]}
+    },
+    {
+      "id": "supported-modes-left-at-all",
+      "kind": "predict",
+      "setup": "Every ghost prefab in the project leaves `SupportedGhostModes` at its default. Nobody changed it because nobody had a reason to: it is not a behaviour setting, the ghosts all work, and narrowing it looks like the kind of micro-optimisation you do at the end.\n\nMeanwhile the bandwidth budget is tight, and profiling shows interpolated-only clients receiving fields they demonstrably never use — velocity on ghosts they are not simulating.",
+      "ask": "Why is the server sending predicted-only data to a client that never predicts, and what does leaving the mask alone actually buy you?",
+      "rightIf": [
+        "says the default keeps every mode available, including switching a ghost's mode at runtime",
+        "explains that the server can only skip mode-specific fields if it can infer which mode each client has the ghost in",
+        "concludes it can infer that for a narrowed mask, and for OwnerPredicted (owner predicts, everyone else interpolates), but not for a ghost that might switch at any moment",
+        "concludes the server must therefore serialise identically for everyone, disabling the send-type optimisation",
+        "identifies what you bought: runtime prediction switching, which most projects never use"
+      ],
+      "answer": "The optimisation that skips predicted-only fields for interpolating clients depends on the server knowing which domain each client has the ghost in. It can know that two ways: you narrowed the mask at authoring time, so there is only one possibility; or the ghost is `OwnerPredicted`, where the rule is mechanical — the owner predicts, everybody else interpolates. A ghost that may switch modes at runtime gives the server neither, so it gives up and serialises one identical payload for all connections.\n\nSo the default is not neutral. It is a purchase: you are paying full bandwidth on every mode-specific field, on every ghost, for every connection, in exchange for the ability to move ghosts between domains at runtime. That is a real and useful capability for a crowded world where you predict only what is near the player — and it is a capability most projects never build.\n\nThe fix is boring and free: if a ghost will never switch, say so. Narrow the mask to the one mode it actually uses and the server starts skipping fields the receiver was never going to read.",
+      "because": "The server can only skip what it can predict about the receiver. Keeping every option open removes the server's ability to infer anything, and inference is what the optimisation runs on.",
+      "goDeeper": {"chapter": "41-clock-domains", "types": ["GhostAuthoringComponent", "GhostComponentAttribute", "GhostFieldAttribute"]}
+    },
+    {
+      "id": "prespawned-mode-override",
+      "kind": "predict",
+      "setup": "Two moving platforms, same prefab, same settings, authored `Interpolated`.\n\nOne is placed in the subscene and pre-spawned. The other is instantiated by the server when the match starts.\n\nA predicted capsule riding the pre-spawned one is rock solid. The same capsule on the server-spawned one shimmies exactly as the clock-domain rule predicts. Same prefab. Same inspector. Same everything you can see.",
+      "ask": "Why do two instances of one prefab behave differently, and what does that tell you about reading a prefab's mode off the inspector?",
+      "rightIf": [
+        "says pre-spawned ghosts are forced to Predicted regardless of the authored DefaultGhostMode",
+        "concludes the pre-spawned platform is in the same clock domain as the capsule, so the interaction is correct",
+        "concludes the server-spawned one honours the authored Interpolated mode and is therefore in the other domain",
+        "notes the authored value is not the runtime value, so the inspector is not the answer",
+        "may note the runtime check is whether the entity has PredictedGhost on this client"
+      ],
+      "answer": "Pre-spawned ghosts do not get the mode you authored. Loading them from the subscene forces them to `Predicted` (with a static optimization mode) no matter what the dropdown says — so the pre-spawned platform happens to be in the same clock domain as your capsule, and the contact resolves at one consistent instant. The server-spawned instance honours `Interpolated` and lands in the other domain, which is the shimmy.\n\nThe uncomfortable part is that this made the bug *look* intermittent and prefab-independent, when it is neither. You had a working case and a broken case that differ only in how the entity came into existence, and nothing in the authoring UI distinguishes them.\n\nWhich is the real lesson: the authored mode is an input, not the answer. `OwnerPredicted` already resolves differently per machine, pre-spawning overrides the value outright, and prediction switching can move a ghost at runtime. The only reliable question is what the entity looks like on this client right now — whether `PredictedGhost` is on it — and that is an Entity Inspector question, not an Inspector one.",
+      "because": "The dropdown is authoring intent. The runtime domain is decided per machine and per spawn path, and only one of those is visible in the prefab.",
+      "goDeeper": {"chapter": "41-clock-domains", "types": ["PredictedGhost", "GhostAuthoringComponent", "GhostInstance"]}
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "id": "42-which-world",
+  "title": "Which world am I in?",
+  "map": "diagrams/42-which-world.html",
+  "blurb": "Six address spaces, one authored prefab, and an integer that correlates two entities which never touch.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "World zero is a physics index",
+      "focus": null,
+      "text": "The phrase world zero is real, and it does not mean what it sounds like. It names the default collider partition inside one entity world, the one a body belongs to unless you say otherwise. An entity world is an address space. A physics world index is a bucket of bodies inside one of those address spaces. One entity world can hold several physics indices, and every index exists separately on the client and on the server. Saying physics runs in world zero is like saying a process runs in heap arena zero. True of the allocator, silent about the process."
+    },
+    {
+      "id": "territory",
+      "title": "What creates each world",
+      "focus": "bootstrap",
+      "text": "The bootstrap is a single method that says: I will take over world creation. Return true from it and the engine builds nothing of its own. Netcode's implementation branches on one setting, the requested play type. Server or client and server gets a server world. Client or client and server gets a client world. Thin clients follow in the editor. Each world is then populated by asking the type manager for every system carrying a particular filter flag, which is why the two columns on this map are different things. The world flags say what the world is. The filter flags say what got put in it."
+    },
+    {
+      "id": "default",
+      "title": "What default really expands to",
+      "focus": "serverworld",
+      "text": "This is the question that trips everyone. The default filter flag has two different expansions, and which one applies depends on who is asking. When a world is being populated, default expands to local simulation plus presentation. When a system is being classified, default expands to whatever its parent group declares as its child default, walking up the ordering chain. If that walk reaches a group with no parent, the fallback is local, server and client simulation. That fallback is the one you meet in practice, because the root simulation group carries no filter attribute at all. It is why an unfiltered gameplay system runs in every game world, including the server."
+    },
+    {
+      "id": "simulation",
+      "title": "Simulation is not presentation",
+      "focus": "serverworld",
+      "text": "The server spawns a fireball. The server has no mesh, no material, no camera. It is tempting to conclude the server does not know where the fireball is. It does. The server computes that position every single tick, including the full rigid body trajectory, because the physics systems resolve into server simulation. What the server lacks is rendering, and rendering is a separate flag on a separate bit. The server world was populated without it, so the systems that turn a transform into pixels were never added. The transform is computed. Nobody draws it. A headless server is not a partial simulation. It is a complete simulation with the display driver unloaded."
+    },
+    {
+      "id": "variants",
+      "title": "One prefab, several baked entities",
+      "focus": "strip",
+      "text": "So how does the client's visual attach to the server's fireball? It does not. There is no attachment. They are two entities in two address spaces and nothing points from one to the other. What crosses the wire is an integer: a ghost identifier and a prefab index. The client looks that index up in its own prefab collection and instantiates its own local copy. Both worlds baked the same authored asset, so both already agree what index seven means. And the two copies are not identical, because baking emits one prefab plus a set of per world removal lists. At startup each world picks the list for itself and strips its own copy before the first instance exists. Renderers and effects are removed on the server. Authority logic is removed on the client. Same asset, different entities."
+    },
+    {
+      "id": "singletons",
+      "title": "Singletons are per world",
+      "focus": "clientworld",
+      "text": "A singleton is an entity in one world's entity manager. There is no process wide registry. Ask for one in the client world and you cannot see the copy in the server world. This is the single most common source of works in the editor, fails in the build, and the reason is mechanical. In the editor both worlds live in one process, so a system reaching for a singleton it does not own often finds a copy anyway. The wrong one, but a plausible one. Ship a dedicated server and the client world is simply not there. The lookup that was quietly wrong becomes loudly absent."
+    }
+  ],
+  "nodes": {
+    "bakeworld": {
+      "short": "A transient world that exists only long enough to turn authored objects into entities.",
+      "deep": "It is created, used and disposed inside a single call, and it carries the baking filter flag so only baking systems land in it. Anything decided here was decided before either runtime world existed, which is why a wrong baked value can never be fixed by a runtime system.",
+      "types": ["World", "WorldFlags", "WorldSystemFilterFlags"]
+    },
+    "prefab": {
+      "short": "The baked ghost prefab, plus four lists describing what to remove from it per world.",
+      "deep": "Baking does not emit one prefab per world type. It emits one entity graph and four blob arrays: remove on server, remove on client, disable on predicted, disable on interpolated. A component marked as belonging to every variant short circuits the classification and appears in all of them.",
+      "types": ["GhostPrefabType", "GhostComponentAttribute", "GhostPrefabCreation"]
+    },
+    "strip": {
+      "short": "Picks the removal list for this world and edits the prefab before anything is instantiated.",
+      "deep": "It tests whether the world is a server, selects the matching list, and removes each named component from the prefab entity and its children. Then it drops the marker saying stripping is pending. Where a ghost can switch between predicted and interpolated at runtime the difference becomes a disable rather than a removal, because the same entity may change mode later.",
+      "types": ["GhostCollectionSystem", "GhostPrefabType"]
+    },
+    "bootstrap": {
+      "short": "The one hook that decides which worlds exist at all.",
+      "deep": "Returning true from its initialize method means the engine creates nothing on its own. Netcode's implementation branches on the requested play type. The Nerve bootstrap layers a lifecycle on top: a persistent service world that outlives everything, a menu world, and client and server worlds created and destroyed on demand. Netcode decides whether they exist. Nerve decides when.",
+      "types": ["ICustomBootstrap", "ClientServerBootstrap", "DefaultWorldInitialization"]
+    },
+    "serverworld": {
+      "short": "Authority. Populated with server simulation only, and deliberately without presentation.",
+      "deep": "It runs the full simulation including the physics solver, because the physics systems resolve to local, server and client simulation. It has no renderer because presentation is a different flag bit and was never requested. When two players disagree about a position, this is the world that is right.",
+      "types": ["WorldSystemFilterFlags", "ClientServerBootstrap", "WorldFlags"]
+    },
+    "wire": {
+      "short": "A ghost identifier and a prefab index. No entity reference ever crosses.",
+      "deep": "Entity references are meaningless across worlds, so replication carries numbers. The identifier is recycled when a ghost dies, so on its own it is not unique. Paired with the tick it spawned on, it is guaranteed unique, because at any moment only one ghost can hold that identifier having spawned on that tick.",
+      "types": ["GhostInstance", "GhostCollectionPrefab", "GhostType"]
+    },
+    "clientworld": {
+      "short": "Prediction plus rendering. The only world that asks for the presentation flag.",
+      "deep": "It is the world to reason about when the local capsule feels laggy, when a remote capsule stutters, or when nothing appears on screen. Its physics is a guess corrected by snapshots. A raycast here queries a predicted collision world, not authority, and that difference is invisible until it matters.",
+      "types": ["PresentationSystemGroup", "WorldSystemFilterFlags"]
+    },
+    "thinclient": {
+      "short": "A keyboard with a socket. Connects, sends input, simulates almost nothing.",
+      "deep": "It is populated with the thin client flag alone, which the physics systems do not carry, so a thin client has no physics at all. That is the point: it is the cheapest way to put load on a server, and it is why a bug that only reproduces with thin clients is usually a missing filter rather than a missing feature.",
+      "types": ["WorldSystemFilterFlags", "ClientServerBootstrap"]
+    }
+  }
+}

@@ -3,6 +3,164 @@
   "voice": "ReadAloud Inflect",
   "lessons": [
     {
+      "id": "00-world",
+      "title": "The Territory",
+      "blurb": "Six regions between a cache line and two capsules on a screen. Start anywhere.",
+      "map": "diagrams/00-world.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "This is a map, not a menu",
+          "focus": null,
+          "text": "What you are looking at is the whole territory on one screen. Six regions, roughly ordered from the silicon at the left to a running game at the right. The arrows are roads, not prerequisites. Nothing here demands that you read it in order, and the fastest way to ruin this is to treat it as a list to get through. Pick the region that annoys you most and go there.",
+          "audio": "audio/00-world/ch-intro.opus"
+        },
+        {
+          "id": "ground",
+          "title": "Start on the ground if you think in cache lines",
+          "focus": "chunk",
+          "text": "The far left is memory, and it is the shortest path in for anyone who has ever cared about a stride. Entities are not objects scattered across the heap. They are rows in fixed size blocks of sixteen kilobytes, one contiguous array per component type, and every design decision above this one falls out of that arrangement. If you understand the chunk you can derive most of the rest by reasoning.",
+          "audio": "audio/00-world/ch-ground.opus"
+        },
+        {
+          "id": "wire",
+          "title": "The middle is where it stops being local",
+          "focus": "wire",
+          "text": "Then the wire, and the moment the story stops being about one process. The rule is small enough to hold in one sentence. The client sends intent. The server sends truth. Nothing else crosses, ever. Two floats saying which direction somebody wants to move, going one way, and delta compressed snapshots coming back the other way. Every complication in this whole handbook is a consequence of those two sentences and the fact that they take time.",
+          "audio": "audio/00-world/ch-wire.opus"
+        },
+        {
+          "id": "hard",
+          "title": "Where it gets genuinely hard",
+          "focus": "clocks",
+          "text": "Just past the wire is the part that catches everyone, and it is the reason this map exists at all. The client is running two clocks. Some entities are played back from the past, some are guessed forward into the future, and which is which depends on who owns them. Then the rollback loop next to it is what fixes the guesses. Then under load, with real latency and a player who is willing to modify the client, everything you assumed gets tested.",
+          "audio": "audio/00-world/ch-hard.opus"
+        },
+        {
+          "id": "blank",
+          "title": "The blank regions are real",
+          "focus": "loop",
+          "text": "Two regions on this map have no maps behind them yet. The engine's update loop, and the stack of libraries we build on. Both have written chapters, neither has been drawn. I have left them on the map rather than hiding them, because a map that only shows the surveyed parts is a brochure. The atlas plans forty of these. Twelve exist. That gap is the honest state of the work, and it is also where the interesting problems are.",
+          "audio": "audio/00-world/ch-blank.opus"
+        }
+      ],
+      "nodes": {
+        "chunk": {
+          "short": "Sixteen kilobytes, one allocation, one stride. The ground floor.",
+          "deep": "This is where the entity component system stops being a design pattern and becomes an actual memory layout you can measure. A header, then one contiguous array per component type, and an entity that is nothing but a shared subscript into all of them. If you have ever hand tuned a loop for the prefetcher, this will feel familiar in a way that surprises you.",
+          "types": [
+            "Chunk",
+            "ArchetypeChunk",
+            "EntityArchetype"
+          ],
+          "goto": "diagrams/05-chunk-layout.html",
+          "gotoLabel": "Inside one chunk",
+          "audio": "audio/00-world/node-chunk-short.opus",
+          "audioDeep": "audio/00-world/node-chunk-deep.opus"
+        },
+        "machine": {
+          "short": "Worlds, systems, jobs \u2014 one process, several isolated universes.",
+          "deep": "A world is a complete isolated instance: its own entities, its own systems, its own memory. A client world and a server world can sit in the same process, tick one after the other in the same frame, and share absolutely nothing. That isolation is what makes the security model possible and what makes debugging confusing.",
+          "types": [
+            "World",
+            "SystemState",
+            "SimulationSystemGroup"
+          ],
+          "goto": "diagrams/01-machine.html",
+          "gotoLabel": "Into the machine",
+          "audio": "audio/00-world/node-machine-short.opus",
+          "audioDeep": "audio/00-world/node-machine-deep.opus"
+        },
+        "loop": {
+          "short": "Bootstrap, system groups, baking. Chapters written, no map yet.",
+          "deep": "This region covers where your world actually comes from: the custom bootstrap that creates it, the tree of system groups that decides what runs when, and the baking step that turns editor objects into entities. That last one is a compile step that nobody tells you is a compile step, which is why the errors from it are so surprising the first time.",
+          "types": [
+            "ClientServerBootstrap",
+            "SimulationSystemGroup",
+            "EntityCommandBuffer"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/00-world/node-loop-short.opus",
+          "audioDeep": "audio/00-world/node-loop-deep.opus"
+        },
+        "stack": {
+          "short": "Core, Grove, Canopy, Nerve. Commercial packages, no map yet.",
+          "deep": "The layer between the engine and our game. The interesting one is Grove, which is a visual graph on the surface and a bytecode virtual machine underneath: nodes bake into a blob image, and generated dispatch walks it. The chapters describe the behaviour; the source is not ours to paste, so everything here is written from the outside in.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/00-world/node-stack-short.opus",
+          "audioDeep": "audio/00-world/node-stack-deep.opus"
+        },
+        "wire": {
+          "short": "Intent goes out, snapshots come back, and that is the whole protocol.",
+          "deep": "One direction carries a bounded statement of what the player wants. The other carries delta compressed state, prioritised, cut off at whatever fits in a packet. A snapshot is not the world; it is as much of the world as fits, sorted by importance. Once you accept that, most of the rest of the network layer stops looking arbitrary.",
+          "types": [
+            "GhostSendSystem",
+            "SnapshotData",
+            "AutoCommandTarget"
+          ],
+          "goto": "diagrams/02-keypress.html",
+          "gotoLabel": "Follow one keypress",
+          "audio": "audio/00-world/node-wire-short.opus",
+          "audioDeep": "audio/00-world/node-wire-deep.opus"
+        },
+        "clocks": {
+          "short": "Two timelines on one client, and ownership decides which you are on.",
+          "deep": "This is the single thing most worth understanding before you touch the Inspector. Some entities are played back out of a buffer from the server's past. Others are simulated ahead into the client's future and corrected. The two cannot interact correctly, which turns one innocent dropdown into an architectural commitment.",
+          "types": [
+            "GhostMode",
+            "GhostOwner",
+            "PredictedGhost"
+          ],
+          "goto": "diagrams/41-clock-domains.html",
+          "gotoLabel": "Into the two clock domains",
+          "audio": "audio/00-world/node-clocks-short.opus",
+          "audioDeep": "audio/00-world/node-clocks-deep.opus"
+        },
+        "rollback": {
+          "short": "Restore, replay, carry on. The correction machine.",
+          "deep": "Every frame the client rewinds its predicted entities to the last tick the server confirmed and resimulates forward to the present. What surprises people is that there is no comparison step. The server's state is written over the prediction whether or not the prediction was right, and when it was right the write simply changes nothing.",
+          "types": [
+            "PredictedSimulationSystemGroup",
+            "Simulate",
+            "GhostPredictionHistoryState"
+          ],
+          "goto": "diagrams/22-prediction-loop.html",
+          "gotoLabel": "Into the rollback loop",
+          "audio": "audio/00-world/node-rollback-short.opus",
+          "audioDeep": "audio/00-world/node-rollback-deep.opus"
+        },
+        "adversary": {
+          "short": "Physics under rollback, lag compensation, and a client that lies.",
+          "deep": "This region is where the comfortable assumptions get tested. Physics inside a loop that runs the same tick repeatedly. A server rewinding its collision world to the moment a shooter actually saw. And the standing assumption that the machine on the other end is modified, which is not paranoia, it is the default.",
+          "types": [
+            "GhostRelevancy",
+            "GhostImportance",
+            "NetworkStreamConnection"
+          ],
+          "goto": "diagrams/35-lag-compensation.html",
+          "gotoLabel": "Rewind the collision world",
+          "audio": "audio/00-world/node-adversary-short.opus",
+          "audioDeep": "audio/00-world/node-adversary-deep.opus"
+        },
+        "capsules": {
+          "short": "The destination: two capsules, one server, and nothing else.",
+          "deep": "The whole handbook is built around the smallest project that is genuinely a networked game rather than a demo. Two players, two capsules, a real client and server split, and a real connection lifecycle. Small enough to hold entirely in your head, complete enough that nothing important has been faked.",
+          "types": [
+            "NetworkStreamConnection",
+            "GhostOwner",
+            "LocalToWorld"
+          ],
+          "goto": "diagrams/04-clientgraph.html",
+          "gotoLabel": "The client state graph",
+          "audio": "audio/00-world/node-capsules-short.opus",
+          "audioDeep": "audio/00-world/node-capsules-deep.opus"
+        }
+      }
+    },
+    {
       "id": "01",
       "title": "The Machine",
       "blurb": "Six worlds in one process, and the one thin channel between them.",
@@ -48,48 +206,108 @@
         "input": {
           "short": "The Input System, holding managed keyboard state.",
           "deep": "Managed memory means Burst cannot touch it. That is why the system reading it is deliberately not Burst compiled \u2014 and that is a correct decision, not a compromise. Read devices on the managed side, write a plain struct, and let every downstream system be fast.",
+          "types": [
+            "PlayerInput",
+            "IInputComponentData",
+            "InputBufferData"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/01/node-input-short.opus",
           "audioDeep": "audio/01/node-input-deep.opus"
         },
         "client": {
           "short": "The client world. It predicts your capsule, renders everything, and owns nothing.",
           "deep": "It runs ahead of the server by roughly half the round trip, so its commands land just in time. It draws your capsule at that predicted tick and everyone else's at an interpolated tick in the past. Two different clocks, on one screen, deliberately.",
+          "types": [
+            "ClientServerBootstrap",
+            "WorldSystemFilterFlags",
+            "PredictedSimulationSystemGroup",
+            "NetworkTime"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/01/node-client-short.opus",
           "audioDeep": "audio/01/node-client-deep.opus"
         },
         "server": {
           "short": "The server world. It holds the truth and decides what each client may know.",
           "deep": "It is inside its own boundary on this map because it is the only world allowed to write authoritative state. It also decides relevancy, which is a security boundary as much as a bandwidth one: information you never send cannot be extracted by a modified client.",
+          "types": [
+            "GhostSendSystem",
+            "SimulationSystemGroup",
+            "NetworkStreamDriver",
+            "NetworkStreamInGame"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/01/node-server-short.opus",
           "audioDeep": "audio/01/node-server-deep.opus"
         },
         "service": {
           "short": "The service world outlives everything and owns the application state graph.",
           "deep": "It is created at startup and never destroyed. Because it survives world transitions, it is the right home for anything that must outlive a match: authentication, analytics, and the state machine that decides whether you are in the menu or in a game.",
+          "types": [
+            "NetworkStreamConnection",
+            "NetworkId",
+            "ConnectionApproved"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/01/node-service-short.opus",
           "audioDeep": "audio/01/node-service-deep.opus"
         },
         "bootstrap": {
           "short": "The bootstrap decides which worlds exist and what they are called.",
           "deep": "It implements Unity's custom bootstrap hook. The important consequence is that world creation is an explicit decision made by a graph node, not a side effect of entering play mode. That is also why a virtual player with the wrong play type will build a second server world and fail to bind the port.",
+          "types": [
+            "ICustomBootstrap",
+            "ClientServerBootstrap",
+            "World",
+            "WorldUnmanaged"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/01/node-bootstrap-short.opus",
           "audioDeep": "audio/01/node-bootstrap-deep.opus"
         },
         "gpu": {
           "short": "Entities Graphics uploads matrices to the GPU and issues batched draws.",
           "deep": "The rule worth carrying: presentation reads simulation and never the reverse. If you ever feed a smoothed or interpolated visual value back into simulation, you have built a feedback loop between what is true and what is drawn, and it will diverge.",
+          "types": [
+            "LocalToWorld",
+            "RenderMeshArray",
+            "EntitiesGraphicsSystem"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/01/node-gpu-short.opus",
           "audioDeep": "audio/01/node-gpu-deep.opus"
         },
         "settings": {
           "short": "A settings asset is a scriptable object that bakes into an entity.",
           "deep": "It is the bridge between a designer's number in the inspector and blittable data in a chunk. The world it lands in is decided by an attribute on the class, which a utility reads to insert the asset into the right authoring prefab. Never hand edit that array.",
+          "types": [
+            "ClientServerTickRate",
+            "ClientTickRate",
+            "GhostSendSystemData"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/01/node-settings-short.opus",
           "audioDeep": "audio/01/node-settings-deep.opus"
         },
         "subscenes": {
           "short": "A sub scene set maps scenes to worlds using load flags.",
           "deep": "This is the routing table. A scene listed with the client flag loads into client worlds; the server flag, server worlds. When an entity you expected is missing from a world, walk this path backwards \u2014 asset, prefab, scene, set, flag \u2014 and you will find the broken link.",
+          "types": [
+            "SceneSystem",
+            "RequestSceneLoaded",
+            "SubScene",
+            "EntitySceneReference"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/01/node-subscenes-short.opus",
           "audioDeep": "audio/01/node-subscenes-deep.opus"
         }
@@ -148,42 +366,95 @@
         "gather": {
           "short": "Reads the keyboard and writes a direction onto the capsule you own.",
           "deep": "It filters on ghost owner is local, a tag NetCode adds to ghosts whose owner id matches yours. Without that filter you would write your input into every player's capsule in your world. It is also not Burst compiled, because the keyboard is managed.",
+          "types": [
+            "PlayerInput",
+            "IInputComponentData",
+            "GhostOwnerIsLocal",
+            "GhostOwner"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/02/node-gather-short.opus",
           "audioDeep": "audio/02/node-gather-deep.opus"
         },
         "ring": {
           "short": "A ring of about sixty four ticks, each slot stamped with its tick.",
           "deep": "History, not a single value. The server needs several ticks to tolerate loss, and rollback needs to replay the exact input of each replayed tick. A circular buffer with a timestamp per slot, where the consumer reads by timestamp rather than position.",
+          "types": [
+            "InputBufferData",
+            "ICommandData",
+            "DynamicBuffer",
+            "NetworkTick"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/02/node-ring-short.opus",
           "audioDeep": "audio/02/node-ring-deep.opus"
         },
         "send": {
           "short": "Sends the last several ticks in one unreliable packet.",
           "deep": "The redundancy lives in the payload rather than the protocol, which is why input feels solid on a lossy link while positions still visibly hitch. A retransmit would arrive too late to matter, so nothing is retransmitted.",
+          "types": [
+            "CommandSendSystemGroup",
+            "AutoCommandTarget",
+            "CopyInputToCommandBufferSystemGroup"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/02/node-send-short.opus",
           "audioDeep": "audio/02/node-send-deep.opus"
         },
         "predict": {
           "short": "The client's copy of the movement rule, running inside prediction.",
           "deep": "It only touches entities whose simulate bit is enabled for the tick being simulated. Simulate is a clock enable line: the clock is running, and that bit decides who latches this edge. Omit it and a ten tick replay moves your capsule ten times too far.",
+          "types": [
+            "PredictedSimulationSystemGroup",
+            "Simulate",
+            "PredictedGhost",
+            "NetworkTime"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/02/node-predict-short.opus",
           "audioDeep": "audio/02/node-predict-deep.opus"
         },
         "srvmove": {
           "short": "The server's copy of that same system. Same code, same constants.",
           "deep": "One world filter names both client and server simulation, so there is literally one implementation. Two would mean two behaviours, and two behaviours mean permanent disagreement. This is what server authoritative with client prediction means in practice.",
+          "types": [
+            "WorldSystemFilterFlags",
+            "SimulationSystemGroup",
+            "Simulate"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/02/node-srvmove-short.opus",
           "audioDeep": "audio/02/node-srvmove-deep.opus"
         },
         "ghostsend": {
           "short": "Delta compresses truth against each connection's acknowledged baseline.",
           "deep": "Every client has acknowledged a different tick, so the server remembers what each one knows and encodes against that. It then sorts by importance and fills a packet until the maximum size. A snapshot is not the world; it is as much of the world as fits, prioritised.",
+          "types": [
+            "GhostSendSystem",
+            "GhostSendSystemData",
+            "GhostImportance",
+            "SnapshotData"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/02/node-ghostsend-short.opus",
           "audioDeep": "audio/02/node-ghostsend-deep.opus"
         },
         "gpu": {
           "short": "Your capsule is drawn ahead of the server; everyone else's, behind it.",
           "deep": "That is not a bug, it is the entire trade made explicit. You need your own capsule to answer instantly, and you need theirs to be smooth. Prediction buys the first, interpolation buys the second, and nobody renders the server's actual present.",
+          "types": [
+            "LocalToWorld",
+            "LocalTransform",
+            "SmoothingAction"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/02/node-gpu-short.opus",
           "audioDeep": "audio/02/node-gpu-deep.opus"
         }
@@ -235,30 +506,66 @@
         "client": {
           "short": "The connection entity. Watch its component set grow.",
           "deep": "Connection, then network id, then approved and account identity, then in game, then command target. There is no connection class anywhere. The component set is the state machine, and a missing component is always the answer to why a join stopped.",
+          "types": [
+            "NetworkStreamDriver",
+            "NetworkStreamRequestConnect",
+            "NetworkStreamConnection"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/03/node-client-short.opus",
           "audioDeep": "audio/03/node-client-deep.opus"
         },
         "graph": {
           "short": "The client state graph. It tracks the connection and holds a gate until we are in game.",
           "deep": "It reads this tick's connection facts, latches them into durable graph state, and sends the go in game request exactly once per connection identity. Keying on identity rather than a boolean means a reconnect resends correctly while a retry does not spam.",
+          "types": [
+            "NetworkId",
+            "NetworkStreamInGame",
+            "NetworkStreamRequestDisconnect"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/03/node-graph-short.opus",
           "audioDeep": "audio/03/node-graph-deep.opus"
         },
         "wire": {
           "short": "Inter process communication in one process, UDP otherwise.",
           "deep": "Snapshots and commands ride unreliable channels because a retransmit would arrive after the data was already stale. Remote procedure calls ride a reliable ordered channel, because a lost go in game request would strand the player forever.",
+          "types": [
+            "NetworkStreamProtocolVersion",
+            "RpcCollection",
+            "IRpcCommand"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/03/node-wire-short.opus",
           "audioDeep": "audio/03/node-wire-deep.opus"
         },
         "server": {
           "short": "Admits the connection, approves it, and spawns for it.",
           "deep": "Its approval path only skips real token validation when the world is not a netcode server world. A separate server world in one process is still a server world, so turning approval on here really does mean a network call to Unity Authentication.",
+          "types": [
+            "IApproveConnection",
+            "ConnectionApproved",
+            "NetworkStreamDriver"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/03/node-server-short.opus",
           "audioDeep": "audio/03/node-server-deep.opus"
         },
         "session": {
           "short": "Its query is the specification for who is allowed to spawn.",
           "deep": "Approved, account identity, network id, and command target must all be present. That is why the connection ladder is really just asking which of those four is missing. It then spawns two entities per player and links them.",
+          "types": [
+            "GhostOwner",
+            "AutoCommandTarget",
+            "CommandTarget",
+            "GhostInstance"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/03/node-session-short.opus",
           "audioDeep": "audio/03/node-session-deep.opus"
         }
@@ -310,26 +617,1807 @@
         "root": {
           "short": "Always on the active path. Anything here runs in every child state.",
           "deep": "That is the whole reason the connection tracker lives here. Attach a watchdog to a child state and it stops watching the moment you leave that state, which for a disconnect detector is exactly the wrong time. Shared watchdogs go at the top of the hierarchy.",
+          "types": [
+            "NetworkStreamConnection",
+            "NetworkStreamDriver",
+            "NetworkId"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/04/node-root-short.opus",
           "audioDeep": "audio/04/node-root-deep.opus"
         },
         "connecting": {
           "short": "The default child. It holds the block that drives the startup gate.",
           "deep": "Every composite state must declare exactly one default child, and the validator proves that at author time rather than letting you find it at runtime. It also proves your state ids do not collide after hashing, which is a lovely thing to catch offline.",
+          "types": [
+            "NetworkStreamRequestConnect",
+            "NetworkStreamConnection"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/04/node-connecting-short.opus",
           "audioDeep": "audio/04/node-connecting-deep.opus"
         },
         "gameplay": {
           "short": "The destination, and only reachable through the gate.",
           "deep": "That is what makes it a falsifiable check. Delete the old workaround, run, and read the state id. If it says gameplay, the graph sent the request, because no other code path can set it. An outcome can have many causes; a mechanism has one.",
+          "types": [
+            "NetworkStreamInGame",
+            "GhostInstance",
+            "PredictedGhost"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/04/node-gameplay-short.opus",
           "audioDeep": "audio/04/node-gameplay-deep.opus"
         },
         "disconnected": {
           "short": "A recoverable failure. The reason is latched into graph state.",
           "deep": "Connection events survive exactly one tick, so the tracker copies them immediately into durable state along with the disconnect reason. It also distinguishes voluntary from involuntary: quitting looks different from being kicked at the door, and the interface should say different things.",
+          "types": [
+            "NetworkStreamRequestDisconnect",
+            "ConnectionState"
+          ],
+          "goto": null,
+          "gotoLabel": null,
           "audio": "audio/04/node-disconnected-short.opus",
           "audioDeep": "audio/04/node-disconnected-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "05-chunk-layout",
+      "title": "Inside One Chunk",
+      "blurb": "Sixteen thousand three hundred and eighty four bytes, and the stride is the entire point.",
+      "map": "diagrams/05-chunk-layout.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "One allocation, and you can read it",
+          "focus": null,
+          "text": "Everything on this map is one allocation. Sixteen kilobytes, taken from a pool, reused. Sixty four bytes of header at the front, deliberately a whole cache line, and then nothing but arrays until the end. There is no object graph here, no vtable, no pointer to follow. If you have ever drawn a memory map on a whiteboard to explain a driver, this is that drawing, and it is the honest layout rather than a metaphor for one.",
+          "audio": "audio/05-chunk-layout/ch-intro.opus"
+        },
+        {
+          "id": "arrays",
+          "title": "One array per component type",
+          "focus": "transform",
+          "text": "After the header comes the entity array, always first, then one contiguous array per component type in this chunk's archetype. Each has a fixed stride: a transform is thirty two bytes, a ghost identity is twelve, a movement input is eight. Within an array, element three sits exactly three strides past the base. No indirection, no holes, no per element metadata. Just a run of identical records, which is the only shape a hardware prefetcher can actually predict.",
+          "audio": "audio/05-chunk-layout/ch-arrays.opus"
+        },
+        {
+          "id": "subscript",
+          "title": "An entity is a subscript, not a struct",
+          "focus": "slot",
+          "text": "Here is the part that takes a while to sit right. Entity number three does not exist anywhere as a contiguous object. Its transform is in one array, its ghost identity is in another, its input is in a third, and those three pieces may be thousands of bytes apart. What ties them together is nothing but the shared index. That is structure of arrays, chosen for exactly the reason you would choose it in C, and it is why a system that only wants transforms never pulls a single byte of anything else into cache.",
+          "audio": "audio/05-chunk-layout/ch-subscript.opus"
+        },
+        {
+          "id": "sweep",
+          "title": "What a job actually sees",
+          "focus": "sweep",
+          "text": "A job is handed one chunk at a time. Inside that chunk, every entity has identical structure by definition, so there is no branch on type and no virtual call anywhere in the loop. It walks one array forward at a fixed stride and ignores every other array in the block. This is why the unit of parallel work is a chunk rather than an entity: a chunk is exactly one cache friendly range with a known length.",
+          "audio": "audio/05-chunk-layout/ch-sweep.opus"
+        },
+        {
+          "id": "capacity",
+          "title": "The consequence nobody warns you about",
+          "focus": "archetype",
+          "text": "Capacity is the usable buffer divided by the sum of the strides. So adding one component to an entity does two things at once. It changes the archetype, which means the entity has to move to a different chunk, which is a memory copy of every one of its components. And it changes capacity, so a block that held one hundred and twenty eight entities might now hold one hundred and thirteen. That is what a structural change actually costs, and that is why you batch them.",
+          "audio": "audio/05-chunk-layout/ch-capacity.opus"
+        }
+      ],
+      "nodes": {
+        "archetype": {
+          "short": "The exact set of component types, shared by every chunk that matches it.",
+          "deep": "An archetype is a set, not an object. It owns the layout: which arrays exist, in what order, at what offsets, and how many entities fit. Every chunk with the same archetype has a byte identical layout, which is what lets a query iterate many chunks with one set of type offsets computed once.",
+          "types": [
+            "EntityArchetype",
+            "ArchetypeChunk",
+            "TypeManager"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/05-chunk-layout/node-archetype-short.opus",
+          "audioDeep": "audio/05-chunk-layout/node-archetype-deep.opus"
+        },
+        "slot": {
+          "short": "One entity, expressed as the same index into several unrelated arrays.",
+          "deep": "There is no object here to hold. The address of entity three's transform is the transform array base plus three times thirty two. The address of its input is a completely different base plus three times eight. Those two addresses have nothing to do with each other except that the same number three produced both of them.",
+          "types": [
+            "ArchetypeChunk",
+            "ComponentTypeHandle",
+            "ChunkIndex"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/05-chunk-layout/node-slot-short.opus",
+          "audioDeep": "audio/05-chunk-layout/node-slot-deep.opus"
+        },
+        "header": {
+          "short": "Sixty four bytes at the front, sized to a cache line on purpose.",
+          "deep": "It carries a globally unique sequence number, some flags, and the identity of the meta entity that holds this chunk's chunk level components. Only twenty four of those bytes are actually serialized when a chunk is written to disk; the rest is runtime bookkeeping. The buffer offset is sixty four so that the first real array starts on a cache line boundary.",
+          "types": [
+            "Chunk",
+            "ChunkIndex"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/05-chunk-layout/node-header-short.opus",
+          "audioDeep": "audio/05-chunk-layout/node-header-deep.opus"
+        },
+        "entities": {
+          "short": "The entity array, always first, eight bytes per slot.",
+          "deep": "An entity handle is an index plus a version number. The version is the trick that makes a stale reference detectable instead of catastrophic: reuse the index, bump the version, and any handle carrying the old version now fails a cheap comparison instead of silently addressing somebody else's data.",
+          "types": [
+            "ArchetypeChunk",
+            "EntityQuery"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/05-chunk-layout/node-entities-short.opus",
+          "audioDeep": "audio/05-chunk-layout/node-entities-deep.opus"
+        },
+        "transform": {
+          "short": "Thirty two bytes per entity, contiguous, no gaps.",
+          "deep": "Position, rotation and a uniform scale, packed. It is the array almost every system touches, which is why its stride matters more than most. A run of these is the best case the memory system ever sees: sequential, aligned, predictable, and completely free of anything the loop does not need.",
+          "types": [
+            "LocalTransform",
+            "LocalToWorld",
+            "PostTransformMatrix"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/05-chunk-layout/node-transform-short.opus",
+          "audioDeep": "audio/05-chunk-layout/node-transform-deep.opus"
+        },
+        "ghost": {
+          "short": "Twelve bytes: a network identity, a prefab type, and a spawn tick.",
+          "deep": "The identifier alone is not unique over time, because identifiers get recycled when ghosts are destroyed. It is the pair of identifier and spawn tick that is guaranteed unique, which is a detail you only care about at exactly the moment it bites you during despawn and respawn in the same window.",
+          "types": [
+            "GhostInstance",
+            "GhostCollection"
+          ],
+          "goto": "diagrams/36-ghost-codegen.html",
+          "gotoLabel": "How this array gets serialized",
+          "audio": "audio/05-chunk-layout/node-ghost-short.opus",
+          "audioDeep": "audio/05-chunk-layout/node-ghost-deep.opus"
+        },
+        "input": {
+          "short": "Eight bytes of intent, and the only thing that leaves this machine.",
+          "deep": "Two floats saying which direction the player wants to go. It sits in this chunk exactly like everything else, with the same stride discipline, and the fact that it is the one component destined for the wire is invisible from the memory layout. That is the point: replication is a property of the schema, not of how the data is stored.",
+          "types": [
+            "ICommandData",
+            "InputBufferData"
+          ],
+          "goto": "diagrams/02-keypress.html",
+          "gotoLabel": "Where that intent goes next",
+          "audio": "audio/05-chunk-layout/node-input-short.opus",
+          "audioDeep": "audio/05-chunk-layout/node-input-deep.opus"
+        },
+        "sweep": {
+          "short": "One job, one chunk, one linear pass with no pointer ever dereferenced.",
+          "deep": "The loop gets a base address and a count. Inside it there is no polymorphism, no null check on a reference, and no cache miss that was not implied by the data you asked for. Arrays this chunk holds but the job did not request are never read, so they never displace anything you do need.",
+          "types": [
+            "EntityQuery",
+            "ChunkEntityEnumerator",
+            "EnabledMask"
+          ],
+          "goto": "diagrams/01-machine.html",
+          "gotoLabel": "Out to the whole machine",
+          "audio": "audio/05-chunk-layout/node-sweep-short.opus",
+          "audioDeep": "audio/05-chunk-layout/node-sweep-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "22-prediction-loop",
+      "title": "The Rollback Loop",
+      "blurb": "Restore, replay, carry on. The same machine every frame, whether or not anything went wrong.",
+      "map": "diagrams/22-prediction-loop.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "It is a loop, not an incident",
+          "focus": null,
+          "text": "Most explanations of rollback tell it as a story. Something goes wrong, the client notices, drama happens, the client repairs itself. That framing is wrong and it makes the code impossible to reason about. This is a loop that runs every frame at the same cost whether the prediction was perfect or hopeless. Read it as a machine with a program counter and it becomes simple.",
+          "audio": "audio/22-prediction-loop/ch-intro.opus"
+        },
+        {
+          "id": "restore",
+          "title": "The restore is unconditional",
+          "focus": "restore",
+          "text": "First move: the server's fields are copied over the predicted entity. Not compared, copied. There is no branch anywhere that asks whether the prediction was right. If it was right, the copy writes identical bytes and costs exactly the same as if it were wrong. That is a genuinely surprising piece of engineering, and once you see it, half the confusion about when rollback happens evaporates. It always happens.",
+          "audio": "audio/22-prediction-loop/ch-restore.opus"
+        },
+        {
+          "id": "head",
+          "title": "One loop head for the whole set",
+          "focus": "start",
+          "text": "Second move: work out which tick to start from. Every predicted entity carries the tick it should start predicting from, and the loop takes the oldest one across the entire predicted set. One entity that has not heard from the server in a while drags the whole loop back with it, because there is one loop, not one per entity. Then on every iteration this same loop head chooses the next tick and enables the simulate bit on exactly the entities that should run for it.",
+          "audio": "audio/22-prediction-loop/ch-head.opus"
+        },
+        {
+          "id": "step",
+          "title": "One tick, your systems, again",
+          "focus": "step",
+          "text": "Third move: run one tick of your own gameplay systems. The same code the server ran, with the input that was recorded for that exact tick pulled back out of the command ring. Then the loop head increments and does it again. This is where anything that is not idempotent per tick betrays you. Integrating a transform is fine. Playing a sound is not, because you are about to play it eight more times.",
+          "audio": "audio/22-prediction-loop/ch-step.opus"
+        },
+        {
+          "id": "starve",
+          "title": "When nothing arrives",
+          "focus": "nosnap",
+          "text": "Most frames no snapshot arrives at all, because you render far more often than the server sends. In that case there is nothing authoritative to restore from, so the loop restores from its own backup of the last full tick it simulated and carries on. The machine does not stall waiting for the network. It runs on its own history and accepts the correction whenever it eventually shows up.",
+          "audio": "audio/22-prediction-loop/ch-starve.opus"
+        },
+        {
+          "id": "cost",
+          "title": "The cost, and the one honest lever",
+          "focus": "backup",
+          "text": "Cost is replayed ticks, times predicted entities, times whatever your predicted systems do. The first term is round trip time and you do not control it. The third you can optimise but only so far. The second is the one you actually chose, and it is the one that quietly grows, because prediction spreads to everything a predicted thing touches. Keeping the predicted set small is not a micro optimisation. It is the design.",
+          "audio": "audio/22-prediction-loop/ch-cost.opus"
+        }
+      ],
+      "nodes": {
+        "snap": {
+          "short": "The server's state for a tick that already happened.",
+          "deep": "It is delta compressed against whatever this connection last acknowledged, sent unreliably, and by the time it lands the client has already simulated well past it. Nothing is retransmitted, because a retransmit would arrive too late to be worth anything. The next snapshot simply re-bases.",
+          "types": [
+            "SnapshotData",
+            "GhostUpdateSystem",
+            "GhostSendSystem"
+          ],
+          "goto": "diagrams/41-clock-domains.html",
+          "gotoLabel": "Which domain is this ghost in?",
+          "audio": "audio/22-prediction-loop/node-snap-short.opus",
+          "audioDeep": "audio/22-prediction-loop/node-snap-deep.opus"
+        },
+        "nosnap": {
+          "short": "The usual case: no new server data this frame at all.",
+          "deep": "At sixty frames a second against a twenty hertz send rate, two frames out of three have nothing new to apply. The loop still runs. It restores from the client's own backup of its last fully simulated tick and keeps going, which is why prediction feels continuous rather than stepping every time a packet lands.",
+          "types": [
+            "GhostPredictionHistoryState",
+            "PredictedGhost"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/22-prediction-loop/node-nosnap-short.opus",
+          "audioDeep": "audio/22-prediction-loop/node-nosnap-deep.opus"
+        },
+        "restore": {
+          "short": "Server fields written over the predicted state, every time, no comparison.",
+          "deep": "Only fields that are actually part of the replicated schema get written. Everything else keeps whatever the last replay left in it, which is a sharp edge: mutate an unreplicated field inside the prediction loop and that mutation is applied once per replayed tick and never undone. It looks correct until the first dropped packet.",
+          "types": [
+            "GhostUpdateSystem",
+            "GhostField",
+            "PredictedGhost"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/22-prediction-loop/node-restore-short.opus",
+          "audioDeep": "audio/22-prediction-loop/node-restore-deep.opus"
+        },
+        "start": {
+          "short": "The loop head: picks the next tick and enables the simulate bit.",
+          "deep": "It runs once per iteration, not once per frame. Each time round it advances the tick being predicted, asks every predicted entity whether it should run for that tick, and sets the enable bit accordingly. Think of it as the clock generator plus the enable decoder for the whole predicted set.",
+          "types": [
+            "PredictedSimulationSystemGroup",
+            "Simulate",
+            "NetworkTime"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/22-prediction-loop/node-start-short.opus",
+          "audioDeep": "audio/22-prediction-loop/node-start-deep.opus"
+        },
+        "step": {
+          "short": "One tick of your own systems, with that tick's recorded input.",
+          "deep": "The same systems the server runs, under one world filter naming both sides, so there is literally one implementation. Anything with an external side effect must be gated on the flag that marks the first time a tick is fully predicted, or it happens once per replay. That flag is the difference between a sound effect and a machine gun.",
+          "types": [
+            "Simulate",
+            "NetworkTime",
+            "InputBufferData"
+          ],
+          "goto": "diagrams/33-predicted-physics.html",
+          "gotoLabel": "Physics inside this loop",
+          "audio": "audio/22-prediction-loop/node-step-short.opus",
+          "audioDeep": "audio/22-prediction-loop/node-step-deep.opus"
+        },
+        "now": {
+          "short": "The client's present, roughly half a round trip ahead of the server.",
+          "deep": "This is what gets rendered for anything you own, and it is deliberately ahead of the truth so that your input has zero perceived latency. Everything else on screen is behind the truth instead. Nobody, on any machine, is looking at the server's actual present.",
+          "types": [
+            "NetworkTime",
+            "LocalTransform",
+            "GhostPredictionSmoothingSystem"
+          ],
+          "goto": "diagrams/02-keypress.html",
+          "gotoLabel": "Back to the keypress",
+          "audio": "audio/22-prediction-loop/node-now-short.opus",
+          "audioDeep": "audio/22-prediction-loop/node-now-deep.opus"
+        },
+        "backup": {
+          "short": "A memory copy of the predicted state after the last full tick.",
+          "deep": "It has two jobs. It is the floor the loop restarts from when no snapshot arrives, and it is the reference the smoothing and error reporting compare against. The copy takes the whole component but the restore touches only the replicated part, which preserves any local state you keep alongside it.",
+          "types": [
+            "GhostPredictionHistoryState",
+            "GhostPredictionSmoothingSystem",
+            "SmoothingAction"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/22-prediction-loop/node-backup-short.opus",
+          "audioDeep": "audio/22-prediction-loop/node-backup-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "33-predicted-physics",
+      "title": "Predicted physics",
+      "blurb": "A rigid body solver re-clocked onto the prediction tick, and the two things that correct it.",
+      "map": "diagrams/33-predicted-physics.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "The same solver, a different clock",
+          "focus": null,
+          "text": "Nothing about the physics solver changes when you make it predicted. What changes is the clock feeding it. It used to be driven by a wall clock accumulator that ticked once per frame. It is now driven by the prediction tick, which can issue ten edges in a single frame after a correction arrives. Everything on this map is a consequence of that one substitution.",
+          "audio": "audio/33-predicted-physics/ch-intro.opus"
+        },
+        {
+          "id": "relocate",
+          "title": "Physics is moved, not called",
+          "focus": "clock",
+          "text": "At the first world update, a configuration system walks the fixed step group, finds the physics group and every system ordered around it, and moves the whole set into the predicted fixed step group. Then it removes itself from the update list, because the move only needs to happen once. If you wrote a system that orders itself relative to physics inside the fixed step group, it is now in a different group from the thing it was ordering against, and it will silently run at the wrong time.",
+          "audio": "audio/33-predicted-physics/ch-relocate.opus"
+        },
+        {
+          "id": "gate",
+          "title": "Two gates, and both must open",
+          "focus": "gate",
+          "text": "A rate manager decides whether the physics group runs at all. By default it demands an entity that is both a predicted ghost and has a physics velocity, unless lag compensation is switched on. Above that sits a second gate: on the client the prediction loop itself only runs when predicted ghosts exist. This pair is the mechanism behind the most common complaint in the forums, where a raycast against static level geometry returns nothing because the collision world was never built.",
+          "audio": "audio/33-predicted-physics/ch-gate.opus"
+        },
+        {
+          "id": "restore",
+          "title": "What a rollback actually puts back",
+          "focus": "snapshot",
+          "text": "There is nothing physics specific about the restore. When a snapshot arrives, the update system copies the server's fields into the components. When no snapshot arrives, the prediction backup restores the last full tick. Both paths copy back only the fields that are actually replicated. Mass, gravity factor, and collider blobs are not replicated, so they are never restored, and a mutation you make to one inside the prediction loop is applied once per replayed tick and never undone.",
+          "audio": "audio/33-predicted-physics/ch-restore.opus"
+        },
+        {
+          "id": "cost",
+          "title": "The price, stated plainly",
+          "focus": "backup",
+          "text": "Rollback cost is predicted entities multiplied by replayed ticks, and physics multiplies both terms. A solve is broadphase, narrowphase, and a constraint pass over every body in the predicted world, repeated for each replayed tick. Batching replayed ticks is the emergency valve, and it is a real accuracy loss, because a batched step pushes a larger delta through the solver and contacts resolve differently. Shrink the predicted set before you reach for batching.",
+          "audio": "audio/33-predicted-physics/ch-cost.opus"
+        }
+      ],
+      "nodes": {
+        "clock": {
+          "short": "The prediction group, issuing one tick edge per simulated tick.",
+          "deep": "On the server it advances once per frame. On the client it can advance many times in one frame, replaying every tick since the last correction. Everything downstream inherits that behaviour, including the solver, which is why physics had to be moved into this group in the first place.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/33-predicted-physics/node-clock-short.opus",
+          "audioDeep": "audio/33-predicted-physics/node-clock-deep.opus"
+        },
+        "gate": {
+          "short": "The rate manager that decides whether physics runs this tick.",
+          "deep": "It has three modes. The default requires a predicted ghost carrying a physics velocity. A relaxed mode accepts any entity with a velocity or a collider. The third mode always runs. In every mode, when nothing matches and lag compensation is the only reason to run, physics runs only on the first time a tick is fully predicted.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/33-predicted-physics/node-gate-short.opus",
+          "audioDeep": "audio/33-predicted-physics/node-gate-deep.opus"
+        },
+        "solver": {
+          "short": "The physics group, relocated out of the fixed step group at startup.",
+          "deep": "Its timestep is one over the simulation tick rate, multiplied by a configurable ratio that defaults to one. It never runs on a partial tick, so a rigid body's transform advances at most once per simulation tick no matter how fast you render. Anything smoother than that has to come from graphical smoothing.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/33-predicted-physics/node-solver-short.opus",
+          "audioDeep": "audio/33-predicted-physics/node-solver-deep.opus"
+        },
+        "snapshot": {
+          "short": "The authoritative correction, copied out of the received snapshot.",
+          "deep": "It writes only the fields that carry a ghost field attribute. For a physics body that means the transform and the linear and angular velocity, the latter quantized to one thousandth of a unit per second. Correcting position without correcting velocity would leave the client re-diverging immediately from the same wrong momentum.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/33-predicted-physics/node-snapshot-short.opus",
+          "audioDeep": "audio/33-predicted-physics/node-snapshot-deep.opus"
+        },
+        "bodies": {
+          "short": "The predicted rigid bodies, which must all be ghosts.",
+          "deep": "A dynamic body that is not a ghost cannot be rolled back, so it would be simulated forward several times per frame and never corrected. A validation system finds them and logs an error naming the offending entities, or moves them to another physics world index if you configured one.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/33-predicted-physics/node-bodies-short.opus",
+          "audioDeep": "audio/33-predicted-physics/node-bodies-deep.opus"
+        },
+        "smooth": {
+          "short": "The render pose between two simulation ticks.",
+          "deep": "The package restricts the graphical smoothing component to predicted prefab variants, so that interpolated clients do not have physics smoothing fighting the snapshot interpolation that is already positioning the body. Smoothing writes a render pose and must never be read back into simulation, because that is a feedback loop that diverges.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/33-predicted-physics/node-smooth-short.opus",
+          "audioDeep": "audio/33-predicted-physics/node-smooth-deep.opus"
+        },
+        "backup": {
+          "short": "A memory copy of the predicted state after the last full tick.",
+          "deep": "It exists so prediction can continue when no new server data has arrived, and it doubles as the reference for prediction error reporting and for smoothing the correction. The copy is of the whole component, but the restore touches only the replicated portion, which preserves any local state you keep beside it.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/33-predicted-physics/node-backup-short.opus",
+          "audioDeep": "audio/33-predicted-physics/node-backup-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "34-predicted-spawning",
+      "title": "Predicted spawning",
+      "blurb": "Two independent streams, one matcher, and an entity that is adopted rather than replaced.",
+      "map": "diagrams/34-predicted-spawning.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "The hole in the feedback loop",
+          "focus": null,
+          "text": "A player capsule can be predicted because it already exists. A projectile cannot, because at the moment of the trigger pull there is nothing to predict. Wait for the server and the rocket appears one full round trip after the input, exactly where the player is paying the most attention. Predicted spawning closes that hole, and the whole map is the machinery for the handover it needs.",
+          "audio": "audio/34-predicted-spawning/ch-intro.opus"
+        },
+        {
+          "id": "client",
+          "title": "The client creates it immediately",
+          "focus": "initsys",
+          "text": "The spawn request rides on the prefab as an enableable component that is baked disabled, so your spawn code is nothing more than an instantiate. A system consumes the request, writes a ghost identifier of zero to mark the entity as client authored, stamps a spawn tick, and serialises the entity's current state into the first snapshot slot. The entity is on screen in the same frame as the input.",
+          "audio": "audio/34-predicted-spawning/ch-client.opus"
+        },
+        {
+          "id": "ticks",
+          "title": "Why the match is a window",
+          "focus": "list",
+          "text": "The two halves stamp their spawn ticks from different clocks. Inside the prediction loop the client stamps the tick it is simulating. Outside it, the client can only stamp the last full server tick it knows about. The server stamps its own tick at the end of its frame. The package's own comment on that branch says the two will normally differ by about one tick, and by more when a rate of fire is involved. That is why classification is a window and not an equality test.",
+          "audio": "audio/34-predicted-spawning/ch-ticks.opus"
+        },
+        {
+          "id": "match",
+          "title": "The matcher, and what it compares",
+          "focus": "match",
+          "text": "One system turns unknown spawns into interpolated or predicted, digging the owner identifier out of the received snapshot bytes for owner predicted ghosts. A second system, ordered last, does the actual matching. It compares two things and only two things: the ghost type, and whether the spawn ticks fall within a window that defaults to plus or minus five. On a hit it records the client entity and removes the pending record.",
+          "audio": "audio/34-predicted-spawning/ch-match.opus"
+        },
+        {
+          "id": "outcome",
+          "title": "Adopt, or reap",
+          "focus": "adopt",
+          "text": "On a match, the spawn system does something quietly remarkable: it returns the client's existing entity instead of instantiating anything. The entity keeps its transform, its trail, and every local component you added, and simply gains the server's ghost identifier. On a miss, the client copy stays in the pending list until the interpolation tick passes its spawn tick, and is then destroyed. The player sees a brief double image and one of them vanishes.",
+          "audio": "audio/34-predicted-spawning/ch-outcome.opus"
+        }
+      ],
+      "nodes": {
+        "request": {
+          "short": "An enableable marker baked onto every prefab that supports prediction.",
+          "deep": "It carries no fields at all. It is baked disabled, so ordinary queries do not find it, and it is enabled briefly during initialisation before removal is scheduled for the next frame. That brief enabled window exists to stop the initialisation running twice when the spawn system is invoked again inside the prediction loop.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/34-predicted-spawning/node-request-short.opus",
+          "audioDeep": "audio/34-predicted-spawning/node-request-deep.opus"
+        },
+        "initsys": {
+          "short": "Initialises the client spawn and stamps the tick everything depends on.",
+          "deep": "It sets the ghost identifier to zero, the real ghost type, and a spawn tick. It sizes the snapshot ring, writes the entity's current state into slot zero with the same generated serializers the server uses, and applies the prediction start tick so rollback has a valid origin from the very first tick.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/34-predicted-spawning/node-initsys-short.opus",
+          "audioDeep": "audio/34-predicted-spawning/node-initsys-deep.opus"
+        },
+        "list": {
+          "short": "The pending list of client spawns waiting to be claimed.",
+          "deep": "It is not indexed. Entries are searched by a key pair, the ghost type and the spawn tick, and a hit removes the entry with a swap back. It behaves like a small store buffer holding writes that retire when a matching authoritative write arrives.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/34-predicted-spawning/node-list-short.opus",
+          "audioDeep": "audio/34-predicted-spawning/node-list-deep.opus"
+        },
+        "queue": {
+          "short": "New ghosts arriving from the server, still unclassified.",
+          "deep": "The receive system never creates ghosts itself. It appends entries describing a new ghost with its type, its identifier, and the tick the server spawned it, and leaves the decision to the classification group. The field to compare against is the server spawn tick, not the tick the snapshot arrived on.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/34-predicted-spawning/node-queue-short.opus",
+          "audioDeep": "audio/34-predicted-spawning/node-queue-deep.opus"
+        },
+        "match": {
+          "short": "Compares ghost type and spawn tick, within a window.",
+          "deep": "The window defaults to plus or minus five ticks. Widen it and misses turn into mismatches. Narrow it and mismatches turn back into misses. The moment two ghosts of one type can spawn within that window, the default matcher is no longer safe and you want your own, keyed on a replicated sequence number.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/34-predicted-spawning/node-match-short.opus",
+          "audioDeep": "audio/34-predicted-spawning/node-match-deep.opus"
+        },
+        "adopt": {
+          "short": "Returns the client's entity untouched instead of instantiating a new one.",
+          "deep": "This is the entire payoff. The adopted entity is the same entity the player has been watching since the trigger pull. It keeps its position, its particle trail, and every purely local component, and from this point forward it receives the server's snapshots like any other ghost.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/34-predicted-spawning/node-adopt-short.opus",
+          "audioDeep": "audio/34-predicted-spawning/node-adopt-deep.opus"
+        },
+        "reaper": {
+          "short": "Destroys client spawns that were never claimed.",
+          "deep": "The deadline is the interpolation tick, optionally pushed back by a configurable number of extra ticks that defaults to zero. Raising that number gives late-arriving server ghosts more chances to classify, but it also keeps mispredicted spawns visible for longer, so raise it in single digits.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/34-predicted-spawning/node-reaper-short.opus",
+          "audioDeep": "audio/34-predicted-spawning/node-reaper-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "35-lag-compensation",
+      "title": "Lag compensation",
+      "blurb": "A tick indexed ring of collision worlds, and the delay measurement that selects a slot.",
+      "map": "diagrams/35-lag-compensation.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "The player aims at a composite image",
+          "focus": null,
+          "text": "Three different nows are on screen at once. Your own body is drawn ahead of the server. Everyone else is drawn behind it. So when a player fires, the crosshair sits over a body that, by the server's clock, is already somewhere else. If the server tests that shot against its own present it will miss shots the player saw land, and the error grows with latency.",
+          "audio": "audio/35-lag-compensation/ch-intro.opus"
+        },
+        {
+          "id": "measure",
+          "title": "The client measures its own delay",
+          "focus": "delay",
+          "text": "The server does not estimate how far behind a client is rendering. The client measures it, as the number of ticks between the server tick and its own interpolation tick, adjusted by the sub tick fractions and floored at zero. That number is written into every command packet, stored per connection on the server, and copied onto the owned ghost when a command for that ghost arrives.",
+          "audio": "audio/35-lag-compensation/ch-measure.opus"
+        },
+        {
+          "id": "ring",
+          "title": "A ring that is really a cache",
+          "focus": "ring",
+          "text": "The history is thirty two collision world slots plus thirty two parallel tick fields. The slot is the tick modulo the size, which is why the size must be zero, one, or a power of two: the index is a mask, not a division, and it has to stay correct when the tick counter wraps. The tick stored beside the slot is the tag. A read hands you back the tag it found, so you can check that the line you got is the line you asked for.",
+          "audio": "audio/35-lag-compensation/ch-ring.opus"
+        },
+        {
+          "id": "query",
+          "title": "The query that fails silently",
+          "focus": "rewind",
+          "text": "The read has four behaviours. A tick newer than anything stored returns the live world. A tick in range returns its clone. A tick older than the ring is clamped to the oldest slot. And an uninitialised history returns the live world. The short overload of that call throws away the expected tick and the returned tick, so a high latency client is served the oldest world you have, forever, with no signal at all. Compare the two ticks and log the mismatch.",
+          "audio": "audio/35-lag-compensation/ch-query.opus"
+        },
+        {
+          "id": "tradeoff",
+          "title": "Somebody absorbs the latency",
+          "focus": "hit",
+          "text": "The server rewinds the target, not the shooter and not the level. So a player can be told they were hit while their own screen already showed them safely behind cover. That is not a bug in the implementation, it is the choice the design makes. Turn compensation off and the shooter absorbs the latency instead, by leading every moving target by their own ping. The interpolation window and the history size are the two bounds you actually control.",
+          "audio": "audio/35-lag-compensation/ch-tradeoff.opus"
+        }
+      ],
+      "nodes": {
+        "delay": {
+          "short": "Computes the interpolation delay and writes it into every command packet.",
+          "deep": "It is the tick distance from the server tick to the interpolation tick, nudged by one in either direction depending on the sub tick fractions, and never allowed below zero. It travels as a plain unsigned integer in the command header, so it costs four bytes on a packet the client was sending anyway.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/35-lag-compensation/node-delay-short.opus",
+          "audioDeep": "audio/35-lag-compensation/node-delay-deep.opus"
+        },
+        "ack": {
+          "short": "Stores the reported delay per connection on the server.",
+          "deep": "It lives alongside the acknowledgement bookkeeping for that connection, and it is only refreshed when a packet carrying a newer remote timestamp arrives. This is the single per connection value from which every per entity delay is copied.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/35-lag-compensation/node-ack-short.opus",
+          "audioDeep": "audio/35-lag-compensation/node-ack-deep.opus"
+        },
+        "cdid": {
+          "short": "The delay, copied onto the owned ghost when a command arrives for it.",
+          "deep": "This component is not baked by default. You get it by enabling track interpolation delay on the ghost authoring component, and only when the ghost also has an owner. It is refreshed only when a command arrives for that entity, so if the player switches command target, the old entity keeps its last reported delay forever.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/35-lag-compensation/node-cdid-short.opus",
+          "audioDeep": "audio/35-lag-compensation/node-cdid-deep.opus"
+        },
+        "physhist": {
+          "short": "Clones the collision world once per fully predicted tick.",
+          "deep": "It runs last inside the physics group, after the world has been built, so collider blob references are valid and copyable. It requires a lag compensation configuration singleton to exist at all, and it refuses to run on a re-simulated tick so replay can never overwrite history that was already recorded.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/35-lag-compensation/node-physhist-short.opus",
+          "audioDeep": "audio/35-lag-compensation/node-physhist-deep.opus"
+        },
+        "ring": {
+          "short": "Thirty two stored collision worlds, indexed by tick.",
+          "deep": "It is not an array of worlds. It is thirty two named fields read through a switch statement, because a collision world contains a broadphase tree that cannot simply be copied into an arbitrary slot. Holding thirty two live broadphase trees in memory, and cloning one per tick, is the real running cost of lag compensation.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/35-lag-compensation/node-ring-short.opus",
+          "audioDeep": "audio/35-lag-compensation/node-ring-deep.opus"
+        },
+        "rewind": {
+          "short": "Subtracts the delay from the current tick and hands back a world.",
+          "deep": "It clamps in two directions. A request newer than the latest stored tick gets the live world. A request older than the ring gets the oldest slot. Both are reported through an expected tick and a returned tick, and comparing those two is the only way to learn that your history is too short for your player base.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/35-lag-compensation/node-rewind-short.opus",
+          "audioDeep": "audio/35-lag-compensation/node-rewind-deep.opus"
+        },
+        "hit": {
+          "short": "Your hit registration, running inside the prediction loop.",
+          "deep": "Three rules apply. Query inside the prediction group so the tick you pass matches the command. Gate the damage on the first time a tick is fully predicted, because damage is a one shot side effect. And filter on the simulate tag, exactly as every other predicted system must.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/35-lag-compensation/node-hit-short.opus",
+          "audioDeep": "audio/35-lag-compensation/node-hit-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "36-ghost-codegen",
+      "title": "Ghost serializer codegen",
+      "blurb": "Attributes and templates become compiled function pointers in a descriptor table.",
+      "map": "diagrams/36-ghost-codegen.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "It happens at compile time",
+          "focus": null,
+          "text": "Replication in this stack has no runtime reflection cost, and the reason is that none of it happens at runtime. A Roslyn generator runs during C sharp compilation, once per assembly, sweeping every syntax tree and sorting candidates into buckets. By the time a world exists, the serialization code is already compiled machine code with a Burst function pointer attached to it.",
+          "audio": "audio/36-ghost-codegen/ch-intro.opus"
+        },
+        {
+          "id": "inputs",
+          "title": "Attributes are the schema, templates are the shapes",
+          "focus": "attrs",
+          "text": "Three attributes carry the declaration. One goes on fields and carries quantization, smoothing, composite change tracking, a sub type selector, and a send flag. One goes on the type and carries prefab type, send optimisation, owner send type, and whether children replicate. The third goes on the type and simply says: replicate the enabled flag as well as the fields. Alongside them sit the templates, one per supported field type, in quantized and unquantized variants.",
+          "audio": "audio/36-ghost-codegen/ch-inputs.opus"
+        },
+        {
+          "id": "emit",
+          "title": "What comes out",
+          "focus": "ser",
+          "text": "For each replicated component the generator produces a struct with a private snapshot layout and eight methods. Copy to snapshot applies quantization. Calculate change mask compares against a baseline. Predict delta derives a predicted baseline. Serialize writes only changed fields. Deserialize reads them back. Copy from snapshot dequantizes and interpolates. Restore from backup handles rollback. And a report method feeds the prediction error debugger.",
+          "audio": "audio/36-ghost-codegen/ch-emit.opus"
+        },
+        {
+          "id": "registry",
+          "title": "A descriptor table, not a lookup",
+          "focus": "state",
+          "text": "One registration system per assembly hands each serializer's descriptor to a collection, which ends up as a dynamic buffer on the ghost collection entity. Each entry carries sizes, mask bit counts, routing rules, and a small set of function pointers. Dispatch at runtime is an index into that buffer followed by an indirect call, exactly like a driver jump table. Nothing is looked up by name at any point after startup.",
+          "audio": "audio/36-ghost-codegen/ch-registry.opus"
+        },
+        {
+          "id": "encoder",
+          "title": "Predict, then encode the residual",
+          "focus": "wire",
+          "text": "Serialization does not delta against the previous value. It deltas against a prediction of the current value, derived from three baselines using fractions in sixteenths, falling back to the newest baseline whenever the extrapolation would be worse. The residual is then written through an entropy model, so a near zero delta costs a handful of bits. A body moving at constant velocity is almost free on the wire. It is the same structure as a lossless audio codec.",
+          "audio": "audio/36-ghost-codegen/ch-encoder.opus"
+        }
+      ],
+      "nodes": {
+        "attrs": {
+          "short": "The three attributes that declare what replicates and how.",
+          "deep": "Quantization defaults to negative one, meaning unset. Composite change tracking is off, so every inner field of a nested struct gets its own change bit. Smoothing defaults to clamp. Send data defaults to true, and the maximum smoothing distance defaults to zero, which disables the snap check entirely.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/36-ghost-codegen/node-attrs-short.opus",
+          "audioDeep": "audio/36-ghost-codegen/node-attrs-deep.opus"
+        },
+        "templates": {
+          "short": "One code template per supported field type, quantized or not.",
+          "deep": "They ship as additional files inside the package, and there are separate templates for the quantized and unquantized form of every floating point type, including the quaternion and every fixed string size. A custom sub type is how you point a field at a template of your own.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/36-ghost-codegen/node-templates-short.opus",
+          "audioDeep": "audio/36-ghost-codegen/node-templates-deep.opus"
+        },
+        "gen": {
+          "short": "A Roslyn generator running once per assembly during compilation.",
+          "deep": "It registers a syntax receiver that sorts candidates into seven buckets: components, remote procedure calls, commands, inputs, variants, ghost behaviours, and remotes. If an assembly does not reference the netcode package, the generator skips it entirely, and your attributes do nothing at all, with no error, because nothing ran.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/36-ghost-codegen/node-gen-short.opus",
+          "audioDeep": "audio/36-ghost-codegen/node-gen-deep.opus"
+        },
+        "ser": {
+          "short": "The emitted serializer struct for one component.",
+          "deep": "Its snapshot layout begins with a tick, then the change mask words, then the enabled bit mask words, then the component data, all aligned. Each replicated field contributes one change bit by default, and the composite option collapses a nested struct down to a single bit for the whole struct.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/36-ghost-codegen/node-ser-short.opus",
+          "audioDeep": "audio/36-ghost-codegen/node-ser-deep.opus"
+        },
+        "reg": {
+          "short": "One generated registration system per assembly.",
+          "deep": "It is ordered into the serializer collection group and created before the default variant group, so that variants can override which serializer a component actually uses. Its whole job is to call add serializer once for each descriptor the generator produced in that assembly.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/36-ghost-codegen/node-reg-short.opus",
+          "audioDeep": "audio/36-ghost-codegen/node-reg-deep.opus"
+        },
+        "state": {
+          "short": "The descriptor: sizes, masks, routing rules, and function pointers.",
+          "deep": "It carries three hashes used for identity and protocol versioning, the component type, the in memory size and the on the wire size, the change mask bit count, whether the enabled bit is serialized, and the routing rules taken from the component attribute. Then it carries the pointers into the generated code.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/36-ghost-codegen/node-state-short.opus",
+          "audioDeep": "audio/36-ghost-codegen/node-state-deep.opus"
+        },
+        "wire": {
+          "short": "The send path, calling into the generated code by index.",
+          "deep": "It compares quantized integers rather than floats when building the change mask, which is the real reason quantization saves bandwidth: quantized values compare equal far more often, and an unchanged field costs only its mask bit. Set quantization too coarse, though, and prediction can never agree with the dequantized server value, so you roll back every single tick.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/36-ghost-codegen/node-wire-short.opus",
+          "audioDeep": "audio/36-ghost-codegen/node-wire-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "37-interest-management",
+      "title": "The Snapshot Budget",
+      "blurb": "One packet per player per tick, and the arbiter that decides what fills it.",
+      "map": "diagrams/37-interest-management.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "A fixed-width bus",
+          "focus": null,
+          "text": "The server does not send you the world. Once per network tick, per connection, it sends one packet, and that packet is about fourteen hundred bytes minus the pipeline header. Everything on this map exists to answer one question: given a budget that does not grow, which ghosts get to spend it this tick.",
+          "audio": "audio/37-interest-management/ch-intro.opus"
+        },
+        {
+          "id": "aging",
+          "title": "Priority times age",
+          "focus": "aging",
+          "text": "Each chunk of ghosts carries a base importance you set on the prefab. The server multiplies that by the number of ticks since the chunk was last sent. That second term is an age counter, and it is the reason a low importance object is never silent forever. This is a priority arbiter with aging, exactly as a bus arbiter avoids starving a low priority requester. Every grant resets that requester's age while everyone else keeps climbing.",
+          "audio": "audio/37-interest-management/ch-aging.opus"
+        },
+        {
+          "id": "scaling",
+          "title": "Your own scoring function",
+          "focus": "scale",
+          "text": "Before the sort, the server hands the whole list of chunks to a function pointer you supply. The built in one is distance based: it takes the difference between the chunk's tile and the player's tile, squares the length, and divides priority by it. Anything within one tile in any direction is treated as here, because a player standing near a tile edge must not lose the tile they are looking at.",
+          "audio": "audio/37-interest-management/ch-scaling.opus"
+        },
+        {
+          "id": "focus",
+          "title": "Where the player is looking",
+          "focus": "focus",
+          "text": "The scaling function needs a focal point per connection, and that lives in a component you put on the connection entity yourself. If you forget it, the scaling function is never called at all, no error appears, and every ghost simply falls back to plain aging. This is the single most common silent failure in interest management.",
+          "audio": "audio/37-interest-management/ch-focus.opus"
+        },
+        {
+          "id": "relevancy",
+          "title": "Relevancy is a different verb",
+          "focus": "relset",
+          "text": "Importance answers how often. Relevancy answers whether at all. A relevancy set is a map keyed by connection and ghost, and it runs in one of two modes: an allowlist where nothing is sent unless listed, or a denylist where listed things are excluded. For anything competitive you want the allowlist, because anything you forget to list in a denylist leaks.",
+          "audio": "audio/37-interest-management/ch-relevancy.opus"
+        },
+        {
+          "id": "spend",
+          "title": "Spending the packet",
+          "focus": "serialize",
+          "text": "The serializer walks the sorted list and writes ghosts until the packet is full, delta compressed against whatever this particular client last acknowledged. A chunk that has not changed since an acknowledged zero change snapshot is skipped entirely. And when a ghost stops being relevant, it is not merely omitted; its history is cleared and a despawn is queued, so the entity is destroyed on the client.",
+          "audio": "audio/37-interest-management/ch-spend.opus"
+        }
+      ],
+      "nodes": {
+        "chunks": {
+          "short": "Every ghost chunk on the server, with per connection state attached.",
+          "deep": "The send system does not think in entities, it thinks in chunks. Each chunk carries, for each connection separately, the tick it was last sent and the snapshot history used for delta compression. That is why the cost of sending grows with player count even when the world does not change at all.",
+          "types": [
+            "ArchetypeChunk",
+            "GhostChunkSerializationState",
+            "GhostInstance",
+            "GhostCleanup"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/37-interest-management/node-chunks-short.opus",
+          "audioDeep": "audio/37-interest-management/node-chunks-deep.opus"
+        },
+        "aging": {
+          "short": "Base importance multiplied by ticks since this chunk was last sent.",
+          "deep": "The product is compared against a minimum send importance floor, and dropped if it is below. Then it is multiplied by one thousand, purely to give your scaling function room to divide. If the whole chunk was irrelevant last time, the priority is divided down first, so barely relevant things do not churn.",
+          "types": [
+            "GhostSendSystemData",
+            "PrioChunk",
+            "GhostAuthoringComponent",
+            "NetworkTick"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/37-interest-management/node-aging-short.opus",
+          "audioDeep": "audio/37-interest-management/node-aging-deep.opus"
+        },
+        "focus": {
+          "short": "The per connection focal point your code puts on the connection entity.",
+          "deep": "Without this component the send system skips importance scaling entirely and logs nothing. The packet dump is the only place it tells you, printing that ghost importance is disabled. Add the component when the player takes control of a pawn, and update it as the pawn moves.",
+          "types": [
+            "GhostConnectionPosition",
+            "GhostDistanceData",
+            "GhostDistancePartitionShared"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/37-interest-management/node-focus-short.opus",
+          "audioDeep": "audio/37-interest-management/node-focus-deep.opus"
+        },
+        "scale": {
+          "short": "Your batched scoring function, called once per connection with every chunk.",
+          "deep": "The batched form is preferred because it replaces thousands of function pointer calls with one. It may rewrite each chunk's priority, and it may also flip a whole chunk relevancy flag, which is a fast path that skips the relevancy hash map completely. After it returns, the list is sorted in descending priority order.",
+          "types": [
+            "GhostImportance",
+            "GhostDistanceImportance",
+            "PortableFunctionPointer",
+            "PrioChunk"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/37-interest-management/node-scale-short.opus",
+          "audioDeep": "audio/37-interest-management/node-scale-deep.opus"
+        },
+        "relset": {
+          "short": "A map from connection and ghost identifier to relevance for this tick.",
+          "deep": "It is consulted only when the faster archetype masks and the chunk level flag have not already settled the question. There is one asymmetry worth knowing: a ghost matching netcode's own internal relevancy rule can never be marked irrelevant by your code.",
+          "types": [
+            "GhostRelevancy",
+            "GhostRelevancyMode",
+            "RelevantGhostForConnection"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/37-interest-management/node-relset-short.opus",
+          "audioDeep": "audio/37-interest-management/node-relset-deep.opus"
+        },
+        "serialize": {
+          "short": "Writes ghosts into the packet, delta compressed against this client's acknowledgement.",
+          "deep": "Three separate limits can stop it early: the number of chunks it is allowed to examine, the number it is allowed to send from, and the packet filling up. Set the examine limit too low and the packet goes out half empty, because that limit is applied before relevancy is even checked.",
+          "types": [
+            "GhostChunkSerializer",
+            "GhostOptimizationMode",
+            "NetworkSnapshotAck"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/37-interest-management/node-serialize-short.opus",
+          "audioDeep": "audio/37-interest-management/node-serialize-deep.opus"
+        },
+        "packet": {
+          "short": "One unreliable packet, sized to the maximum message size minus headers.",
+          "deep": "You can override the size globally, or per connection, which is how you hit a specific bandwidth target for a specific player. Ask for more than the message size and the snapshot quietly moves onto the fragmenting pipeline, which costs you reassembly and makes loss hurt more.",
+          "types": [
+            "NetworkStreamSnapshotTargetSize",
+            "NetworkParameterConstants",
+            "FragmentationPipelineStage"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/37-interest-management/node-packet-short.opus",
+          "audioDeep": "audio/37-interest-management/node-packet-deep.opus"
+        },
+        "despawn": {
+          "short": "Ghosts that dropped out of relevance, plus ordinary destroyed entities.",
+          "deep": "A third of the packet is reserved for despawn messages by default, before ghost data gets any of it, and the package suggests raising that toward three quarters at large scale. Because relevancy churn is spawn and despawn churn, a relevancy rule with no hysteresis will spend your packet on nothing but bookkeeping.",
+          "types": [
+            "PendingGhostDespawn",
+            "GhostDespawnSystem",
+            "GhostSendSystemData"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/37-interest-management/node-despawn-short.opus",
+          "audioDeep": "audio/37-interest-management/node-despawn-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "38-profiling",
+      "title": "The Measurement Plane",
+      "blurb": "Four bottlenecks that look identical from outside, and the counters that separate them.",
+      "map": "diagrams/38-profiling.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "Four problems, one symptom",
+          "focus": null,
+          "text": "Netcode has four bottlenecks: serialization work on the server, bandwidth on the wire, prediction replay on the client, and the quality of the link itself. From the outside they all look the same, because the game gets worse when there are more players. Reaching for a central processing unit profiler when you have a bandwidth problem is how weeks disappear.",
+          "audio": "audio/38-profiling/ch-intro.opus"
+        },
+        {
+          "id": "gate",
+          "title": "None of this exists in a release build",
+          "focus": "collector",
+          "text": "Every metric component and every counter here is wrapped in a compile time condition. In a release player without the debug define, the types do not exist and nothing is emitted. The collector also gates itself on the profiler being enabled, and it creates its own singleton entity. If you had already made one to read metrics from your own code, it destroys yours and warns you.",
+          "audio": "audio/38-profiling/ch-gate.opus"
+        },
+        {
+          "id": "shapes",
+          "title": "The same numbers, two shapes",
+          "focus": "singletons",
+          "text": "The collector publishes in two forms. One is ordinary entity components you can read from your own system: round trip time, jitter, command age, snapshot size in bits, per ghost type instance counts and sizes. The other is profiler counters in the network category, which is what the profiler window graphs. Read the components when you want a number. Read the counters when you want a shape over time.",
+          "audio": "audio/38-profiling/ch-shapes.opus"
+        },
+        {
+          "id": "thresholds",
+          "title": "The only two defined bad values",
+          "focus": "modules",
+          "text": "This chapter refuses to tell you what a bad millisecond looks like, because that was never measured here. But the package itself defines exactly two thresholds. Compression efficiency below seventy percent is flagged as poor. A snapshot approaching ninety percent of the maximum message size is flagged as reaching the ceiling. Those are the package's numbers, not invented ones.",
+          "audio": "audio/38-profiling/ch-thresholds.opus"
+        },
+        {
+          "id": "prediction",
+          "title": "Counting prediction ticks",
+          "focus": "client",
+          "text": "Rollback cost is predicted entities multiplied by replayed ticks, and both terms are readable. Network time exposes how many predicted ticks have run this frame and how many the loop expects. It even prints them together in one string, which makes it the cheapest prediction probe you will ever write. Batching replayed ticks saves time and costs simulation accuracy, because one step with a larger delta is not the same as several small ones.",
+          "audio": "audio/38-profiling/ch-prediction.opus"
+        },
+        {
+          "id": "probe",
+          "title": "The dashboard that survives a build",
+          "focus": "hud",
+          "text": "The fastest netcode instrument is not a window. Query the network metrics, the snapshot metrics, and the network time in one client system, and log one line per second. Four numbers separate all four bottlenecks, and unlike a profiler window they keep working in a headless build on a real server.",
+          "audio": "audio/38-profiling/ch-probe.opus"
+        }
+      ],
+      "nodes": {
+        "server": {
+          "short": "Emits snapshot sizes, chunk counts, and per ghost serialization timings.",
+          "deep": "This is also where the named profiler markers live. Prioritize chunks covers gathering and sorting per connection, relevancy covers per entity evaluation, and there is a marker for the static optimization check. There is an option to add a marker per component inside serialization, which costs performance and is meant to be turned on, read, and turned off.",
+          "types": [
+            "GhostSendSystem",
+            "ProfilerMarker",
+            "GhostSendSystemData",
+            "GhostSerializationMetrics"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/38-profiling/node-server-short.opus",
+          "audioDeep": "audio/38-profiling/node-server-deep.opus"
+        },
+        "client": {
+          "short": "Emits round trip time, jitter, snapshot age, and prediction error magnitudes.",
+          "deep": "Prediction errors are reported as a buffer of magnitudes paired with a buffer of names, joined only by index. Read one without the other and you have numbers attached to nothing. The client is also where you count predicted ticks per frame, which is the client side cost term.",
+          "types": [
+            "NetworkTime",
+            "PredictedGhost",
+            "PredictionErrorMetrics",
+            "PredictionErrorNames"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/38-profiling/node-client-short.opus",
+          "audioDeep": "audio/38-profiling/node-client-deep.opus"
+        },
+        "collector": {
+          "short": "One system per world that gathers stats and publishes them twice.",
+          "deep": "It only runs while the profiler is enabled, and it cleans up when the profiler is switched off. It creates a singleton entity named metrics monitor carrying six required component types. Server worlds get instance count and snapshot size counters; client worlds get those plus jitter and round trip time.",
+          "types": [
+            "GhostMetricsMonitor",
+            "ProfilerCounterValue",
+            "ProfilerCategory"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/38-profiling/node-collector-short.opus",
+          "audioDeep": "audio/38-profiling/node-collector-deep.opus"
+        },
+        "counters": {
+          "short": "Profiler counters in the network category: bytes, counts, and nanoseconds.",
+          "deep": "Snapshot size is published in bytes, converted from a bit total. Round trip time and jitter are stored in milliseconds on the component and multiplied by one million for the nanosecond unit the counter declares. If you want milliseconds, read the component rather than the counter.",
+          "types": [
+            "ProfilerCounterValue",
+            "ProfilerCategory",
+            "ProfilerMarkerDataUnit"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/38-profiling/node-counters-short.opus",
+          "audioDeep": "audio/38-profiling/node-counters-deep.opus"
+        },
+        "singletons": {
+          "short": "Ordinary entity components holding every metric the collector gathered.",
+          "deep": "Network metrics carries round trip time, jitter, command age, and the minimum and maximum snapshot age. Snapshot metrics carries total size in bits, total ghost count, and despawn counts. Ghost metrics is a buffer with one entry per ghost type, holding instance count, size in bits, and chunk count on the server.",
+          "types": [
+            "NetworkMetrics",
+            "SnapshotMetrics",
+            "GhostMetrics",
+            "GhostNames"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/38-profiling/node-singletons-short.opus",
+          "audioDeep": "audio/38-profiling/node-singletons-deep.opus"
+        },
+        "modules": {
+          "short": "Two profiler modules, one for the client world and one for the server world.",
+          "deep": "The per tick view breaks a snapshot into rows with size, percentage of the snapshot, instance count, compression efficiency, and average size per instance. Two rows are not ghost types at all: snapshot overhead for spawns and prefab lists, and ghost prefab overhead for identifiers, spawn ticks, and baselines. Note that the older browser based network debugger is marked deprecated in this version.",
+          "types": [
+            "ProfilerModule",
+            "ProfilerModuleMetadata",
+            "ProfilerCounterDescriptor"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/38-profiling/node-modules-short.opus",
+          "audioDeep": "audio/38-profiling/node-modules-deep.opus"
+        },
+        "hud": {
+          "short": "Your own system reading the metric components and logging a line.",
+          "deep": "Four numbers are enough to separate the four bottlenecks: round trip time, jitter, snapshot bits, and predicted ticks per frame. Because these are plain components, this probe compiles into a development build and keeps reporting from a real server under real load, which no editor window can do.",
+          "types": [
+            "NetworkMetrics",
+            "SnapshotMetrics",
+            "NetworkTime",
+            "CommandArrivalStatistics"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/38-profiling/node-hud-short.opus",
+          "audioDeep": "audio/38-profiling/node-hud-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "39-connection-topologies",
+      "title": "The Transport Stack",
+      "blurb": "From a call to Listen down to the bytes, and where a relay actually sits.",
+      "map": "diagrams/39-connection-topologies.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "Four independent choices",
+          "focus": null,
+          "text": "People collapse four separate decisions into one word and then argue about it. Topology is who owns the authoritative simulation. The driver store is which driver instances exist. The interface is how bytes leave the process. Reachability is whether the client can address the host at all. A relay answers the fourth question and changes nothing about the first.",
+          "audio": "audio/39-connection-topologies/ch-intro.opus"
+        },
+        {
+          "id": "worlds",
+          "title": "There is no client hosted mode",
+          "focus": "api",
+          "text": "The play type has exactly three values. Client and server creates both worlds in one process, which is a listen server. Client creates one world that must connect to something. Server creates one world that can only listen. What people call client hosting is simply client and server running on a player's machine, with every consequence that implies for who you are trusting.",
+          "audio": "audio/39-connection-topologies/ch-worlds.opus"
+        },
+        {
+          "id": "ctor",
+          "title": "One property is the extension point",
+          "focus": "ctor",
+          "text": "A single static property holds the driver constructor, and swapping it is how you inject relay parameters, transport layer security, or unusual queue sizes. You do not write driver creation by hand: the default builder gives you a register helper for every combination, and you mutate the settings object before handing it over.",
+          "audio": "audio/39-connection-topologies/ch-ctor.opus"
+        },
+        {
+          "id": "two",
+          "title": "The server holds two drivers",
+          "focus": "store",
+          "text": "A server in the editor usually registers two drivers: one using inter process communication for the client living in the same process, and one socket driver for everyone else. The client picks the in process route only when a server world already exists and the network simulator is off. That last condition is why turning the simulator on forces sockets, since there would otherwise be nothing to emulate.",
+          "audio": "audio/39-connection-topologies/ch-two.opus"
+        },
+        {
+          "id": "pipes",
+          "title": "The pipeline stack",
+          "focus": "wire",
+          "text": "Each driver creates three pipelines. Unreliable sequenced carries snapshots and commands. Reliable sequenced carries remote procedure calls. A fragmenting pipeline carries snapshots too big for one message. In the editor, with the simulator on, a fourth stage is appended to all three on the client only. Each stage adds header bytes, and the send system subtracts them before deciding how big a snapshot may be.",
+          "audio": "audio/39-connection-topologies/ch-pipes.opus"
+        },
+        {
+          "id": "relay",
+          "title": "What is not in the box",
+          "focus": "relay",
+          "text": "Search the whole transport package for hole punching or address translation traversal and you find nothing. There is a relay client that takes an endpoint, an allocation identifier, and a key. Everything that produces those values, along with matchmaking, lobbies, and hosted fleets, is a service running somewhere else. This book verified the struct and the driver parameter, and it verified nothing about the service.",
+          "audio": "audio/39-connection-topologies/ch-relay.opus"
+        }
+      ],
+      "nodes": {
+        "api": {
+          "short": "The singleton your game calls to listen or to connect.",
+          "deep": "It also exposes the driver store itself, so you can ask which address a given driver actually bound to. When a listen server's own player feels mysteriously laggy, that query tells you whether the local connection went over the in process driver or fell back to the loopback socket.",
+          "types": [
+            "NetworkStreamDriver",
+            "NetworkEndpoint",
+            "NetCodeConnectionEvent"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/39-connection-topologies/node-api-short.opus",
+          "audioDeep": "audio/39-connection-topologies/node-api-deep.opus"
+        },
+        "ctor": {
+          "short": "A static property you replace to control how drivers are built.",
+          "deep": "It has two methods, one for the client world and one for the server world, and it lazily defaults to a constructor that registers in process and socket drivers. Assign your own before any world is created. Relay parameters, certificates, and queue sizes are all just settings you apply before calling the register helper.",
+          "types": [
+            "INetworkStreamDriverConstructor",
+            "DefaultDriverBuilder",
+            "NetworkSettings"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/39-connection-topologies/node-ctor-short.opus",
+          "audioDeep": "audio/39-connection-topologies/node-ctor-deep.opus"
+        },
+        "store": {
+          "short": "An array of driver instances, each tagged in process or socket.",
+          "deep": "The server usually holds two, the client holds one. The order matters more than people expect: the local client only gets the fast in process driver if the server world already exists, so you must start listening before you try to connect. Get that wrong and your host player quietly routes through the loopback socket.",
+          "types": [
+            "NetworkDriverStore",
+            "TransportType",
+            "NetworkDriverInstance"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/39-connection-topologies/node-store-short.opus",
+          "audioDeep": "audio/39-connection-topologies/node-store-deep.opus"
+        },
+        "relay": {
+          "short": "An allocation from a hosted service: an endpoint, a key, a join code.",
+          "deep": "Netcode applies it as driver settings on the socket driver only. On a server the in process driver is deliberately registered without relay parameters, so the host's own player keeps the fast path while remote clients take the longer route. A relay is a reachability fix, not a topology, and it costs an extra hop of latency.",
+          "types": [
+            "RelayServerData",
+            "RelayAllocationId",
+            "RelayHMACKey"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/39-connection-topologies/node-relay-short.opus",
+          "audioDeep": "audio/39-connection-topologies/node-relay-deep.opus"
+        },
+        "ipc": {
+          "short": "An in process driver with no socket, no latency, and guaranteed delivery.",
+          "deep": "It is what makes a listen server's own player feel instant, and it is also what makes editor testing dishonest, because a perfect link hides exactly the class of bug that ships. Develop with the simulator on, which forces even the local client onto a real socket.",
+          "types": [
+            "IPCNetworkInterface",
+            "ClientServerBootstrap",
+            "NetworkDriver"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/39-connection-topologies/node-ipc-short.opus",
+          "audioDeep": "audio/39-connection-topologies/node-ipc-deep.opus"
+        },
+        "socket": {
+          "short": "A datagram driver, or a web socket driver when targeting a browser.",
+          "deep": "A browser client cannot open a datagram socket, so it uses web sockets, and it cannot listen at all. The default server constructor throws for that target and tells you to build a custom constructor using relay settings instead. This is the one case where reachability dictates topology.",
+          "types": [
+            "UDPNetworkInterface",
+            "WebSocketNetworkInterface",
+            "NetworkDriver"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/39-connection-topologies/node-socket-short.opus",
+          "audioDeep": "audio/39-connection-topologies/node-socket-deep.opus"
+        },
+        "local": {
+          "short": "The host's own player, connected through the in process driver.",
+          "deep": "It is a real connection with a real network identifier, running the whole netcode flow, just with a transport that never drops or delays anything. Whether the host's zero latency advantage is acceptable is a design decision. In a shooter it usually is not, and no configuration removes it.",
+          "types": [
+            "NetworkStreamConnection",
+            "NetworkId",
+            "NetworkStreamInGame"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/39-connection-topologies/node-local-short.opus",
+          "audioDeep": "audio/39-connection-topologies/node-local-deep.opus"
+        },
+        "wire": {
+          "short": "The three pipelines every driver creates, and the bytes they carry.",
+          "deep": "Defaults worth knowing: a maximum message size of fourteen hundred bytes, a reliable window of thirty two, a fragmentation payload capacity of sixteen kilobytes, and a thirty second disconnect timeout with a half second heartbeat. In the editor a maximum frame time is set so a breakpoint does not look like a dropped connection.",
+          "types": [
+            "UnreliableSequencedPipelineStage",
+            "ReliableSequencedPipelineStage",
+            "FragmentationPipelineStage",
+            "SimulatorPipelineStage"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/39-connection-topologies/node-wire-short.opus",
+          "audioDeep": "audio/39-connection-topologies/node-wire-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "40-cheat-surface",
+      "title": "The Trust Boundary",
+      "blurb": "What a modified client can assert, and exactly where each assertion is bounded.",
+      "map": "diagrams/40-cheat-surface.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "Intent, never results",
+          "focus": null,
+          "text": "The security model is one sentence: the client sends intent and the server computes results. Everything inside the client box belongs to the attacker, including the parts netcode fills in automatically. Everything the server derives from those fields belongs to you. The strength of the whole model is how much the server derives and how little it accepts.",
+          "audio": "audio/40-cheat-surface/ch-intro.opus"
+        },
+        {
+          "id": "mailbox",
+          "title": "A mailbox, not a shared bus",
+          "focus": "packet",
+          "text": "Think of this as a privilege boundary with a mailbox. The client writes a message; the server reads it as a request and executes in its own address space. A design where the client sends a position is a design where the untrusted side has a write port into privileged memory. Every hole on this map is either an unvalidated field in the mailbox, or a read port that was opened too wide.",
+          "audio": "audio/40-cheat-surface/ch-mailbox.opus"
+        },
+        {
+          "id": "bounded",
+          "title": "What is already bounded for you",
+          "focus": "ring",
+          "text": "A command packet carries at most thirty two commands. The buffer they land in is a ring of sixty four slots keyed by tick, and the prediction loop reads exactly one command per tick. Commands older than the current server tick are rewritten to it. So flooding does not multiply your actions; it wastes your own bandwidth and costs the server a little work.",
+          "audio": "audio/40-cheat-surface/ch-bounded.opus"
+        },
+        {
+          "id": "unbounded",
+          "title": "What is not bounded at all",
+          "focus": "sim",
+          "text": "The receive path deserializes your input struct field by field with no range check, no clamp, and no normalisation. A movement vector arrives as whatever bit patterns were sent, and the server then multiplies it by speed and delta time with full authority. That is an authoritative teleport. Clamp on read, and do it in the shared predicted system, because a server only clamp the client does not apply is a permanent misprediction.",
+          "audio": "audio/40-cheat-surface/ch-unbounded.opus"
+        },
+        {
+          "id": "lag",
+          "title": "What lag compensation gives back",
+          "focus": "rewind",
+          "text": "To rewind the world to what a client saw, the server has to know how far behind that view was, and the client is the one who says. Inflate that number and the server rewinds further than your view required. The structural bound is the history buffer, which holds at most thirty two collision worlds, so your history size is literally your maximum exploitable rewind.",
+          "audio": "audio/40-cheat-surface/ch-lag.opus"
+        },
+        {
+          "id": "read",
+          "title": "The read port",
+          "focus": "relev",
+          "text": "A client can render anything it received, so quantization, obfuscation, and encryption do not stop a wall hack. The only defence is not sending the data. Relevancy in allowlist mode, and marking private state as owner only, are the structural answers. An aimbot that cannot see you cannot aim at you, and that is the netcode contribution to a problem netcode cannot otherwise solve.",
+          "audio": "audio/40-cheat-surface/ch-read.opus"
+        }
+      ],
+      "nodes": {
+        "client": {
+          "short": "A process the attacker fully controls: memory, code, timing, and clock.",
+          "deep": "Nothing it reports is evidence of anything. It can put any value in any input field, send at any rate, claim any tick, and report any interpolation delay. What it cannot do is write a replicated field, because those flow only from server to client, and it cannot change what the server would have simulated.",
+          "types": [
+            "IInputComponentData",
+            "AutoCommandTarget",
+            "CommandTarget"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/40-cheat-surface/node-client-short.opus",
+          "audioDeep": "audio/40-cheat-surface/node-client-deep.opus"
+        },
+        "packet": {
+          "short": "Input fields and a tick number, at most thirty two commands per packet.",
+          "deep": "The count is five bits, and the number actually sent is the target command slack plus the additional commands setting, which is redundancy against loss rather than a rate. Late arrivals and duplicate resends are both counted in a statistics block on the connection, which is where you detect a client behaving strangely.",
+          "types": [
+            "CommandSendSystem",
+            "ICommandDataSerializer",
+            "CommandArrivalStatistics"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/40-cheat-surface/node-packet-short.opus",
+          "audioDeep": "audio/40-cheat-surface/node-packet-deep.opus"
+        },
+        "delay": {
+          "short": "The interpolation delay, written into the command header by the sender.",
+          "deep": "The component that receives it is documented as the latest reported delay, which is exactly as trustworthy as it sounds. It is also never reset when the client switches which entity it is controlling, so a stale value from a previous vehicle silently applies to the next one. That is a correctness bug before it is a security one.",
+          "types": [
+            "CommandDataInterpolationDelay",
+            "NetworkSnapshotAck",
+            "NetworkTime"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/40-cheat-surface/node-delay-short.opus",
+          "audioDeep": "audio/40-cheat-surface/node-delay-deep.opus"
+        },
+        "ring": {
+          "short": "Sixty four slots keyed by tick, read once per tick by the prediction loop.",
+          "deep": "This is what makes flooding pointless. Inserting into an occupied slot replaces its contents and counts as a redundant resend. Commands for future ticks simply wait until the server reaches them, which is normal because clients deliberately run ahead. The only way this becomes a hazard is if your own code reads the buffer directly instead of by tick.",
+          "types": [
+            "ICommandData",
+            "InputBufferData",
+            "CommandDataUtility",
+            "NetworkTick"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/40-cheat-surface/node-ring-short.opus",
+          "audioDeep": "audio/40-cheat-surface/node-ring-deep.opus"
+        },
+        "rewind": {
+          "short": "The collision history, and the clamp that bounds how far back anyone can reach.",
+          "deep": "The requested delay is clamped to one less than the history size, and the raw buffer holds at most thirty two worlds. At sixty simulation steps per second that is a little over half a second. The lookup returns both the tick you asked for and the tick you got, and the package documentation tells you to compare them to find players sitting on the clamp.",
+          "types": [
+            "PhysicsWorldHistory",
+            "LagCompensationConfig",
+            "PhysicsWorldHistorySingleton"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/40-cheat-surface/node-rewind-short.opus",
+          "audioDeep": "audio/40-cheat-surface/node-rewind-deep.opus"
+        },
+        "sim": {
+          "short": "The only writer of truth, running the same rules the client predicted.",
+          "deep": "This is where your input domains have to be enforced, in the shared predicted system so both sides agree. Directions get normalised, non finite values get zeroed, angles get wrapped. Outcomes that decide anything, such as damage, loot, or score, belong in a server only system that the client never runs at all.",
+          "types": [
+            "PredictedSimulationSystemGroup",
+            "Simulate",
+            "GhostOwner"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/40-cheat-surface/node-sim-short.opus",
+          "audioDeep": "audio/40-cheat-surface/node-sim-deep.opus"
+        },
+        "relev": {
+          "short": "The gate deciding which ghosts each connection is allowed to receive.",
+          "deep": "Allowlist mode sends nothing unless listed, which is the correct posture for a competitive game. Denylist mode leaks anything you forget. Marking a component as owner only removes ammunition, cooldowns, and private state from every other client's snapshot entirely. Distance driven relevancy still leaks through walls at close range, which is exactly where it matters.",
+          "types": [
+            "GhostRelevancy",
+            "GhostRelevancyMode",
+            "SendToOwnerType",
+            "GhostComponentAttribute"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/40-cheat-surface/node-relev-short.opus",
+          "audioDeep": "audio/40-cheat-surface/node-relev-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "41-clock-domains",
+      "title": "Two Clock Domains",
+      "blurb": "Every ghost on a client lives in the server's past or the client's future. Ownership picks which.",
+      "map": "diagrams/41-clock-domains.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "There is no single now",
+          "focus": null,
+          "text": "Here is the thing the dropdown never tells you. A client does not have one clock. It has two, running at different offsets from the server, and every replicated entity is assigned to one of them. One domain plays back the server's past out of a buffer. The other guesses at the client's future and gets corrected. They are not two settings on a spectrum. They are two different machines, and this map puts them side by side so you can see that.",
+          "audio": "audio/41-clock-domains/ch-intro.opus"
+        },
+        {
+          "id": "past",
+          "title": "The past is a delay line",
+          "focus": "buffer",
+          "text": "Take the interpolated side first, because it is the one you already know from hardware. Snapshots arrive and go into a ring. A read pointer trails the write pointer by a fixed number of ticks. You read out whatever the buffer held that many ticks ago, and you interpolate between the two entries that bracket it. The client never simulates this entity. Not once. It is a delay line with a lerp on the output, and like every elastic buffer it can be late, but it cannot be wrong.",
+          "audio": "audio/41-clock-domains/ch-past.opus"
+        },
+        {
+          "id": "future",
+          "title": "The future is speculative execution",
+          "focus": "replay",
+          "text": "Now the other side, and this one you have definitely built before, in silicon. A predicted entity is simulated ahead of the server, on the client's own timeline. Every frame it restores that entity to the last tick the server confirmed, then resimulates every tick from there up to the present. Each arriving snapshot is a checkpoint. It either agrees, in which case the restore changes nothing, or it disagrees, and the replay lands somewhere different. That is speculative execution with a pipeline flush, right down to the cost model.",
+          "audio": "audio/41-clock-domains/ch-future.opus"
+        },
+        {
+          "id": "selector",
+          "title": "Ownership is the selector",
+          "focus": "owner",
+          "text": "So which domain does an entity get? For the two simple modes it is fixed at bake time and it is the same everywhere. Owner predicted is the interesting one. It selects per machine, at runtime, by ownership. The client that owns the entity predicts it. Every other client interpolates it. Which means the very same prefab, spawned once on the server, is sitting in different time domains on different machines at the same instant. That is not a bug in your mental model. That is the design.",
+          "audio": "audio/41-clock-domains/ch-selector.opus"
+        },
+        {
+          "id": "contagion",
+          "title": "The rule that wrecks projects",
+          "focus": "interp",
+          "text": "And now the edge in the middle of the map, the one drawn in red. A predicted entity cannot correctly interact with an interpolated one. They are not simulating the same instant. One of them is roughly half a round trip ahead and the other is roughly two snapshots behind, so a collision between them is a collision between two different moments. The consequence is that anything a predicted entity touches must itself become predicted. Prediction is contagious. You set out to predict one capsule and you discover you have signed up to predict the crate it pushes, the platform it stands on, and the door it opens.",
+          "audio": "audio/41-clock-domains/ch-contagion.opus"
+        },
+        {
+          "id": "cost",
+          "title": "What it costs, plainly",
+          "focus": "predict",
+          "text": "The asymmetry is brutal and worth stating in numbers. An interpolated ghost costs two buffer reads and a lerp. No gameplay system runs for it on the client at all. A predicted ghost costs ticks behind, times entities, times your predicted systems, every single frame. And the ticks behind term is the same for all of them, because there is one loop covering the whole predicted set. So the only lever you really have is the size of that set. Owner predicted exists to make that set exactly one.",
+          "audio": "audio/41-clock-domains/ch-cost.opus"
+        }
+      ],
+      "nodes": {
+        "authoring": {
+          "short": "The prefab component where the whole decision is made, at bake time.",
+          "deep": "Two fields matter. The default mode says which domain a ghost lands in when it spawns. The supported modes mask says which domains it is allowed to occupy at all, and narrowing it lets the baker strip out the machinery for the other one. The mask defaults to allowing both, which is the safe choice and also the one that leaves optimization on the table.",
+          "types": [
+            "GhostAuthoringComponent",
+            "BaseGhostSettings",
+            "GhostMode",
+            "GhostModeMask"
+          ],
+          "goto": "diagrams/36-ghost-codegen.html",
+          "gotoLabel": "What the generator does with this",
+          "audio": "audio/41-clock-domains/node-authoring-short.opus",
+          "audioDeep": "audio/41-clock-domains/node-authoring-deep.opus"
+        },
+        "server": {
+          "short": "The only machine with a real present, and it never renders it.",
+          "deep": "There is exactly one authoritative timeline and it lives here. Everything on the right half of this map is a client's attempt to be somewhere useful relative to this tick. One side lags it deliberately, the other side runs ahead of it deliberately, and neither is ever equal to it.",
+          "types": [
+            "NetworkTime",
+            "NetworkTick",
+            "ClientServerTickRate"
+          ],
+          "goto": "diagrams/02-keypress.html",
+          "gotoLabel": "Follow one keypress across",
+          "audio": "audio/41-clock-domains/node-server-short.opus",
+          "audioDeep": "audio/41-clock-domains/node-server-deep.opus"
+        },
+        "owner": {
+          "short": "The per-machine selector: is this entity's owner me?",
+          "deep": "The server stamps an owning network identifier onto the ghost. On each client that identifier is compared with its own, and under owner predicted the answer picks the time domain. It is the only setting in the system whose effect differs from machine to machine, which is exactly why it confuses people looking at one Inspector.",
+          "types": [
+            "GhostOwner",
+            "GhostOwnerIsLocal",
+            "NetworkId",
+            "GhostMode"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/41-clock-domains/node-owner-short.opus",
+          "audioDeep": "audio/41-clock-domains/node-owner-deep.opus"
+        },
+        "buffer": {
+          "short": "A ring of received snapshots, written at the rate the wire delivers them.",
+          "deep": "The write pointer moves whenever a packet lands, which is irregular. The read pointer moves smoothly with the client's clock, a fixed number of ticks behind. That gap is the entire jitter budget. Too small and you underrun and see a freeze. Too large and you have added latency for nothing. Same knob, same trade, same tuning instinct as any elastic buffer between two clock domains.",
+          "types": [
+            "SnapshotData",
+            "SnapshotDataBuffer",
+            "ClientTickRate",
+            "GhostUpdateSystem"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/41-clock-domains/node-buffer-short.opus",
+          "audioDeep": "audio/41-clock-domains/node-buffer-deep.opus"
+        },
+        "interp": {
+          "short": "An entity the client plays back and never simulates.",
+          "deep": "No gameplay system touches it. Its transform is written by the update system from two buffered snapshots, and that is all that happens to it on this machine. It can be extrapolated forward for a short while if data is missing, but it is never predicted, because prediction means running your simulation and this entity's simulation is somebody else's job.",
+          "types": [
+            "GhostMode",
+            "SmoothingAction",
+            "LocalTransform",
+            "GhostUpdateSystem"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/41-clock-domains/node-interp-short.opus",
+          "audioDeep": "audio/41-clock-domains/node-interp-deep.opus"
+        },
+        "replay": {
+          "short": "Rewind to the last confirmed tick, then resimulate forward to now.",
+          "deep": "Every frame, not just on a mismatch. When a snapshot arrives, the restore point is the tick that snapshot describes. When nothing arrives, the restore point is the client's own backup of its last full tick, so the loop keeps running on its own history. One loop covers every predicted ghost, and it rewinds as far as the oldest of them requires.",
+          "types": [
+            "PredictedGhost",
+            "GhostPredictionHistoryState",
+            "PredictedSimulationSystemGroup",
+            "Simulate"
+          ],
+          "goto": "diagrams/22-prediction-loop.html",
+          "gotoLabel": "Into the rollback loop",
+          "audio": "audio/41-clock-domains/node-replay-short.opus",
+          "audioDeep": "audio/41-clock-domains/node-replay-deep.opus"
+        },
+        "predict": {
+          "short": "An entity the client simulates ahead of the server, and pays for.",
+          "deep": "Its cost is ticks behind, times entities, times the systems inside the prediction group. The first term comes from the round trip and you do not control it. The third you can optimise. The second is the one you actually decide, and the contagion rule is what makes that decision leak. Every predicted thing must also be deterministic enough that replaying it lands in the same place twice.",
+          "types": [
+            "PredictedGhost",
+            "GhostPredictionSwitchingQueues",
+            "GhostSendType",
+            "GhostPredictionSmoothingSystem"
+          ],
+          "goto": "diagrams/33-predicted-physics.html",
+          "gotoLabel": "The classic contagion case: physics",
+          "audio": "audio/41-clock-domains/node-predict-short.opus",
+          "audioDeep": "audio/41-clock-domains/node-predict-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "42-which-world",
+      "title": "Which world am I in?",
+      "blurb": "Six address spaces, one authored prefab, and an integer that correlates two entities which never touch.",
+      "map": "diagrams/42-which-world.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "World zero is a physics index",
+          "focus": null,
+          "text": "The phrase world zero is real, and it does not mean what it sounds like. It names the default collider partition inside one entity world, the one a body belongs to unless you say otherwise. An entity world is an address space. A physics world index is a bucket of bodies inside one of those address spaces. One entity world can hold several physics indices, and every index exists separately on the client and on the server. Saying physics runs in world zero is like saying a process runs in heap arena zero. True of the allocator, silent about the process.",
+          "audio": "audio/42-which-world/ch-intro.opus"
+        },
+        {
+          "id": "territory",
+          "title": "What creates each world",
+          "focus": "bootstrap",
+          "text": "The bootstrap is a single method that says: I will take over world creation. Return true from it and the engine builds nothing of its own. Netcode's implementation branches on one setting, the requested play type. Server or client and server gets a server world. Client or client and server gets a client world. Thin clients follow in the editor. Each world is then populated by asking the type manager for every system carrying a particular filter flag, which is why the two columns on this map are different things. The world flags say what the world is. The filter flags say what got put in it.",
+          "audio": "audio/42-which-world/ch-territory.opus"
+        },
+        {
+          "id": "default",
+          "title": "What default really expands to",
+          "focus": "serverworld",
+          "text": "This is the question that trips everyone. The default filter flag has two different expansions, and which one applies depends on who is asking. When a world is being populated, default expands to local simulation plus presentation. When a system is being classified, default expands to whatever its parent group declares as its child default, walking up the ordering chain. If that walk reaches a group with no parent, the fallback is local, server and client simulation. That fallback is the one you meet in practice, because the root simulation group carries no filter attribute at all. It is why an unfiltered gameplay system runs in every game world, including the server.",
+          "audio": "audio/42-which-world/ch-default.opus"
+        },
+        {
+          "id": "simulation",
+          "title": "Simulation is not presentation",
+          "focus": "serverworld",
+          "text": "The server spawns a fireball. The server has no mesh, no material, no camera. It is tempting to conclude the server does not know where the fireball is. It does. The server computes that position every single tick, including the full rigid body trajectory, because the physics systems resolve into server simulation. What the server lacks is rendering, and rendering is a separate flag on a separate bit. The server world was populated without it, so the systems that turn a transform into pixels were never added. The transform is computed. Nobody draws it. A headless server is not a partial simulation. It is a complete simulation with the display driver unloaded.",
+          "audio": "audio/42-which-world/ch-simulation.opus"
+        },
+        {
+          "id": "variants",
+          "title": "One prefab, several baked entities",
+          "focus": "strip",
+          "text": "So how does the client's visual attach to the server's fireball? It does not. There is no attachment. They are two entities in two address spaces and nothing points from one to the other. What crosses the wire is an integer: a ghost identifier and a prefab index. The client looks that index up in its own prefab collection and instantiates its own local copy. Both worlds baked the same authored asset, so both already agree what index seven means. And the two copies are not identical, because baking emits one prefab plus a set of per world removal lists. At startup each world picks the list for itself and strips its own copy before the first instance exists. Renderers and effects are removed on the server. Authority logic is removed on the client. Same asset, different entities.",
+          "audio": "audio/42-which-world/ch-variants.opus"
+        },
+        {
+          "id": "singletons",
+          "title": "Singletons are per world",
+          "focus": "clientworld",
+          "text": "A singleton is an entity in one world's entity manager. There is no process wide registry. Ask for one in the client world and you cannot see the copy in the server world. This is the single most common source of works in the editor, fails in the build, and the reason is mechanical. In the editor both worlds live in one process, so a system reaching for a singleton it does not own often finds a copy anyway. The wrong one, but a plausible one. Ship a dedicated server and the client world is simply not there. The lookup that was quietly wrong becomes loudly absent.",
+          "audio": "audio/42-which-world/ch-singletons.opus"
+        }
+      ],
+      "nodes": {
+        "bakeworld": {
+          "short": "A transient world that exists only long enough to turn authored objects into entities.",
+          "deep": "It is created, used and disposed inside a single call, and it carries the baking filter flag so only baking systems land in it. Anything decided here was decided before either runtime world existed, which is why a wrong baked value can never be fixed by a runtime system.",
+          "types": [
+            "World",
+            "WorldFlags",
+            "WorldSystemFilterFlags"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/42-which-world/node-bakeworld-short.opus",
+          "audioDeep": "audio/42-which-world/node-bakeworld-deep.opus"
+        },
+        "prefab": {
+          "short": "The baked ghost prefab, plus four lists describing what to remove from it per world.",
+          "deep": "Baking does not emit one prefab per world type. It emits one entity graph and four blob arrays: remove on server, remove on client, disable on predicted, disable on interpolated. A component marked as belonging to every variant short circuits the classification and appears in all of them.",
+          "types": [
+            "GhostPrefabType",
+            "GhostComponentAttribute",
+            "GhostPrefabCreation"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/42-which-world/node-prefab-short.opus",
+          "audioDeep": "audio/42-which-world/node-prefab-deep.opus"
+        },
+        "strip": {
+          "short": "Picks the removal list for this world and edits the prefab before anything is instantiated.",
+          "deep": "It tests whether the world is a server, selects the matching list, and removes each named component from the prefab entity and its children. Then it drops the marker saying stripping is pending. Where a ghost can switch between predicted and interpolated at runtime the difference becomes a disable rather than a removal, because the same entity may change mode later.",
+          "types": [
+            "GhostCollectionSystem",
+            "GhostPrefabType"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/42-which-world/node-strip-short.opus",
+          "audioDeep": "audio/42-which-world/node-strip-deep.opus"
+        },
+        "bootstrap": {
+          "short": "The one hook that decides which worlds exist at all.",
+          "deep": "Returning true from its initialize method means the engine creates nothing on its own. Netcode's implementation branches on the requested play type. The Nerve bootstrap layers a lifecycle on top: a persistent service world that outlives everything, a menu world, and client and server worlds created and destroyed on demand. Netcode decides whether they exist. Nerve decides when.",
+          "types": [
+            "ICustomBootstrap",
+            "ClientServerBootstrap",
+            "DefaultWorldInitialization"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/42-which-world/node-bootstrap-short.opus",
+          "audioDeep": "audio/42-which-world/node-bootstrap-deep.opus"
+        },
+        "serverworld": {
+          "short": "Authority. Populated with server simulation only, and deliberately without presentation.",
+          "deep": "It runs the full simulation including the physics solver, because the physics systems resolve to local, server and client simulation. It has no renderer because presentation is a different flag bit and was never requested. When two players disagree about a position, this is the world that is right.",
+          "types": [
+            "WorldSystemFilterFlags",
+            "ClientServerBootstrap",
+            "WorldFlags"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/42-which-world/node-serverworld-short.opus",
+          "audioDeep": "audio/42-which-world/node-serverworld-deep.opus"
+        },
+        "wire": {
+          "short": "A ghost identifier and a prefab index. No entity reference ever crosses.",
+          "deep": "Entity references are meaningless across worlds, so replication carries numbers. The identifier is recycled when a ghost dies, so on its own it is not unique. Paired with the tick it spawned on, it is guaranteed unique, because at any moment only one ghost can hold that identifier having spawned on that tick.",
+          "types": [
+            "GhostInstance",
+            "GhostCollectionPrefab",
+            "GhostType"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/42-which-world/node-wire-short.opus",
+          "audioDeep": "audio/42-which-world/node-wire-deep.opus"
+        },
+        "clientworld": {
+          "short": "Prediction plus rendering. The only world that asks for the presentation flag.",
+          "deep": "It is the world to reason about when the local capsule feels laggy, when a remote capsule stutters, or when nothing appears on screen. Its physics is a guess corrected by snapshots. A raycast here queries a predicted collision world, not authority, and that difference is invisible until it matters.",
+          "types": [
+            "PresentationSystemGroup",
+            "WorldSystemFilterFlags"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/42-which-world/node-clientworld-short.opus",
+          "audioDeep": "audio/42-which-world/node-clientworld-deep.opus"
+        },
+        "thinclient": {
+          "short": "A keyboard with a socket. Connects, sends input, simulates almost nothing.",
+          "deep": "It is populated with the thin client flag alone, which the physics systems do not carry, so a thin client has no physics at all. That is the point: it is the cheapest way to put load on a server, and it is why a bug that only reproduces with thin clients is usually a missing filter rather than a missing feature.",
+          "types": [
+            "WorldSystemFilterFlags",
+            "ClientServerBootstrap"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/42-which-world/node-thinclient-short.opus",
+          "audioDeep": "audio/42-which-world/node-thinclient-deep.opus"
+        }
+      }
+    },
+    {
+      "id": "43-physics-on-the-server",
+      "title": "Physics on the server",
+      "blurb": "Where the solver actually lives, what the tick does to it, and the budget you sign up for when everything is a rigid body.",
+      "map": "diagrams/43-physics-on-the-server.html",
+      "chapters": [
+        {
+          "id": "intro",
+          "title": "The solver has no world filter",
+          "focus": null,
+          "text": "Open the physics package and search it for world filter attributes. The runtime has none. The only ones in the whole package are on baking systems and debug display systems. The physics group carries exactly one attribute, saying which group it updates in, and nothing about where it is allowed to exist. That silence is the answer to the question. An unfiltered system resolves to the default flag, the default flag is replaced by the parent group's child default, and a chain that ends at the root simulation group falls through to a hard coded fallback: local, server and client simulation. So the solver runs in the single player world, the client world and the server world. It does not run in a thin client.",
+          "audio": "audio/43-physics-on-the-server/ch-intro.opus"
+        },
+        {
+          "id": "reclock",
+          "title": "Netcode re-clocks the whole group",
+          "focus": "predict",
+          "text": "Physics normally runs in the fixed step group, driven by an accumulator against wall clock time. That is the wrong clock for prediction, because prediction needs to run the same tick several times. So netcode moves it, on the client and on the server both. The move is a transitive closure, not a list: it seeds a set with the physics group, then repeatedly scans the fixed step group adding any system whose ordering attributes name something already in the set, looping until a full pass adds nothing. Think of it as a clock domain crossing. The logic is untouched. Only the clock feeding it is swapped, from a wall clock at one edge per frame to a prediction tick that can issue many edges in a single frame.",
+          "audio": "audio/43-physics-on-the-server/ch-reclock.opus"
+        },
+        {
+          "id": "free",
+          "title": "Static bodies are free",
+          "focus": "staticbake",
+          "text": "The physics world is built from two queries. Dynamic bodies are entities that have a velocity. Static bodies are entities that have a collider and no velocity. The export system writes back exactly two component types, a transform and a velocity, so a static body never has anything written to it and never changes. And the validation system that complains about non ghost dynamic bodies only matches entities that have a velocity, so a static collider never trips it. The rule that falls out is where the bandwidth is won in a physics game: a body baked into a subscene that never moves needs no ghost, no snapshot and no prediction. Both worlds baked it from the same data, so both already agree.",
+          "audio": "audio/43-physics-on-the-server/ch-free.opus"
+        },
+        {
+          "id": "contagion",
+          "title": "The contagion rule, and the arithmetic",
+          "focus": "predict",
+          "text": "A predicted body and an interpolated body are in different time domains. One is ahead of the server, one is behind it. They are never simultaneously correct, so a contact between them is a contact between two different moments, and it resolves differently on every machine. In a game where everything is physical that rule propagates. If the player can push a crate, the crate is predicted. If the crate can knock a barrel, the barrel is predicted. The predicted set is the transitive closure of what can be touched by something predicted. Now the arithmetic. The server steps once per tick, sixty times a second by default. The client steps once per tick it is replaying, and the replay depth is roughly round trip time converted to ticks. On an ordinary connection that is around eight solves per rendered frame where the server does one. The server's cost scales with body count. The client's scales with body count times replay depth.",
+          "audio": "audio/43-physics-on-the-server/ch-contagion.opus"
+        },
+        {
+          "id": "wire",
+          "title": "What actually replicates",
+          "focus": "interp",
+          "text": "The package ships two default variants for physics and they are the entire contract. Velocity is replicated, linear and angular, quantized to a thousandth of a unit, and only sent to clients that are predicting the ghost. Graphical smoothing is restricted to server and predicted client versions, which is a deletion rather than an addition, so that an interpolated client does not have physics smoothing fighting the snapshot interpolation already positioning the body. That table is complete, and the completeness is the point. Mass, gravity factor, damping and colliders appear nowhere in the netcode runtime. They are not replicated, and therefore they are never rolled back. Mutate one inside the prediction loop and the mutation applies once per replayed tick and is never undone.",
+          "audio": "audio/43-physics-on-the-server/ch-wire.opus"
+        },
+        {
+          "id": "escape",
+          "title": "The second physics world",
+          "focus": "otherworld",
+          "text": "The predicted physics world can only contain things that roll back, so a dynamic body that is not a ghost is an error. If you want ragdolls, debris or cosmetic impacts, and in a physics heavy game you will, they have to leave the default index. Set the non ghost world index in the netcode physics config, give the prefabs a matching index, and the validation system stops complaining while the predicted world stays small. The config is baked from a component in a subscene, and when it is absent the rate manager falls through to a default initialised struct, which is enum value zero, which is the narrowest of the three run modes. No config is not everything on. It is the most restrictive gate.",
+          "audio": "audio/43-physics-on-the-server/ch-escape.opus"
+        }
+      ],
+      "nodes": {
+        "authored": {
+          "short": "A shape plus a motion type, authored before any world exists.",
+          "deep": "Two authoring stacks bake to the same runtime components. The hybrid path bakes Unity's own rigid body and collider components. The custom path adds its own body and shape behaviours plus joints, motors and material tags. Never mix them on one body hierarchy: mixing double bakes, drops colliders, or produces conflicting motion types.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/43-physics-on-the-server/node-authored-short.opus",
+          "audioDeep": "audio/43-physics-on-the-server/node-authored-deep.opus"
+        },
+        "moves": {
+          "short": "The only question that matters first: does this body have a velocity?",
+          "deep": "This is not a design preference, it is the query the physics world build actually runs. Bodies with a velocity go into the dynamic set. Bodies with a collider and no velocity go into the static set. Everything downstream on this map follows from which side of that query a body lands on.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/43-physics-on-the-server/node-moves-short.opus",
+          "audioDeep": "audio/43-physics-on-the-server/node-moves-deep.opus"
+        },
+        "staticbake": {
+          "short": "Baked level geometry. No ghost, no snapshot, no prediction, no cost beyond broadphase.",
+          "deep": "Start here and justify every promotion out of it. The export step writes back only transforms and velocities, so a static body is never written to at runtime and cannot drift. Both worlds baked it from the same subscene, so they already agree without a single byte on the wire.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/43-physics-on-the-server/node-staticbake-short.opus",
+          "audioDeep": "audio/43-physics-on-the-server/node-staticbake-deep.opus"
+        },
+        "touch": {
+          "short": "Can a player reach this body, directly or through a chain of contacts?",
+          "deep": "The answer is transitive, and that is the expensive part. A body the player can push must be predicted. Anything that body can hit must also be predicted, or the contact happens between two different moments. Draw the closure honestly before you count the budget, because the closure is usually larger than the intuition.",
+          "types": [],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/43-physics-on-the-server/node-touch-short.opus",
+          "audioDeep": "audio/43-physics-on-the-server/node-touch-deep.opus"
+        },
+        "interp": {
+          "short": "The server solves, the client interpolates, the client's solver is never involved.",
+          "deep": "This is the cheapest replicated option and it is under used. Anything dynamic the local player cannot touch belongs here: distant props, vehicles you only watch, machinery. Netcode strips physics graphical smoothing from the interpolated variant precisely so smoothing does not fight the snapshot interpolation.",
+          "types": [
+            "GhostSendType",
+            "GhostPrefabType"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/43-physics-on-the-server/node-interp-short.opus",
+          "audioDeep": "audio/43-physics-on-the-server/node-interp-deep.opus"
+        },
+        "predict": {
+          "short": "The same rule executed in both worlds, and re-executed on every replayed tick.",
+          "deep": "Each predicted body costs a full broadphase, narrowphase and constraint solve per replayed tick, not a transform integration. Raising substeps or solver iterations multiplies against replay depth, which is why both are the wrong first knob under prediction. Fix the predicted body count first.",
+          "types": [
+            "PredictedGhost",
+            "PredictedFixedStepSimulationSystemGroup",
+            "ClientTickRate"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/43-physics-on-the-server/node-predict-short.opus",
+          "audioDeep": "audio/43-physics-on-the-server/node-predict-deep.opus"
+        },
+        "otherworld": {
+          "short": "A second physics index for dynamic bodies that are not ghosts.",
+          "deep": "The predicted world can only hold things that roll back, so a dynamic non ghost left in the default index is flagged as an error naming the offending entities. Configure the alternate index and the same bodies become legal client only debris. This is the only way to have ragdolls in a predicted physics game without failing validation.",
+          "types": [
+            "PredictedPhysicsNonGhostWorld",
+            "NetCodePhysicsConfig",
+            "PhysicGroupRunMode"
+          ],
+          "goto": null,
+          "gotoLabel": null,
+          "audio": "audio/43-physics-on-the-server/node-otherworld-short.opus",
+          "audioDeep": "audio/43-physics-on-the-server/node-otherworld-deep.opus"
         }
       }
     },

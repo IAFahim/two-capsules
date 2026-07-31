@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "The Trust Boundary",
+    "subtitle": "What a modified client can assert, and where each assertion is bounded",
+    "output": "diagrams/40-cheat-surface.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "assert",
+        "label": "What the client asserts",
+        "focus": [
+          "client",
+          "packet",
+          "delay"
+        ],
+        "note": "Field values, a tick number, and a reported interpolation delay. All untrusted."
+      },
+      {
+        "id": "bound",
+        "label": "Where each assertion is bounded",
+        "focus": [
+          "ring",
+          "rewind",
+          "sim"
+        ],
+        "note": "One command per tick, and a rewind clamped to the history buffer."
+      },
+      {
+        "id": "read",
+        "label": "The read port",
+        "focus": [
+          "sim",
+          "relev"
+        ],
+        "note": "A client cannot render what the server never sent. That is the only wallhack defence."
+      }
+    ],
+    "viewBox": [
+      1180,
+      660
+    ]
+  },
+  "stages": [
+    {
+      "label": "untrusted"
+    },
+    {
+      "label": "the wire"
+    },
+    {
+      "label": "intake bounds"
+    },
+    {
+      "label": "authority"
+    },
+    {
+      "label": "read port"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Modified client",
+      "sublabel": "attacker owns this box",
+      "tag": "untrusted",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "packet",
+      "type": "messagebus",
+      "label": "Command packet",
+      "sublabel": "fields + tick, 32 max",
+      "tag": "any value",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "delay",
+      "type": "messagebus",
+      "label": "Reported delay",
+      "sublabel": "interpolation, in the header",
+      "tag": "self-reported",
+      "stage": 1,
+      "row": 1
+    },
+    {
+      "id": "ring",
+      "type": "database",
+      "label": "Tick-keyed ring",
+      "sublabel": "64 slots, late ticks rewritten",
+      "tag": "one per tick",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "rewind",
+      "type": "security",
+      "label": "History clamp",
+      "sublabel": "ServerHistorySize, max 32",
+      "tag": "bounded rewind",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "sim",
+      "type": "backend",
+      "label": "Server simulation",
+      "sublabel": "clamps, then applies",
+      "tag": "sole authority",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "relev",
+      "type": "security",
+      "label": "Relevancy filter",
+      "sublabel": "allowlist per connection",
+      "tag": "what leaves",
+      "stage": 4,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "client",
+      "to": "packet",
+      "label": "intent only",
+      "classification": "untrusted",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "client",
+      "to": "delay",
+      "label": "my delay",
+      "classification": "untrusted"
+    },
+    {
+      "from": "packet",
+      "to": "ring",
+      "label": "one per tick",
+      "classification": "bounded",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "delay",
+      "to": "rewind",
+      "label": "clamped",
+      "classification": "bounded",
+      "variant": "security"
+    },
+    {
+      "from": "ring",
+      "to": "sim",
+      "label": "raw fields",
+      "classification": "untrusted",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "rewind",
+      "to": "sim",
+      "label": "rewound hitboxes",
+      "classification": "bounded",
+      "variant": "security"
+    },
+    {
+      "from": "sim",
+      "to": "relev",
+      "label": "truth",
+      "classification": "authoritative",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The model in one sentence",
+      "items": [
+        "The client sends intent, the server computes results",
+        "A direction is bounded; a position would have to be trusted",
+        "The same movement rule runs on both sides, so lying changes nothing",
+        "Strength equals how much the server derives and how little it accepts"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Bounded for you, already",
+      "items": [
+        "At most thirty two commands per packet, five bits of count",
+        "A ring of sixty four slots keyed by tick, so flooding buys nothing",
+        "Commands older than the current tick are rewritten to it",
+        "Interpolation delay is clamped to the collision history size"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Not bounded — your job",
+      "items": [
+        "Input field ranges: nothing checks magnitude, sign, or finiteness",
+        "Line of sight, weapon range, and fire rate on the server",
+        "How much of the world each connection is allowed to receive",
+        "Who is allowed to connect at all, via connection approval"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Structural versus detection",
+      "items": [
+        "Structural: clamps, relevancy allowlists, owner-only components, approval",
+        "Detection: aim analysis, packet rate, players sitting on the rewind clamp",
+        "Aimbots cannot be prevented by authority, only starved of information",
+        "On a listen server nothing protects the guests from the host"
+      ]
+    }
+  ]
+}

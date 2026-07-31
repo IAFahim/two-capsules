@@ -1,0 +1,86 @@
+{
+  "id": "19-connection-lifecycle",
+  "title": "Connection lifecycle",
+  "source": {"chapter": "19-connection-lifecycle", "map": "diagrams/03-connect.html"},
+  "checks": [
+    {
+      "id": "conns-1-ingame-0",
+      "kind": "choice",
+      "setup": "You run the world probe and get:\n\n    ClientWorld: conns=1 inGame=0 ghosts=0\n    ServerWorld: conns=1 inGame=0 ghosts=0\n\nThe socket is open on both sides. No errors anywhere. The player sits on a connecting screen.",
+      "ask": "What does this reading rule in, and what do you check next?",
+      "options": [
+        {
+          "text": "Steps 1-4 succeeded and nothing has added NetworkStreamInGame. Check whether anything on the client is actually sending the go-in-game request.",
+          "right": true,
+          "why": "`conns=1` on both sides means socket, handshake and network id all happened — those are the steps that create and populate the connection entity. `inGame=0` is the next link in the chain and it is the flag that arms the entire snapshot system. In this project that is exactly the gap: the node that sends the request exists in the package but has to live inside a client graph, and the sample ships no client graph, so the node was present and never executed."
+        },
+        {
+          "text": "Protocol version mismatch — the client and server were built from different ghost schemas.",
+          "right": false,
+          "why": "A genuine failure and a common one, but it stops you at the handshake, so you would not have a connection entity on both sides at all. The reading you have already rules it out. Worth remembering as the thing to suspect when `conns=0` on the server while the client thinks it connected."
+        },
+        {
+          "text": "Relevancy is excluding the ghosts from this connection.",
+          "right": false,
+          "why": "Relevancy is a late-stage filter and it cannot be the cause when `inGame=0`, because nothing is being sent at all yet. This is the classic mistake of starting the diagnosis at the symptom (`ghosts=0`) instead of at the first broken link in the chain. Read the ladder left to right."
+        },
+        {
+          "text": "The player prefab is missing its ghost authoring, so it spawns only on the server.",
+          "right": false,
+          "why": "That is a real and nastily silent bug, but it would show as `inGame=1 ghosts=0` on the client with entities present on the server. Its signature is different from this one, and knowing which reading points at it is the entire value of the probe."
+        }
+      ],
+      "answer": "The eight-step chain is a ladder and the probe tells you which rung you are on. `conns=1 inGame=0` on both sides means the connection is fully established and nothing has armed the snapshot system. `inGame=1 ghosts=0` would be a spawn problem instead. Ninety seconds, one command, no guessing.",
+      "because": "NetworkStreamInGame is the flag that arms snapshots. Until something adds it, zero ghost data flows and every downstream mechanism is irrelevant.",
+      "goDeeper": {"chapter": "19-connection-lifecycle", "node": "graph", "types": ["NetworkStreamInGame", "NetworkStreamConnection", "NetworkId", "GhostInstance"]}
+    },
+    {
+      "id": "approval-turned-on",
+      "kind": "predict",
+      "setup": "No player ever spawns. You trace it to the spawn system's query, which requires an approval component that nothing in a stock project ever adds — both approval systems disable themselves when `network.require-connection-approval` is false, and false is the default.\n\nFound it. You flip the config var to true, on a project that runs ClientWorld and ServerWorld as two worlds in one editor process.",
+      "ask": "What happens now, and why does 'it is all local, there is nothing to authenticate against' turn out to be false?",
+      "rightIf": [
+        "says the approval server system only skips real validation when the world is not a server world",
+        "identifies that a separate ServerWorld in one process genuinely is a server world, so the check does not skip",
+        "concludes it takes the real branch and performs live token validation over the network against Unity Authentication",
+        "predicts the outcome: approval never completes locally (no token, no service, or a network call that fails or hangs), so still no spawn — a different silent stall",
+        "notes the local-approval stopgap has to supply the identity itself, and that it is a hack with a written-down delete condition"
+      ],
+      "answer": "The skip-validation path is gated on the world *not* being a server world, and your ServerWorld is unambiguously a server world — being in the same process as the client does not change its flags. So flipping the switch does not enable a local rubber stamp; it enables the real thing, which reaches out to Unity Authentication with a token you do not have, and either fails or hangs. You have traded \"nothing ever adds approval\" for \"approval is attempted and never completes\", and both look identical from the outside: no player spawns, nothing logged.\n\nThat is why the project carries a small local system that supplies the approval components and a synthetic identity directly. It is a hack, it says so in its own doc comment, and it names the condition under which it should be deleted — which is the only honest way to ship one.",
+      "because": "\"Local\" is a property of the world flags, not of the machine. A server world in your process is still a server world to every system that asks.",
+      "goDeeper": {"chapter": "19-connection-lifecycle", "node": "server", "types": ["NetworkId", "World", "WorldFlags"]}
+    },
+    {
+      "id": "connection-events-live-one-tick",
+      "kind": "predict",
+      "setup": "Disconnect handling reads the per-tick connection event list and reacts to terminal states. It works.\n\nSomeone moves that read into a system that only runs when the UI is visible — it is a UI concern, after all, and running it every tick on a headless server is waste. The system is gated so it updates only while the pause/status panel is open.\n\nDisconnects are now detected most of the time. Occasionally the game just sits there, connected to nothing, until the player quits.",
+      "ask": "What kind of signal is the connection event list, and what does 'most of the time' depend on?",
+      "rightIf": [
+        "says connection events live for exactly one tick — the list is rebuilt each tick",
+        "concludes any consumer that does not run every tick will miss events whenever its skipped tick is the one carrying the event",
+        "identifies 'most of the time' as the probability that the panel happened to be open on that tick",
+        "names the fix as latching the event into durable state the moment it is seen, and reading the latched state from anywhere",
+        "may frame it as a pulse needing a latch rather than a level you can poll"
+      ],
+      "answer": "The event list is a one-tick pulse, not a status register. It is populated for the tick on which the event occurred and gone on the next one, so any consumer that does not run on that exact tick sees nothing and has no way to know it missed anything. Gating the reader on the UI turns detection into a coin flip weighted by how often the panel is open, and the coin is flipped at the worst possible moment — during a disconnect, when the player is not opening menus.\n\nThe shape of the fix is the one you would use on any edge-triggered line: latch it. A system that runs every tick observes the pulse and writes durable state — the snapshot the graph reads, plus whatever the UI needs — and every other consumer polls that state at whatever rate it likes. Which is precisely what the connection tracker node does, and why it lives on the always-active state.",
+      "because": "A one-tick event is an edge. Polling an edge at a lower rate than it is generated does not sample it less often, it misses it entirely.",
+      "goDeeper": {"chapter": "19-connection-lifecycle", "node": "session", "types": ["NetCodeConnectionEvent", "ConnectionState", "NetworkStreamDriver"]}
+    },
+    {
+      "id": "handshake-version-mismatch",
+      "kind": "predict",
+      "setup": "You add one `[GhostField]` to a component on a shared prefab. You rebuild the client and test against the server build from yesterday, because rebuilding the server takes four minutes and the change is client-visible only.\n\nThe client reports connected. Then it disconnects. The server logs nothing useful. Repeat: same thing, every time, in under a second.",
+      "ask": "Which step of the chain is this, what is being compared, and why is 'the change is client-visible only' a category error?",
+      "rightIf": [
+        "identifies step 2, the handshake, as the failure point",
+        "says the protocol version incorporates the ghost schemas, which are generated from the prefabs",
+        "concludes adding a replicated field changes the schema and therefore the version on the side that was rebuilt",
+        "explains the category error: the schema is the wire contract, so any change to it is a both-sides change by definition",
+        "may note the failure is fast and clean by design — the alternative is two peers misinterpreting each other's bytes"
+      ],
+      "answer": "This is the handshake refusing you, and it is the system working. The prefab is the schema; baking generates serializer code per ghost type, and the protocol version is derived from that. Add a replicated field and the generated layout changes, so the rebuilt side is speaking a different wire format from the one that was not rebuilt. There is no partial compatibility to negotiate — a field offset is a field offset — so the connection is closed immediately.\n\n\"Client-visible only\" describes what the field is *for*. It says nothing about who has to agree on the bytes, and the answer to that is always both. Anything that touches the ghost schema is a both-sides deploy, which is worth internalising before you spend an afternoon on a four-minute build.\n\nFailing in under a second with a version mismatch is the good outcome. The alternative — two peers with different layouts happily exchanging packets — is a corruption bug you would chase for days.",
+      "because": "The generated schema is the protocol. Changing it on one side is changing the protocol on one side, and a handshake exists to catch exactly that.",
+      "goDeeper": {"chapter": "19-connection-lifecycle", "node": "wire", "types": ["GhostAuthoringComponent", "GhostFieldAttribute", "GhostPrefabMetaData"]}
+    }
+  ]
+}

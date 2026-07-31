@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Predicted physics",
+    "subtitle": "A rigid body solver re-clocked onto the prediction tick, and the two things that correct it",
+    "output": "diagrams/33-predicted-physics.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "clocking",
+        "label": "The clock domain crossing",
+        "focus": [
+          "clock",
+          "gate",
+          "solver"
+        ],
+        "note": "Physics is moved out of the fixed-step group and driven by the prediction tick instead."
+      },
+      {
+        "id": "correction",
+        "label": "What corrects a body",
+        "focus": [
+          "snapshot",
+          "bodies",
+          "backup"
+        ],
+        "note": "Only replicated fields are restored. Everything else keeps whatever the replay left."
+      },
+      {
+        "id": "render",
+        "label": "The render pose",
+        "focus": [
+          "bodies",
+          "smooth"
+        ],
+        "note": "Between ticks the body does not move; smoothing fills the gap and is never read back."
+      }
+    ],
+    "viewBox": [
+      1120,
+      620
+    ]
+  },
+  "stages": [
+    {
+      "label": "prediction clock"
+    },
+    {
+      "label": "gate"
+    },
+    {
+      "label": "solve"
+    },
+    {
+      "label": "predicted state"
+    },
+    {
+      "label": "after the tick"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "clock",
+      "type": "frontend",
+      "label": "PredictedSimulation",
+      "sublabel": "one edge per tick, many per frame",
+      "tag": "rollback",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "PhysicsRateManager",
+      "sublabel": "PhysicGroupRunMode",
+      "tag": "full ticks only",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "solver",
+      "type": "backend",
+      "label": "PhysicsSystemGroup",
+      "sublabel": "relocated out of FixedStep",
+      "tag": "one solve per tick",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "snapshot",
+      "type": "messagebus",
+      "label": "GhostUpdateSystem",
+      "sublabel": "server state for tick T",
+      "tag": "authority",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "bodies",
+      "type": "database",
+      "label": "Predicted bodies",
+      "sublabel": "transform + PhysicsVelocity",
+      "tag": "ghosts only",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "smooth",
+      "type": "external",
+      "label": "Graphical smoothing",
+      "sublabel": "render pose between ticks",
+      "tag": "presentation",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "backup",
+      "type": "database",
+      "label": "Prediction backup",
+      "sublabel": "replicated fields only",
+      "tag": "last full tick",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "clock",
+      "to": "gate",
+      "label": "tick edges",
+      "classification": "clock",
+      "variant": "emphasis"
+    },
+    {
+      "from": "gate",
+      "to": "solver",
+      "label": "run, or skip",
+      "classification": "control",
+      "variant": "emphasis"
+    },
+    {
+      "from": "solver",
+      "to": "bodies",
+      "label": "solved motion",
+      "classification": "speculative",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "snapshot",
+      "to": "bodies",
+      "label": "correction",
+      "classification": "authoritative",
+      "variant": "security"
+    },
+    {
+      "from": "bodies",
+      "to": "smooth",
+      "label": "interpolated pose",
+      "classification": "presentation",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "bodies",
+      "to": "backup",
+      "label": "memcopy",
+      "classification": "history"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Why the solver moved groups",
+      "items": [
+        "FixedStep is driven by a wall clock accumulator, once per frame",
+        "Prediction needs the same tick solved again after every correction",
+        "PredictedPhysicsConfigSystem relocates the group once, then removes itself",
+        "Ordering you wrote against FixedStep is now in a different group"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Two gates, both must open",
+      "items": [
+        "The prediction loop runs only when predicted ghosts exist, by default",
+        "The physics group then applies PhysicGroupRunMode on top of that",
+        "This is why a raycast against static geometry returns nothing early on",
+        "AlwaysRun on both is the fix, and it costs an update every frame"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What rollback does not restore",
+      "items": [
+        "Only fields carrying a GhostField are copied back",
+        "PhysicsMass, gravity factor and collider blobs are not replicated",
+        "Mutate one inside prediction and the change applies once per replayed tick",
+        "It looks correct until the first packet drops"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The cost, and the emergency valve",
+      "items": [
+        "Cost is predicted bodies times replayed ticks, times a full solve",
+        "Batch repeated ticks before batching first-time ticks",
+        "Batching integrates a larger delta, so contacts resolve differently",
+        "Prefer shrinking the predicted set over batching it"
+      ]
+    }
+  ]
+}

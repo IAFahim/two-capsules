@@ -1,0 +1,123 @@
+{
+  "id": "41-clock-domains",
+  "title": "Two Clock Domains",
+  "map": "diagrams/41-clock-domains.html",
+  "blurb": "Every ghost on a client lives in the server's past or the client's future. Ownership picks which.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "There is no single now",
+      "focus": null,
+      "text": "Here is the thing the dropdown never tells you. A client does not have one clock. It has two, running at different offsets from the server, and every replicated entity is assigned to one of them. One domain plays back the server's past out of a buffer. The other guesses at the client's future and gets corrected. They are not two settings on a spectrum. They are two different machines, and this map puts them side by side so you can see that."
+    },
+    {
+      "id": "past",
+      "title": "The past is a delay line",
+      "focus": "buffer",
+      "text": "Take the interpolated side first, because it is the one you already know from hardware. Snapshots arrive and go into a ring. A read pointer trails the write pointer by a fixed number of ticks. You read out whatever the buffer held that many ticks ago, and you interpolate between the two entries that bracket it. The client never simulates this entity. Not once. It is a delay line with a lerp on the output, and like every elastic buffer it can be late, but it cannot be wrong."
+    },
+    {
+      "id": "future",
+      "title": "The future is speculative execution",
+      "focus": "replay",
+      "text": "Now the other side, and this one you have definitely built before, in silicon. A predicted entity is simulated ahead of the server, on the client's own timeline. Every frame it restores that entity to the last tick the server confirmed, then resimulates every tick from there up to the present. Each arriving snapshot is a checkpoint. It either agrees, in which case the restore changes nothing, or it disagrees, and the replay lands somewhere different. That is speculative execution with a pipeline flush, right down to the cost model."
+    },
+    {
+      "id": "selector",
+      "title": "Ownership is the selector",
+      "focus": "owner",
+      "text": "So which domain does an entity get? For the two simple modes it is fixed at bake time and it is the same everywhere. Owner predicted is the interesting one. It selects per machine, at runtime, by ownership. The client that owns the entity predicts it. Every other client interpolates it. Which means the very same prefab, spawned once on the server, is sitting in different time domains on different machines at the same instant. That is not a bug in your mental model. That is the design."
+    },
+    {
+      "id": "contagion",
+      "title": "The rule that wrecks projects",
+      "focus": "interp",
+      "text": "And now the edge in the middle of the map, the one drawn in red. A predicted entity cannot correctly interact with an interpolated one. They are not simulating the same instant. One of them is roughly half a round trip ahead and the other is roughly two snapshots behind, so a collision between them is a collision between two different moments. The consequence is that anything a predicted entity touches must itself become predicted. Prediction is contagious. You set out to predict one capsule and you discover you have signed up to predict the crate it pushes, the platform it stands on, and the door it opens."
+    },
+    {
+      "id": "cost",
+      "title": "What it costs, plainly",
+      "focus": "predict",
+      "text": "The asymmetry is brutal and worth stating in numbers. An interpolated ghost costs two buffer reads and a lerp. No gameplay system runs for it on the client at all. A predicted ghost costs ticks behind, times entities, times your predicted systems, every single frame. And the ticks behind term is the same for all of them, because there is one loop covering the whole predicted set. So the only lever you really have is the size of that set. Owner predicted exists to make that set exactly one."
+    }
+  ],
+  "nodes": {
+    "authoring": {
+      "short": "The prefab component where the whole decision is made, at bake time.",
+      "deep": "Two fields matter. The default mode says which domain a ghost lands in when it spawns. The supported modes mask says which domains it is allowed to occupy at all, and narrowing it lets the baker strip out the machinery for the other one. The mask defaults to allowing both, which is the safe choice and also the one that leaves optimization on the table.",
+      "types": [
+        "GhostAuthoringComponent",
+        "BaseGhostSettings",
+        "GhostMode",
+        "GhostModeMask"
+      ],
+      "goto": "diagrams/36-ghost-codegen.html",
+      "gotoLabel": "What the generator does with this"
+    },
+    "server": {
+      "short": "The only machine with a real present, and it never renders it.",
+      "deep": "There is exactly one authoritative timeline and it lives here. Everything on the right half of this map is a client's attempt to be somewhere useful relative to this tick. One side lags it deliberately, the other side runs ahead of it deliberately, and neither is ever equal to it.",
+      "types": [
+        "NetworkTime",
+        "NetworkTick",
+        "ClientServerTickRate"
+      ],
+      "goto": "diagrams/02-keypress.html",
+      "gotoLabel": "Follow one keypress across"
+    },
+    "owner": {
+      "short": "The per-machine selector: is this entity's owner me?",
+      "deep": "The server stamps an owning network identifier onto the ghost. On each client that identifier is compared with its own, and under owner predicted the answer picks the time domain. It is the only setting in the system whose effect differs from machine to machine, which is exactly why it confuses people looking at one Inspector.",
+      "types": [
+        "GhostOwner",
+        "GhostOwnerIsLocal",
+        "NetworkId",
+        "GhostMode"
+      ]
+    },
+    "buffer": {
+      "short": "A ring of received snapshots, written at the rate the wire delivers them.",
+      "deep": "The write pointer moves whenever a packet lands, which is irregular. The read pointer moves smoothly with the client's clock, a fixed number of ticks behind. That gap is the entire jitter budget. Too small and you underrun and see a freeze. Too large and you have added latency for nothing. Same knob, same trade, same tuning instinct as any elastic buffer between two clock domains.",
+      "types": [
+        "SnapshotData",
+        "SnapshotDataBuffer",
+        "ClientTickRate",
+        "GhostUpdateSystem"
+      ]
+    },
+    "interp": {
+      "short": "An entity the client plays back and never simulates.",
+      "deep": "No gameplay system touches it. Its transform is written by the update system from two buffered snapshots, and that is all that happens to it on this machine. It can be extrapolated forward for a short while if data is missing, but it is never predicted, because prediction means running your simulation and this entity's simulation is somebody else's job.",
+      "types": [
+        "GhostMode",
+        "SmoothingAction",
+        "LocalTransform",
+        "GhostUpdateSystem"
+      ]
+    },
+    "replay": {
+      "short": "Rewind to the last confirmed tick, then resimulate forward to now.",
+      "deep": "Every frame, not just on a mismatch. When a snapshot arrives, the restore point is the tick that snapshot describes. When nothing arrives, the restore point is the client's own backup of its last full tick, so the loop keeps running on its own history. One loop covers every predicted ghost, and it rewinds as far as the oldest of them requires.",
+      "types": [
+        "PredictedGhost",
+        "GhostPredictionHistoryState",
+        "PredictedSimulationSystemGroup",
+        "Simulate"
+      ],
+      "goto": "diagrams/22-prediction-loop.html",
+      "gotoLabel": "Into the rollback loop"
+    },
+    "predict": {
+      "short": "An entity the client simulates ahead of the server, and pays for.",
+      "deep": "Its cost is ticks behind, times entities, times the systems inside the prediction group. The first term comes from the round trip and you do not control it. The third you can optimise. The second is the one you actually decide, and the contagion rule is what makes that decision leak. Every predicted thing must also be deterministic enough that replaying it lands in the same place twice.",
+      "types": [
+        "PredictedGhost",
+        "GhostPredictionSwitchingQueues",
+        "GhostSendType",
+        "GhostPredictionSmoothingSystem"
+      ],
+      "goto": "diagrams/33-predicted-physics.html",
+      "gotoLabel": "The classic contagion case: physics"
+    }
+  }
+}

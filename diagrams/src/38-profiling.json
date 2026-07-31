@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "The Measurement Plane",
+    "subtitle": "Where netcode numbers come from, and which instrument reads each one",
+    "output": "diagrams/38-profiling.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "sources",
+        "label": "Who produces the numbers",
+        "focus": [
+          "server",
+          "client",
+          "collector"
+        ],
+        "note": "Both worlds emit stats every tick; one collector system gathers them."
+      },
+      {
+        "id": "shapes",
+        "label": "Two shapes of the same data",
+        "focus": [
+          "collector",
+          "singletons",
+          "counters"
+        ],
+        "note": "ECS components for your code, profiler counters for graphs."
+      },
+      {
+        "id": "read",
+        "label": "Reading it back",
+        "focus": [
+          "singletons",
+          "modules",
+          "hud"
+        ],
+        "note": "The profiler window is optional. Your own system is often faster."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "server",
+      "type": "backend",
+      "label": "ServerWorld",
+      "sublabel": "GhostSendSystem markers",
+      "tag": "serialization CPU",
+      "pos": [
+        60,
+        100
+      ],
+      "size": [
+        180,
+        66
+      ]
+    },
+    {
+      "id": "collector",
+      "type": "cloud",
+      "label": "Metrics collector",
+      "sublabel": "gated on Profiler.enabled",
+      "tag": "one per world",
+      "pos": [
+        400,
+        100
+      ],
+      "size": [
+        190,
+        66
+      ]
+    },
+    {
+      "id": "counters",
+      "type": "messagebus",
+      "label": "Profiler counters",
+      "sublabel": "Network category",
+      "tag": "bytes · count · ns",
+      "pos": [
+        760,
+        100
+      ],
+      "size": [
+        190,
+        66
+      ]
+    },
+    {
+      "id": "client",
+      "type": "frontend",
+      "label": "ClientWorld",
+      "sublabel": "prediction tick counts",
+      "tag": "rollback CPU",
+      "pos": [
+        60,
+        340
+      ],
+      "size": [
+        180,
+        66
+      ]
+    },
+    {
+      "id": "singletons",
+      "type": "database",
+      "label": "Metric singletons",
+      "sublabel": "NetworkMetrics · SnapshotMetrics",
+      "tag": "ECS components",
+      "pos": [
+        400,
+        340
+      ],
+      "size": [
+        190,
+        66
+      ]
+    },
+    {
+      "id": "modules",
+      "type": "external",
+      "label": "Profiler modules",
+      "sublabel": "Client World · Server World",
+      "tag": "editor only",
+      "pos": [
+        760,
+        340
+      ],
+      "size": [
+        190,
+        66
+      ]
+    },
+    {
+      "id": "hud",
+      "type": "frontend",
+      "label": "Your own probe",
+      "sublabel": "four numbers, once a second",
+      "tag": "survives headless",
+      "pos": [
+        400,
+        580
+      ],
+      "size": [
+        190,
+        66
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "development builds only — UNITY_EDITOR or NETCODE_DEBUG",
+      "wraps": [
+        "server",
+        "collector",
+        "counters",
+        "client",
+        "singletons",
+        "modules",
+        "hud"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "server",
+      "to": "collector",
+      "label": "snapshot bits",
+      "variant": "emphasis",
+      "labelDx": 60
+    },
+    {
+      "from": "client",
+      "to": "collector",
+      "label": "RTT · jitter · errors",
+      "variant": "emphasis"
+    },
+    {
+      "from": "collector",
+      "to": "counters",
+      "label": "publishes"
+    },
+    {
+      "from": "collector",
+      "to": "singletons",
+      "label": "writes",
+      "labelDy": 24
+    },
+    {
+      "from": "counters",
+      "to": "modules",
+      "label": "graphs",
+      "labelDy": 24
+    },
+    {
+      "from": "singletons",
+      "to": "modules",
+      "label": "per-tick breakdown"
+    },
+    {
+      "from": "singletons",
+      "to": "hud",
+      "label": "read in a system",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The four bottlenecks",
+      "items": [
+        "Serialization CPU on the server, growing with connections",
+        "Egress bandwidth, growing with ghosts and bits per ghost",
+        "Prediction CPU on the client: predicted entities times replayed ticks",
+        "Link quality: latency, jitter and loss, which is not your code"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The only two defined bad values",
+      "items": [
+        "Compression efficiency below seventy percent is flagged by the package",
+        "Snapshot size above ninety percent of the max message size is flagged",
+        "Everything else has a shape, not a number, and yours will differ",
+        "Never trust a quoted millisecond figure you did not measure yourself"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Markers worth pinning",
+      "items": [
+        "Prioritize chunks: gathering and sorting, per connection",
+        "Relevancy: per-entity relevancy evaluation inside the send system",
+        "Can use static optimization: the static skip check",
+        "Server fixed update: one whole server tick"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Telling them apart",
+      "items": [
+        "Snapshot size pinned but ghost count flat: bandwidth",
+        "Tick batching warnings with snapshots under the ceiling: server CPU",
+        "Client spikes on snapshot arrival: prediction replay",
+        "High jitter and a wide snapshot age spread: the link"
+      ]
+    }
+  ]
+}

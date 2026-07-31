@@ -45,6 +45,9 @@ flowchart TB
 For a player capsule, `OwnerPredicted` is nearly always right: *you* need your own capsule to
 respond in zero frames; you do not need someone else's to be frame-exact, you need it smooth.
 
+These three are really two *clock domains* with ownership as the selector, and choosing between
+them has a consequence that spreads — see [41 · Clock domains](41-clock-domains.md).
+
 ## Snapshots: delta-compressed, importance-scheduled
 
 Each server tick, per connection:
@@ -107,9 +110,13 @@ client world without the client ever calling `Instantiate`.
 
 > **🔬 Probe** — see the schema Unity actually generated:
 > ```
-> Multiplayer → Ghost Snapshot Inspector   (in play mode)
+> Window → Multiplayer → Ghost Prefab List     (every replicated prefab and its settings)
+> Window → Multiplayer → Network Profiler      (per-ghost byte cost, in play mode)
 > ```
-> It shows per-ghost byte cost. If a ghost is unexpectedly expensive, a field you did not
-> mean to replicate is in the schema.
+> The Network Profiler's snapshot breakdown is where per-ghost cost lives. If a ghost is
+> unexpectedly expensive, a field you did not mean to replicate is in the schema.
+> The registered menu items are listed at `Runtime/Stats/GhostStatsSystem.cs:22`; the older
+> browser-based Network Debugger is still there but marked deprecated. Chapter 38 walks the
+> profiler properly.
 
 → [15 · The tick](15-the-tick.md)

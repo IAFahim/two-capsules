@@ -1,0 +1,114 @@
+{
+  "id": "22-prediction-loop",
+  "title": "The Rollback Loop",
+  "map": "diagrams/22-prediction-loop.html",
+  "blurb": "Restore, replay, carry on. The same machine every frame, whether or not anything went wrong.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "It is a loop, not an incident",
+      "focus": null,
+      "text": "Most explanations of rollback tell it as a story. Something goes wrong, the client notices, drama happens, the client repairs itself. That framing is wrong and it makes the code impossible to reason about. This is a loop that runs every frame at the same cost whether the prediction was perfect or hopeless. Read it as a machine with a program counter and it becomes simple."
+    },
+    {
+      "id": "restore",
+      "title": "The restore is unconditional",
+      "focus": "restore",
+      "text": "First move: the server's fields are copied over the predicted entity. Not compared, copied. There is no branch anywhere that asks whether the prediction was right. If it was right, the copy writes identical bytes and costs exactly the same as if it were wrong. That is a genuinely surprising piece of engineering, and once you see it, half the confusion about when rollback happens evaporates. It always happens."
+    },
+    {
+      "id": "head",
+      "title": "One loop head for the whole set",
+      "focus": "start",
+      "text": "Second move: work out which tick to start from. Every predicted entity carries the tick it should start predicting from, and the loop takes the oldest one across the entire predicted set. One entity that has not heard from the server in a while drags the whole loop back with it, because there is one loop, not one per entity. Then on every iteration this same loop head chooses the next tick and enables the simulate bit on exactly the entities that should run for it."
+    },
+    {
+      "id": "step",
+      "title": "One tick, your systems, again",
+      "focus": "step",
+      "text": "Third move: run one tick of your own gameplay systems. The same code the server ran, with the input that was recorded for that exact tick pulled back out of the command ring. Then the loop head increments and does it again. This is where anything that is not idempotent per tick betrays you. Integrating a transform is fine. Playing a sound is not, because you are about to play it eight more times."
+    },
+    {
+      "id": "starve",
+      "title": "When nothing arrives",
+      "focus": "nosnap",
+      "text": "Most frames no snapshot arrives at all, because you render far more often than the server sends. In that case there is nothing authoritative to restore from, so the loop restores from its own backup of the last full tick it simulated and carries on. The machine does not stall waiting for the network. It runs on its own history and accepts the correction whenever it eventually shows up."
+    },
+    {
+      "id": "cost",
+      "title": "The cost, and the one honest lever",
+      "focus": "backup",
+      "text": "Cost is replayed ticks, times predicted entities, times whatever your predicted systems do. The first term is round trip time and you do not control it. The third you can optimise but only so far. The second is the one you actually chose, and it is the one that quietly grows, because prediction spreads to everything a predicted thing touches. Keeping the predicted set small is not a micro optimisation. It is the design."
+    }
+  ],
+  "nodes": {
+    "snap": {
+      "short": "The server's state for a tick that already happened.",
+      "deep": "It is delta compressed against whatever this connection last acknowledged, sent unreliably, and by the time it lands the client has already simulated well past it. Nothing is retransmitted, because a retransmit would arrive too late to be worth anything. The next snapshot simply re-bases.",
+      "types": [
+        "SnapshotData",
+        "GhostUpdateSystem",
+        "GhostSendSystem"
+      ],
+      "goto": "diagrams/41-clock-domains.html",
+      "gotoLabel": "Which domain is this ghost in?"
+    },
+    "nosnap": {
+      "short": "The usual case: no new server data this frame at all.",
+      "deep": "At sixty frames a second against a twenty hertz send rate, two frames out of three have nothing new to apply. The loop still runs. It restores from the client's own backup of its last fully simulated tick and keeps going, which is why prediction feels continuous rather than stepping every time a packet lands.",
+      "types": [
+        "GhostPredictionHistoryState",
+        "PredictedGhost"
+      ]
+    },
+    "restore": {
+      "short": "Server fields written over the predicted state, every time, no comparison.",
+      "deep": "Only fields that are actually part of the replicated schema get written. Everything else keeps whatever the last replay left in it, which is a sharp edge: mutate an unreplicated field inside the prediction loop and that mutation is applied once per replayed tick and never undone. It looks correct until the first dropped packet.",
+      "types": [
+        "GhostUpdateSystem",
+        "GhostField",
+        "PredictedGhost"
+      ]
+    },
+    "start": {
+      "short": "The loop head: picks the next tick and enables the simulate bit.",
+      "deep": "It runs once per iteration, not once per frame. Each time round it advances the tick being predicted, asks every predicted entity whether it should run for that tick, and sets the enable bit accordingly. Think of it as the clock generator plus the enable decoder for the whole predicted set.",
+      "types": [
+        "PredictedSimulationSystemGroup",
+        "Simulate",
+        "NetworkTime"
+      ]
+    },
+    "step": {
+      "short": "One tick of your own systems, with that tick's recorded input.",
+      "deep": "The same systems the server runs, under one world filter naming both sides, so there is literally one implementation. Anything with an external side effect must be gated on the flag that marks the first time a tick is fully predicted, or it happens once per replay. That flag is the difference between a sound effect and a machine gun.",
+      "types": [
+        "Simulate",
+        "NetworkTime",
+        "InputBufferData"
+      ],
+      "goto": "diagrams/33-predicted-physics.html",
+      "gotoLabel": "Physics inside this loop"
+    },
+    "now": {
+      "short": "The client's present, roughly half a round trip ahead of the server.",
+      "deep": "This is what gets rendered for anything you own, and it is deliberately ahead of the truth so that your input has zero perceived latency. Everything else on screen is behind the truth instead. Nobody, on any machine, is looking at the server's actual present.",
+      "types": [
+        "NetworkTime",
+        "LocalTransform",
+        "GhostPredictionSmoothingSystem"
+      ],
+      "goto": "diagrams/02-keypress.html",
+      "gotoLabel": "Back to the keypress"
+    },
+    "backup": {
+      "short": "A memory copy of the predicted state after the last full tick.",
+      "deep": "It has two jobs. It is the floor the loop restarts from when no snapshot arrives, and it is the reference the smoothing and error reporting compare against. The copy takes the whole component but the restore touches only the replicated part, which preserves any local state you keep alongside it.",
+      "types": [
+        "GhostPredictionHistoryState",
+        "GhostPredictionSmoothingSystem",
+        "SmoothingAction"
+      ]
+    }
+  }
+}

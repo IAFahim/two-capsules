@@ -1,0 +1,114 @@
+{
+  "id": "05-chunk-layout",
+  "title": "Inside One Chunk",
+  "map": "diagrams/05-chunk-layout.html",
+  "blurb": "Sixteen thousand three hundred and eighty four bytes, and the stride is the entire point.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "One allocation, and you can read it",
+      "focus": null,
+      "text": "Everything on this map is one allocation. Sixteen kilobytes, taken from a pool, reused. Sixty four bytes of header at the front, deliberately a whole cache line, and then nothing but arrays until the end. There is no object graph here, no vtable, no pointer to follow. If you have ever drawn a memory map on a whiteboard to explain a driver, this is that drawing, and it is the honest layout rather than a metaphor for one."
+    },
+    {
+      "id": "arrays",
+      "title": "One array per component type",
+      "focus": "transform",
+      "text": "After the header comes the entity array, always first, then one contiguous array per component type in this chunk's archetype. Each has a fixed stride: a transform is thirty two bytes, a ghost identity is twelve, a movement input is eight. Within an array, element three sits exactly three strides past the base. No indirection, no holes, no per element metadata. Just a run of identical records, which is the only shape a hardware prefetcher can actually predict."
+    },
+    {
+      "id": "subscript",
+      "title": "An entity is a subscript, not a struct",
+      "focus": "slot",
+      "text": "Here is the part that takes a while to sit right. Entity number three does not exist anywhere as a contiguous object. Its transform is in one array, its ghost identity is in another, its input is in a third, and those three pieces may be thousands of bytes apart. What ties them together is nothing but the shared index. That is structure of arrays, chosen for exactly the reason you would choose it in C, and it is why a system that only wants transforms never pulls a single byte of anything else into cache."
+    },
+    {
+      "id": "sweep",
+      "title": "What a job actually sees",
+      "focus": "sweep",
+      "text": "A job is handed one chunk at a time. Inside that chunk, every entity has identical structure by definition, so there is no branch on type and no virtual call anywhere in the loop. It walks one array forward at a fixed stride and ignores every other array in the block. This is why the unit of parallel work is a chunk rather than an entity: a chunk is exactly one cache friendly range with a known length."
+    },
+    {
+      "id": "capacity",
+      "title": "The consequence nobody warns you about",
+      "focus": "archetype",
+      "text": "Capacity is the usable buffer divided by the sum of the strides. So adding one component to an entity does two things at once. It changes the archetype, which means the entity has to move to a different chunk, which is a memory copy of every one of its components. And it changes capacity, so a block that held one hundred and twenty eight entities might now hold one hundred and thirteen. That is what a structural change actually costs, and that is why you batch them."
+    }
+  ],
+  "nodes": {
+    "archetype": {
+      "short": "The exact set of component types, shared by every chunk that matches it.",
+      "deep": "An archetype is a set, not an object. It owns the layout: which arrays exist, in what order, at what offsets, and how many entities fit. Every chunk with the same archetype has a byte identical layout, which is what lets a query iterate many chunks with one set of type offsets computed once.",
+      "types": [
+        "EntityArchetype",
+        "ArchetypeChunk",
+        "TypeManager"
+      ]
+    },
+    "slot": {
+      "short": "One entity, expressed as the same index into several unrelated arrays.",
+      "deep": "There is no object here to hold. The address of entity three's transform is the transform array base plus three times thirty two. The address of its input is a completely different base plus three times eight. Those two addresses have nothing to do with each other except that the same number three produced both of them.",
+      "types": [
+        "ArchetypeChunk",
+        "ComponentTypeHandle",
+        "ChunkIndex"
+      ]
+    },
+    "header": {
+      "short": "Sixty four bytes at the front, sized to a cache line on purpose.",
+      "deep": "It carries a globally unique sequence number, some flags, and the identity of the meta entity that holds this chunk's chunk level components. Only twenty four of those bytes are actually serialized when a chunk is written to disk; the rest is runtime bookkeeping. The buffer offset is sixty four so that the first real array starts on a cache line boundary.",
+      "types": [
+        "Chunk",
+        "ChunkIndex"
+      ]
+    },
+    "entities": {
+      "short": "The entity array, always first, eight bytes per slot.",
+      "deep": "An entity handle is an index plus a version number. The version is the trick that makes a stale reference detectable instead of catastrophic: reuse the index, bump the version, and any handle carrying the old version now fails a cheap comparison instead of silently addressing somebody else's data.",
+      "types": [
+        "ArchetypeChunk",
+        "EntityQuery"
+      ]
+    },
+    "transform": {
+      "short": "Thirty two bytes per entity, contiguous, no gaps.",
+      "deep": "Position, rotation and a uniform scale, packed. It is the array almost every system touches, which is why its stride matters more than most. A run of these is the best case the memory system ever sees: sequential, aligned, predictable, and completely free of anything the loop does not need.",
+      "types": [
+        "LocalTransform",
+        "LocalToWorld",
+        "PostTransformMatrix"
+      ]
+    },
+    "ghost": {
+      "short": "Twelve bytes: a network identity, a prefab type, and a spawn tick.",
+      "deep": "The identifier alone is not unique over time, because identifiers get recycled when ghosts are destroyed. It is the pair of identifier and spawn tick that is guaranteed unique, which is a detail you only care about at exactly the moment it bites you during despawn and respawn in the same window.",
+      "types": [
+        "GhostInstance",
+        "GhostCollection"
+      ],
+      "goto": "diagrams/36-ghost-codegen.html",
+      "gotoLabel": "How this array gets serialized"
+    },
+    "input": {
+      "short": "Eight bytes of intent, and the only thing that leaves this machine.",
+      "deep": "Two floats saying which direction the player wants to go. It sits in this chunk exactly like everything else, with the same stride discipline, and the fact that it is the one component destined for the wire is invisible from the memory layout. That is the point: replication is a property of the schema, not of how the data is stored.",
+      "types": [
+        "ICommandData",
+        "InputBufferData"
+      ],
+      "goto": "diagrams/02-keypress.html",
+      "gotoLabel": "Where that intent goes next"
+    },
+    "sweep": {
+      "short": "One job, one chunk, one linear pass with no pointer ever dereferenced.",
+      "deep": "The loop gets a base address and a count. Inside it there is no polymorphism, no null check on a reference, and no cache miss that was not implied by the data you asked for. Arrays this chunk holds but the job did not request are never read, so they never displace anything you do need.",
+      "types": [
+        "EntityQuery",
+        "ChunkEntityEnumerator",
+        "EnabledMask"
+      ],
+      "goto": "diagrams/01-machine.html",
+      "gotoLabel": "Out to the whole machine"
+    }
+  }
+}

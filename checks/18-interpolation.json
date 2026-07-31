@@ -1,0 +1,116 @@
+{
+  "id": "18-interpolation",
+  "title": "Interpolation",
+  "source": {
+    "chapter": "18-interpolation",
+    "map": "diagrams/02-keypress.html"
+  },
+  "checks": [
+    {
+      "id": "smoothing-fed-back",
+      "kind": "predict",
+      "setup": "After a rollback the capsule snaps, so you register a smoothing action that blends the rendered position toward the corrected one over a few frames. It looks great.\n\nThen a camera-collision system needs the capsule's visual position, so it reads the smoothed transform. And then the movement system, which already reads `LocalTransform`, is now reading the value the smoother wrote.",
+      "ask": "Describe the loop you just closed, and what it does to a capsule that receives a large correction.",
+      "rightIf": [
+        "says smoothing operates on the rendered transform and simulation must not read it back",
+        "traces the loop: simulation integrates from a smoothed value, the result is corrected, the correction is smoothed, and the smoothed value is integrated from again",
+        "concludes the simulated state is now a function of presentation, so the correction never converges — it is chasing a value that moves because it corrected it",
+        "predicts divergence or a long crawl rather than a clean settle after a large correction",
+        "states the rule: presentation reads simulation, never the reverse"
+      ],
+      "answer": "Smoothing is a low-pass filter on the output. You have wired the output back into the input, so it is no longer a filter — it is a feedback loop with a delay in it, and feedback loops with delay either crawl or oscillate depending on how much gain you gave them.\n\nWalk one large correction through it. The server says you are 2 m back. The smoother starts blending the rendered position toward that. The movement system integrates from the blended value, which is neither the predicted nor the corrected one, so its next state is wrong in a new way. The next snapshot corrects *that*, which the smoother blends again, which the movement system integrates from again. The system is now solving for a target that moves every time it moves toward it, and the settle takes forever or never happens.\n\nThe rule is one-directional and it is not stylistic: presentation reads simulation. Never the reverse. If a system needs a position to make a decision that affects the world, it needs the simulated one, however ugly.",
+      "because": "Smoothing is a filter on the rendered value. Reading it back into simulation turns a filter into a control loop nobody designed.",
+      "goDeeper": {
+        "chapter": "18-interpolation",
+        "types": [
+          "GhostPredictionSmoothing",
+          "SmoothingAction",
+          "LocalTransform"
+        ]
+      }
+    },
+    {
+      "id": "predict-everything",
+      "kind": "predict",
+      "setup": "\"Why do we have two modes at all? Fighting games predict everything. Set `DefaultGhostMode = Predicted` on every prefab and every entity is instant and correct.\"\n\nYou try it in the two-capsule project. It works flawlessly — same frame times, same feel, arguably crisper. So it ships as the project default, and every new prefab inherits it: crates, doors, pickups, decorative drones, five hundred entities in the shipping arena.",
+      "ask": "Name the two bills that come due, and say precisely why the two-capsule experiment could not have shown you either one.",
+      "rightIf": [
+        "first bill: every predicted ghost replays on every rollback, so cost scales with predicted entities x replayed ticks",
+        "second bill: every predicted entity must now be deterministic across machines, which is a commitment, not a setting",
+        "notes that non-deterministic predicted entities rubber-band rather than erroring",
+        "explains the experiment's blindness: two entities make the first factor negligible, and a clean local connection makes the second factor (replayed ticks) 1",
+        "may add that predicted physics is a large determinism commitment specifically"
+      ],
+      "answer": "Bill one is arithmetic: rollback cost is predicted entities x replayed ticks. Two capsules on a clean connection is 2 x 1, which is free by construction. Five hundred entities and a 12-tick correction is 6000 entity-ticks in one frame, and no amount of per-entity cheapness makes that a frame you keep.\n\nBill two is a promise, not a number: every predicted entity has to simulate identically on every machine. Not approximately — the client predicts it and the server checks. Anything that does not reproduce (uninitialised state, iteration order, floating-point differences, anything reading a local random seed) rubber-bands forever, and if you predicted physics you have signed up for cross-machine deterministic physics, which is a large commitment that people underestimate at exactly this moment.\n\nThe experiment could not show either one because it held both factors at their minimum simultaneously. That is not a small experiment, it is a degenerate one. `OwnerPredicted` exists to say: pay that price for the one entity where latency is genuinely unacceptable, and take the cheap smooth path for the other four hundred and ninety-nine.",
+      "because": "Predicting everything is not a mode, it is a determinism commitment with a cost multiplier attached. Both terms are 1 in the experiment that talked you into it.",
+      "goDeeper": {
+        "chapter": "18-interpolation",
+        "types": [
+          "PredictedGhost",
+          "GhostAuthoringComponent",
+          "PredictedSimulationSystemGroup"
+        ]
+      }
+    },
+    {
+      "id": "delay-cut-to-feel-snappier",
+      "kind": "predict",
+      "setup": "A playtester says other players feel \"a beat behind\". They are: about 100 ms behind, by design. You cut `InterpolationTimeNetTicks` from 2 snapshot intervals to 1, then to well under one, to make them current.\n\nOn the LAN this is a straight improvement — other capsules are visibly more responsive and nothing looks wrong. In a playtest across the country, other capsules stutter and briefly freeze.",
+      "ask": "What is the buffer for, what does 'too small' actually mean in terms of the two snapshots the client needs, and what is the correct failure mode when the data is missing?",
+      "rightIf": [
+        "says the client renders between two snapshots it already has and never extrapolates",
+        "explains the delay is the margin that guarantees the bracketing snapshots have arrived despite jitter and loss",
+        "concludes too small means the newer bracketing snapshot has not arrived yet, so there is nothing to interpolate toward",
+        "identifies the correct failure: the client holds the last known value, which reads as a brief freeze rather than a teleport",
+        "frames it as an elastic buffer trade: too small underruns, too large adds pointless lag"
+      ],
+      "answer": "The delay is not lag someone forgot to remove; it is the margin that guarantees the two snapshots you need to interpolate between have both arrived. The client always renders *between* two known-good points and never extrapolates — so if the newer of the two has not landed yet, there is no segment to be on. NetCode holds the last known value until it arrives, which is a brief freeze followed by a resume. That is the correct failure mode, chosen deliberately over guessing forward and then teleporting back.\n\nOn a LAN, jitter is a fraction of a snapshot interval and a one-interval buffer never underruns, so you measured the improvement and none of the cost. Across the country, jitter is comparable to the interval itself and you underrun constantly — hence stutter and freezes rather than smoothness.\n\nIt is an elastic buffer between two clock domains, and it has the trade every elastic buffer has: too small and you underrun, too large and you add latency nobody asked for. The right size is a function of *their* jitter, not your LAN's, so tune it with emulation on.",
+      "because": "The interpolation delay is a jitter absorber. Shrinking it does not make the data arrive sooner; it just removes the margin that was hiding the arrival times.",
+      "goDeeper": {
+        "chapter": "18-interpolation",
+        "types": [
+          "ClientTickRate",
+          "NetworkTime"
+        ]
+      }
+    },
+    {
+      "id": "frozen-then-jumps",
+      "kind": "choice",
+      "setup": "One symptom, from a player near the edge of a large map: another player's capsule freezes completely for a second or two, then reappears somewhere else entirely. Not a slide, not a rubber-band — a hard freeze followed by a hard jump. Your own capsule is fine throughout. The connection graph shows steady RTT and no loss during the window.",
+      "ask": "Which mechanism produces exactly this shape?",
+      "options": [
+        {
+          "text": "The ghost fell out of relevancy for this connection and later came back.",
+          "right": true,
+          "why": "Relevancy is binary: while irrelevant, the server sends nothing about that ghost at all, so the client has no new snapshots and holds the last value — the freeze. When it becomes relevant again the ghost reappears wherever it now is, which is a jump proportional to how long it was gone. The clean RTT and the map-edge location are both consistent with an interest-management boundary rather than a wire problem."
+        },
+        {
+          "text": "Interpolation buffer underrun from packet loss.",
+          "right": false,
+          "why": "Underrun does produce a hold-then-resume, so it is the right family — but it is short, it tracks measurable loss, and the resume continues roughly from where the motion was heading. A multi-second freeze with clean loss statistics is too long and too clean for underrun. The duration and the loss graph are what separate the two."
+        },
+        {
+          "text": "The ghost is Predicted rather than Interpolated and is not deterministic on this client.",
+          "right": false,
+          "why": "Non-determinism in a predicted ghost gives you continuous rubber-banding — a constant fight, never a freeze. This is a real failure mode with a completely different signature, and telling the two apart by shape is most of the skill: fighting means prediction, holding means missing data."
+        },
+        {
+          "text": "The server is batching ticks, so that ghost's updates arrived in one clump.",
+          "right": false,
+          "why": "Batching affects the whole server simulation, so every remote entity would show it at once and your own capsule would not be fine. Any explanation that predicts a global symptom has to be dropped when the evidence says one entity. Blast radius is a diagnostic."
+        }
+      ],
+      "answer": "Freeze then jump is the signature of missing data over a long window: the client holds the last known value because there is nothing to interpolate toward, then resumes wherever reality has got to. Over a second or two on a clean connection, that is relevancy, not loss.",
+      "because": "Interpolation never extrapolates. When the data stops, the picture stops — and how long it stopped tells you which mechanism stopped it.",
+      "goDeeper": {
+        "chapter": "18-interpolation",
+        "types": [
+          "GhostRelevancy",
+          "GhostRelevancyMode",
+          "GhostInstance"
+        ]
+      }
+    }
+  ]
+}

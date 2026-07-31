@@ -1,0 +1,68 @@
+{
+  "id": "35-lag-compensation",
+  "title": "Lag compensation",
+  "map": "diagrams/35-lag-compensation.html",
+  "blurb": "A tick indexed ring of collision worlds, and the delay measurement that selects a slot.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "The player aims at a composite image",
+      "focus": null,
+      "text": "Three different nows are on screen at once. Your own body is drawn ahead of the server. Everyone else is drawn behind it. So when a player fires, the crosshair sits over a body that, by the server's clock, is already somewhere else. If the server tests that shot against its own present it will miss shots the player saw land, and the error grows with latency."
+    },
+    {
+      "id": "measure",
+      "title": "The client measures its own delay",
+      "focus": "delay",
+      "text": "The server does not estimate how far behind a client is rendering. The client measures it, as the number of ticks between the server tick and its own interpolation tick, adjusted by the sub tick fractions and floored at zero. That number is written into every command packet, stored per connection on the server, and copied onto the owned ghost when a command for that ghost arrives."
+    },
+    {
+      "id": "ring",
+      "title": "A ring that is really a cache",
+      "focus": "ring",
+      "text": "The history is thirty two collision world slots plus thirty two parallel tick fields. The slot is the tick modulo the size, which is why the size must be zero, one, or a power of two: the index is a mask, not a division, and it has to stay correct when the tick counter wraps. The tick stored beside the slot is the tag. A read hands you back the tag it found, so you can check that the line you got is the line you asked for."
+    },
+    {
+      "id": "query",
+      "title": "The query that fails silently",
+      "focus": "rewind",
+      "text": "The read has four behaviours. A tick newer than anything stored returns the live world. A tick in range returns its clone. A tick older than the ring is clamped to the oldest slot. And an uninitialised history returns the live world. The short overload of that call throws away the expected tick and the returned tick, so a high latency client is served the oldest world you have, forever, with no signal at all. Compare the two ticks and log the mismatch."
+    },
+    {
+      "id": "tradeoff",
+      "title": "Somebody absorbs the latency",
+      "focus": "hit",
+      "text": "The server rewinds the target, not the shooter and not the level. So a player can be told they were hit while their own screen already showed them safely behind cover. That is not a bug in the implementation, it is the choice the design makes. Turn compensation off and the shooter absorbs the latency instead, by leading every moving target by their own ping. The interpolation window and the history size are the two bounds you actually control."
+    }
+  ],
+  "nodes": {
+    "delay": {
+      "short": "Computes the interpolation delay and writes it into every command packet.",
+      "deep": "It is the tick distance from the server tick to the interpolation tick, nudged by one in either direction depending on the sub tick fractions, and never allowed below zero. It travels as a plain unsigned integer in the command header, so it costs four bytes on a packet the client was sending anyway."
+    },
+    "ack": {
+      "short": "Stores the reported delay per connection on the server.",
+      "deep": "It lives alongside the acknowledgement bookkeeping for that connection, and it is only refreshed when a packet carrying a newer remote timestamp arrives. This is the single per connection value from which every per entity delay is copied."
+    },
+    "cdid": {
+      "short": "The delay, copied onto the owned ghost when a command arrives for it.",
+      "deep": "This component is not baked by default. You get it by enabling track interpolation delay on the ghost authoring component, and only when the ghost also has an owner. It is refreshed only when a command arrives for that entity, so if the player switches command target, the old entity keeps its last reported delay forever."
+    },
+    "physhist": {
+      "short": "Clones the collision world once per fully predicted tick.",
+      "deep": "It runs last inside the physics group, after the world has been built, so collider blob references are valid and copyable. It requires a lag compensation configuration singleton to exist at all, and it refuses to run on a re-simulated tick so replay can never overwrite history that was already recorded."
+    },
+    "ring": {
+      "short": "Thirty two stored collision worlds, indexed by tick.",
+      "deep": "It is not an array of worlds. It is thirty two named fields read through a switch statement, because a collision world contains a broadphase tree that cannot simply be copied into an arbitrary slot. Holding thirty two live broadphase trees in memory, and cloning one per tick, is the real running cost of lag compensation."
+    },
+    "rewind": {
+      "short": "Subtracts the delay from the current tick and hands back a world.",
+      "deep": "It clamps in two directions. A request newer than the latest stored tick gets the live world. A request older than the ring gets the oldest slot. Both are reported through an expected tick and a returned tick, and comparing those two is the only way to learn that your history is too short for your player base."
+    },
+    "hit": {
+      "short": "Your hit registration, running inside the prediction loop.",
+      "deep": "Three rules apply. Query inside the prediction group so the tick you pass matches the command. Gate the damage on the first time a tick is fully predicted, because damage is a one shot side effect. And filter on the simulate tag, exactly as every other predicted system must."
+    }
+  }
+}

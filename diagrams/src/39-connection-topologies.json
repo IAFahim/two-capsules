@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "The Transport Stack",
+    "subtitle": "From a call to Listen down to the bytes — and where a relay actually sits",
+    "output": "diagrams/39-connection-topologies.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "build",
+        "label": "Who builds the drivers",
+        "focus": [
+          "api",
+          "ctor",
+          "store"
+        ],
+        "note": "One static property is the whole extension point."
+      },
+      {
+        "id": "two",
+        "label": "The server holds two",
+        "focus": [
+          "store",
+          "ipc",
+          "socket"
+        ],
+        "note": "IPC for the in-process client, a socket for everyone else."
+      },
+      {
+        "id": "reach",
+        "label": "Reachability, not topology",
+        "focus": [
+          "relay",
+          "socket",
+          "wire"
+        ],
+        "note": "A relay changes the path, never who owns the simulation."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "api",
+      "type": "frontend",
+      "label": "NetworkStreamDriver",
+      "sublabel": "Listen and Connect",
+      "tag": "singleton",
+      "pos": [
+        60,
+        100
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "ctor",
+      "type": "database",
+      "label": "Driver constructor",
+      "sublabel": "swap the static property",
+      "tag": "your hook",
+      "pos": [
+        360,
+        100
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "store",
+      "type": "cloud",
+      "label": "NetworkDriverStore",
+      "sublabel": "one entry per driver",
+      "tag": "IPC · Socket",
+      "pos": [
+        660,
+        100
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "relay",
+      "type": "external",
+      "label": "Relay allocation",
+      "sublabel": "endpoint, key, join code",
+      "tag": "service-side",
+      "pos": [
+        960,
+        100
+      ],
+      "size": [
+        220,
+        66
+      ]
+    },
+    {
+      "id": "ipc",
+      "type": "backend",
+      "label": "IPC driver",
+      "sublabel": "in-process, zero latency",
+      "tag": "listen server",
+      "pos": [
+        660,
+        360
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "socket",
+      "type": "backend",
+      "label": "Socket driver",
+      "sublabel": "UDP, or WebSocket on the web",
+      "tag": "everyone else",
+      "pos": [
+        960,
+        360
+      ],
+      "size": [
+        220,
+        66
+      ]
+    },
+    {
+      "id": "local",
+      "type": "frontend",
+      "label": "Local client",
+      "sublabel": "the host's own player",
+      "tag": "no wire latency",
+      "pos": [
+        660,
+        600
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "wire",
+      "type": "messagebus",
+      "label": "Pipeline stack",
+      "sublabel": "unreliable · reliable · fragmented",
+      "tag": "MTU 1400",
+      "pos": [
+        960,
+        600
+      ],
+      "size": [
+        220,
+        66
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "api",
+      "to": "ctor",
+      "label": "world creation",
+      "variant": "dashed"
+    },
+    {
+      "from": "ctor",
+      "to": "store",
+      "label": "registers drivers",
+      "variant": "emphasis"
+    },
+    {
+      "from": "relay",
+      "to": "socket",
+      "label": "relay parameters",
+      "variant": "dashed",
+      "labelDy": 24
+    },
+    {
+      "from": "store",
+      "to": "ipc",
+      "label": "in-process",
+      "labelDy": 24
+    },
+    {
+      "from": "store",
+      "to": "socket",
+      "label": "remote",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ipc",
+      "to": "local",
+      "label": "loopback",
+      "labelDy": 24
+    },
+    {
+      "from": "socket",
+      "to": "wire",
+      "label": "packets",
+      "variant": "emphasis",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Four independent choices",
+      "items": [
+        "Topology: who owns the authoritative simulation",
+        "Driver store: which driver instances exist at all",
+        "Interface: how bytes leave the process, in-process or socket",
+        "Reachability: whether the client can address the host directly"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What the play type decides",
+      "items": [
+        "Client and server: both worlds, a listen server, the default",
+        "Client only: one world, must connect to something",
+        "Server only: one world, can only listen",
+        "There is no separate client-hosted mode, only client and server on a player machine"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Not in these packages",
+      "items": [
+        "There is no hole punching or address translation traversal anywhere in transport",
+        "Relay allocation, join codes, matchmaking and lobbies are all service-side",
+        "Fleet and server hosting is a Unity service, documented outside this book",
+        "Distributed authority does not exist in netcode for entities today"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Choosing",
+      "items": [
+        "Cheating matters and budget allows: a dedicated server",
+        "Friends, small sessions, low cost: a listen server behind a relay",
+        "Browser client: it cannot listen, so it must be a client",
+        "Develop with the simulator on, which forces sockets and exposes real bugs"
+      ]
+    }
+  ]
+}

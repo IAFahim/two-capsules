@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Lag compensation",
+    "subtitle": "A tick-indexed ring of collision worlds, and the delay measurement that selects a slot",
+    "output": "diagrams/35-lag-compensation.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "delay",
+        "label": "The delay measurement",
+        "focus": [
+          "delay",
+          "ack",
+          "cdid"
+        ],
+        "note": "The client measures how far behind it is rendering and ships that number in every command."
+      },
+      {
+        "id": "ring",
+        "label": "The history ring",
+        "focus": [
+          "physhist",
+          "ring"
+        ],
+        "note": "One collision world clone per full tick, stored at tick modulo size, tagged with its tick."
+      },
+      {
+        "id": "query",
+        "label": "The rewind query",
+        "focus": [
+          "ring",
+          "rewind",
+          "hit"
+        ],
+        "note": "Compare expected tick with returned tick, or clamping will fail silently forever."
+      }
+    ],
+    "viewBox": [
+      1120,
+      620
+    ]
+  },
+  "stages": [
+    {
+      "label": "client measures"
+    },
+    {
+      "label": "wire"
+    },
+    {
+      "label": "server stores"
+    },
+    {
+      "label": "rewind"
+    },
+    {
+      "label": "hit test"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "delay",
+      "type": "frontend",
+      "label": "CommandSend",
+      "sublabel": "server tick minus interpolation tick",
+      "tag": "every packet",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "ack",
+      "type": "messagebus",
+      "label": "SnapshotAck",
+      "sublabel": "remote interpolation delay",
+      "tag": "per connection",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "cdid",
+      "type": "database",
+      "label": "Delay component",
+      "sublabel": "written on command receive",
+      "tag": "opt-in at bake",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "physhist",
+      "type": "backend",
+      "label": "PhysicsWorldHistory",
+      "sublabel": "clones the collision world",
+      "tag": "last in physics",
+      "stage": 1,
+      "row": 1
+    },
+    {
+      "id": "ring",
+      "type": "database",
+      "label": "Collision ring",
+      "sublabel": "slot is tick modulo size",
+      "tag": "tick is the tag",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "rewind",
+      "type": "security",
+      "label": "Rewind query",
+      "sublabel": "clamps, reports the tick it gave",
+      "tag": "expected vs returned",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "hit",
+      "type": "backend",
+      "label": "Your hit system",
+      "sublabel": "inside prediction, first full tick",
+      "tag": "Simulate",
+      "stage": 4,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "delay",
+      "to": "ack",
+      "label": "in the header",
+      "classification": "wire",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ack",
+      "to": "cdid",
+      "label": "onto the ghost",
+      "classification": "wire",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "physhist",
+      "to": "ring",
+      "label": "clone per tick",
+      "classification": "history",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "cdid",
+      "to": "rewind",
+      "label": "how far back",
+      "classification": "control",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "ring",
+      "to": "rewind",
+      "label": "the stored world",
+      "classification": "history",
+      "variant": "security"
+    },
+    {
+      "from": "rewind",
+      "to": "hit",
+      "label": "client's view",
+      "classification": "authoritative",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Why the server cannot guess the delay",
+      "items": [
+        "Interpolation delay depends on the client's own jitter and window settings",
+        "So the client measures it and writes it into every command packet",
+        "The server stores it per connection and copies it onto the owned ghost",
+        "It is only refreshed when a command arrives for that specific entity"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The ring is a direct-mapped cache",
+      "items": [
+        "Index is the low bits of the tick, which is why the size must be a power of two",
+        "The tick is stored alongside the slot and acts as the tag",
+        "A read hands back the tick it actually found",
+        "Requests older than the ring are clamped to the oldest slot, not refused"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The silent failure",
+      "items": [
+        "The short overload throws away expected tick and returned tick",
+        "A high-latency client then gets the oldest world forever, with no signal",
+        "Compare the two ticks and log the mismatch",
+        "That comparison is how you learn your history is too short"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Somebody absorbs the latency",
+      "items": [
+        "The server rewinds the target, not the shooter and not the level",
+        "So a player can be hit after their own screen shows them behind cover",
+        "Without compensation the shooter absorbs it instead, by leading every target",
+        "The interpolation window and the history size are the two bounds you control"
+      ]
+    }
+  ]
+}

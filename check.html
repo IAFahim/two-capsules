@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Check · Two Capsules</title>
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#111a2d; --card:#16203a; --ink:#e9eefb; --muted:#93a4c6;
+    --line:#22304f; --a:#5eead4; --ok:#34d399; --hl:rgba(94,234,212,.13);
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#fbfcfe; --panel:#fff; --card:#f4f7fb; --ink:#111a2b; --muted:#4a5a78;
+           --line:#dce3ef; --a:#0d9488; --ok:#059669; --hl:rgba(13,148,136,.10); }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;color:var(--ink);background:var(--bg);display:grid;grid-template-rows:auto 1fr auto;
+       font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+  a{color:var(--a);text-decoration:none} a:hover{text-decoration:underline}
+  button{font:inherit;color:inherit;cursor:pointer}
+
+  .top{display:flex;gap:12px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+  .brand{font-weight:700;white-space:nowrap}
+  .brand small{display:block;font-weight:400;color:var(--muted);font-size:.7rem}
+  select{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:6px 10px;font:inherit;font-size:.85rem;max-width:46vw}
+  .spacer{flex:1}
+  .top button,.top a.btn{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:6px 11px;font-size:.82rem}
+  .top button:hover,.top a.btn:hover{border-color:var(--a)}
+  .top button[aria-pressed="true"]{border-color:var(--a);color:var(--a)}
+
+  .wrap{overflow:auto;padding:26px 20px 60px}
+  main{max-width:74ch;margin:0 auto;line-height:1.68;font-size:1.03rem}
+
+  .eyebrow{color:var(--muted);font-size:.78rem;letter-spacing:.02em;margin:0 0 .5em}
+  .eyebrow a{color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+  h1{font-size:1.5rem;line-height:1.2;margin:.1em 0 .8em;letter-spacing:-.015em}
+  h2{font-size:1.05rem;margin:1.8em 0 .5em;letter-spacing:-.005em}
+  p{margin:.85em 0}
+  code{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:.88em}
+  pre.code{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 15px;overflow-x:auto;font-size:.83rem;line-height:1.5;margin:.9em 0}
+  pre.code code{background:none;border:0;padding:0}
+
+  .setup{border-left:3px solid var(--line);padding:.1em 0 .1em 16px;margin:1.1em 0}
+  .ask{border-left:3px solid var(--a);padding:.5em 0 .5em 16px;background:var(--hl);border-radius:0 9px 9px 0;font-weight:600}
+  .ask p{margin:.2em 0}
+
+  textarea{width:100%;min-height:8.5em;background:var(--card);color:var(--ink);border:1px solid var(--line);
+           border-radius:11px;padding:12px 14px;font:inherit;font-size:.95rem;line-height:1.6;resize:vertical}
+  textarea:focus{outline:none;border-color:var(--a)}
+
+  .opts{display:grid;gap:9px;margin:1.1em 0}
+  .opt{display:flex;gap:11px;align-items:flex-start;text-align:left;background:var(--card);border:1px solid var(--line);
+       border-radius:11px;padding:11px 13px;font-size:.95rem;line-height:1.55;width:100%}
+  .opt:hover{border-color:var(--a)}
+  .opt .k{flex:0 0 auto;color:var(--muted);font-variant-numeric:tabular-nums;border:1px solid var(--line);
+          border-radius:6px;padding:0 6px;font-size:.78rem;line-height:1.5rem}
+  .opt .ob{display:block;flex:1 1 auto;min-width:0}
+  .opt[data-v="right"]{border-color:var(--ok)}
+  .opt[data-v="right"] .k{border-color:var(--ok);color:var(--ok)}
+  .opt[data-v="wrong"]{opacity:.85}
+  .opt[data-picked="1"]{box-shadow:0 0 0 3px var(--hl)}
+  .why{font-size:.9rem;color:var(--muted);line-height:1.6;margin:.35em 0 0}
+  .why b{color:var(--ink);font-weight:600}
+
+  .crit{list-style:none;padding:0;margin:.6em 0}
+  .crit li{margin:.35em 0}
+  .crit label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:.95rem;line-height:1.55}
+  .crit input{margin-top:.42em;accent-color:var(--a);width:15px;height:15px;flex:0 0 auto}
+
+  .yours{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
+         white-space:pre-wrap;font-size:.93rem;line-height:1.6;color:var(--muted)}
+
+  .reveal{margin-top:1.6em;border-top:1px solid var(--line);padding-top:.4em}
+  .because{border-left:3px solid var(--a);padding:.4em 0 .4em 14px;background:var(--hl);border-radius:0 9px 9px 0;
+           font-size:.95rem;margin:1.2em 0}
+  .deeper{font-size:.88rem;color:var(--muted);margin-top:1.4em;border-top:1px solid var(--line);padding-top:.9em}
+  .deeper a{margin-right:14px;white-space:nowrap}
+  .deeper .types a{margin-right:9px}
+
+  .grade{display:flex;gap:10px;flex-wrap:wrap;margin:1.3em 0 .2em}
+  .grade button{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 14px;font-size:.88rem}
+  .grade button:hover{border-color:var(--a)}
+  .grade button.ok:hover{border-color:var(--ok);color:var(--ok)}
+  .graded{color:var(--muted);font-size:.85rem;margin:1.2em 0 0}
+
+  .cards{display:grid;gap:9px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));margin:1.2em 0}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 13px;text-align:left;font-size:.9rem}
+  .chip:hover{border-color:var(--a)}
+  .chip b{display:block;font-weight:600;margin-bottom:3px}
+  .chip span{color:var(--muted);font-size:.8rem}
+  .chip i{display:block;height:4px;border-radius:99px;background:var(--line);margin-top:8px;overflow:hidden}
+  .chip i u{display:block;height:100%;background:var(--ok);width:0}
+
+  .bar{border-top:1px solid var(--line);background:var(--panel);padding:9px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .bar button{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:7px 13px;font-size:.85rem}
+  .bar button:hover{border-color:var(--a)}
+  .bar button.pri{border-color:var(--a);color:var(--a)}
+  .prog{flex:1;min-width:120px;height:5px;border-radius:99px;background:var(--card);overflow:hidden}
+  .prog i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s ease}
+  .hint{color:var(--muted);font-size:.76rem}
+  .hint kbd{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+  @media (prefers-reduced-motion: reduce){ .prog i{transition:none} }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand">Two Capsules <small>probe the circuit</small></div>
+  <select id="pick" aria-label="What to run"></select>
+  <button id="restart" title="Restart this run">↺</button>
+  <div class="spacer"></div>
+  <button id="home">Progress</button>
+  <a class="btn" href="read.html">Book ↗</a>
+  <a class="btn" href="explore.html">Maps ↗</a>
+  <a class="btn" href="reference.html">Reference ↗</a>
+  <a class="btn" href="index.html">Index ↗</a>
+</div>
+
+<div class="wrap" id="wrap"><main id="view"></main></div>
+
+<div class="bar">
+  <button id="next" class="pri">Next →</button>
+  <button id="skip">Skip</button>
+  <div class="prog"><i id="progBar"></i></div>
+  <span class="hint" id="state">loading</span>
+  <span class="hint"><kbd>Enter</kbd> commit · <kbd>1</kbd>–<kbd>4</kbd> pick · <kbd>N</kbd> next · <kbd>S</kbd> skip</span>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var view = $("view"), wrap = $("wrap");
+
+  var index = null;          // checks/index.json
+  var loaded = {};           // slug -> chapter payload
+  var typeIds = null;        // bare name -> reference id
+  var run = [];              // [{slug, chapterTitle, check}]
+  var at = 0;
+  var mode = "mixed";
+  var state = load();
+
+  // ---------- storage ----------
+  function load(){
+    try { return JSON.parse(localStorage.getItem("tc.checks") || "{}"); }
+    catch(_) { return {}; }
+  }
+  function save(){
+    try { localStorage.setItem("tc.checks", JSON.stringify(state)); } catch(_) {}
+  }
+  function key(slug, id){ return slug + "/" + id; }
+  function mark(slug, id, right){
+    state[key(slug, id)] = { a: true, r: right, t: Date.now() };
+    save(); paintProgress();
+    if (index) buildPicker();   // keep the shaky count and the per-chapter tallies live
+  }
+
+  // ---------- text ----------
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+  // `x` -> <code>x</code>, on already-escaped text
+  function spans(s){
+    return s.replace(/`([^`]+)`/g, function(_, c){ return "<code>" + c + "</code>"; });
+  }
+  // Blocks: runs of 4-space-indented lines become <pre>, everything else <p>.
+  function rich(src){
+    var lines = String(src == null ? "" : src).split("\n");
+    var out = [], buf = [], inCode = false;
+    function flush(){
+      if (!buf.length) return;
+      if (inCode){
+        while (buf.length && !buf[buf.length-1].trim()) buf.pop();
+        out.push('<pre class="code"><code>' + esc(buf.join("\n").replace(/^ {4}/gm, "")) + "</code></pre>");
+      } else {
+        out.push("<p>" + spans(esc(buf.join(" "))) + "</p>");
+      }
+      buf = [];
+    }
+    for (var i = 0; i < lines.length; i++){
+      var ln = lines[i], code = /^ {4}/.test(ln), blank = !ln.trim();
+      if (blank){
+        if (inCode) { buf.push(ln); }   // blank line inside a code run: keep, trimmed on flush
+        else { flush(); }
+        continue;
+      }
+      if (code !== inCode){ flush(); inCode = code; }
+      buf.push(ln);
+    }
+    flush();
+    return out.join("");
+  }
+
+  // ---------- deep links ----------
+  function mapHref(map){
+    // explore.html selects its map from the hash (the map number). The query is
+    // carried along so the intent survives if explore ever reads it.
+    var m = /(\d\d)-/.exec(String(map).split("/").pop() || "");
+    return "explore.html?map=" + encodeURIComponent(map) + (m ? "#" + m[1] : "");
+  }
+  function deeper(g, item){
+    if (!g) return "";
+    var chapterMap = item && item.map;
+    var h = ['<div class="deeper">'];
+    if (g.chapter) h.push('<a href="read.html#' + esc(g.chapter) + '">' +
+      esc(item && item.chapterTitle ? item.chapterTitle : "Chapter " + g.chapter) + ' ↗</a>');
+    if (chapterMap) {
+      h.push('<a href="' + esc(mapHref(chapterMap)) + '">Map' + (g.node ? " · " + esc(g.node) : "") + ' ↗</a>');
+    }
+    var t = g.types || [];
+    if (t.length){
+      h.push('<span class="types"><br />');
+      for (var i = 0; i < t.length; i++){
+        var id = typeIds && typeIds[t[i]];
+        h.push(id ? '<a href="reference.html#' + encodeURIComponent(id) + '"><code>' + esc(t[i]) + "</code></a>"
+                  : "<code>" + esc(t[i]) + "</code> ");
+      }
+      h.push("</span>");
+    }
+    h.push("</div>");
+    return h.join("");
+  }
+
+  // ---------- rendering a check ----------
+  // Nothing below the question exists in the DOM until commit(). The answer,
+  // the criteria and the per-option explanations are all built inside
+  // revealPredict() / revealChoice(), which only run from a click or Enter.
+  function current(){ return run[at]; }
+
+  function render(){
+    if (!run.length){ home(); return; }
+    if (at >= run.length){ done(); return; }
+    var item = run[at], c = item.check;
+    var st = state[key(item.slug, c.id)];
+    // In a chapter run you already know the chapter, so name it. In a mixed or
+    // shaky run, naming it would narrow the answer before the reader commits —
+    // the chapter is revealed with the answer, via the goDeeper links.
+    var named = (mode !== "mixed" && mode !== "shaky");
+    var h = [];
+    h.push('<p class="eyebrow">' + (named ? "" : (mode === "shaky" ? "shaky · " : "mixed · ")) +
+           "check " + (at + 1) + " of " + run.length + (st && st.a ? " · seen before" : "") + "</p>");
+    h.push("<h1>" + esc(named ? item.chapterTitle : "Predict the failure") + "</h1>");
+    h.push('<div class="setup">' + rich(c.setup) + "</div>");
+    h.push('<div class="ask">' + rich(c.ask) + "</div>");
+
+    if (c.kind === "choice"){
+      h.push('<div class="opts" id="opts">');
+      for (var i = 0; i < c.options.length; i++){
+        h.push('<button class="opt" data-i="' + i + '"><span class="k">' + (i + 1) + '</span><span class="ob">' +
+               spans(esc(c.options[i].text)) + "</span></button>");
+      }
+      h.push("</div>");
+    } else {
+      h.push('<p class="hint">Write what you think happens. Rough is fine — the point is committing before you look.</p>');
+      h.push('<textarea id="ta" placeholder="Your prediction…" aria-label="Your prediction"></textarea>');
+      h.push('<div class="grade"><button id="commit" class="ok">Commit &amp; compare</button></div>');
+    }
+    h.push('<div id="rev"></div>');
+    view.innerHTML = h.join("");
+    wrap.scrollTop = 0;
+
+    if (c.kind === "choice"){
+      var btns = view.querySelectorAll(".opt");
+      for (var j = 0; j < btns.length; j++){
+        btns[j].addEventListener("click", function(){ revealChoice(+this.dataset.i); });
+      }
+    } else {
+      $("commit").addEventListener("click", commit);
+      var ta = $("ta");
+      ta.focus();
+      ta.addEventListener("keydown", function(e){
+        if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); commit(); }
+      });
+    }
+    paintProgress();
+  }
+
+  function commit(){
+    var it = current(), rev = $("rev");
+    if (!it || !rev) return;                     // not in a run
+    if (it.check.kind !== "predict") return;
+    if (rev.childNodes.length) return;           // already committed
+    revealPredict($("ta").value);
+  }
+
+  function revealPredict(text){
+    var item = current(), c = item.check;
+    var ta = $("ta"); if (ta) ta.disabled = true;
+    var cm = $("commit"); if (cm) cm.remove();
+
+    var h = ['<div class="reveal">'];
+    h.push("<h2>What you committed</h2>");
+    h.push('<div class="yours">' + (text.trim() ? esc(text.trim()) : "— nothing written —") + "</div>");
+    h.push("<h2>You were right if you said</h2>");
+    h.push('<ul class="crit">');
+    for (var i = 0; i < c.rightIf.length; i++){
+      h.push('<li><label><input type="checkbox" data-c="1" /><span>' + spans(esc(c.rightIf[i])) + "</span></label></li>");
+    }
+    h.push("</ul>");
+    h.push("<h2>What happens</h2>");
+    h.push(rich(c.answer));
+    h.push('<div class="because">' + spans(esc(c.because)) + "</div>");
+    h.push(deeper(c.goDeeper, item));
+    h.push('<div class="grade"><button id="gOk" class="ok">I had this</button>' +
+           '<button id="gNo">Add to shaky</button>' +
+           '<span class="hint" id="tally"></span></div>');
+    h.push('<p class="graded" id="gmsg"></p>');
+    h.push("</div>");
+    $("rev").innerHTML = h.join("");
+
+    var boxes = $("rev").querySelectorAll('input[data-c]');
+    function tally(){
+      var n = 0;
+      for (var i = 0; i < boxes.length; i++) if (boxes[i].checked) n++;
+      $("tally").textContent = n + " of " + boxes.length + " — your call which side of the line that is";
+    }
+    for (var b = 0; b < boxes.length; b++) boxes[b].addEventListener("change", tally);
+    tally();
+
+    $("gOk").addEventListener("click", function(){ grade(true); });
+    $("gNo").addEventListener("click", function(){ grade(false); });
+  }
+
+  function grade(right){
+    var item = current();
+    mark(item.slug, item.check.id, right);
+    var m = $("gmsg");
+    if (m) m.textContent = right
+      ? "Logged. Press N for the next one."
+      : "Logged as shaky. It will be waiting in the shaky list when you want another go.";
+  }
+
+  function revealChoice(picked){
+    var item = current(), c = item.check;
+    if ($("rev").childNodes.length) return;      // already answered
+    var opts = view.querySelectorAll(".opt");
+    for (var i = 0; i < opts.length; i++){
+      var o = c.options[i];
+      opts[i].disabled = true;
+      opts[i].setAttribute("data-v", o.right ? "right" : "wrong");
+      if (i === picked) opts[i].setAttribute("data-picked", "1");
+      var p = document.createElement("p");
+      p.className = "why";
+      p.innerHTML = "<b>" + (o.right ? "Holds." : "Does not hold.") + "</b> " + spans(esc(o.why));
+      opts[i].lastChild.appendChild(p);
+    }
+    var right = !!c.options[picked].right;
+    var h = ['<div class="reveal">'];
+    h.push("<h2>What happens</h2>");
+    h.push(rich(c.answer));
+    h.push('<div class="because">' + spans(esc(c.because)) + "</div>");
+    h.push(deeper(c.goDeeper, item));
+    h.push('<p class="graded">' + (right
+      ? "That one holds. Press N for the next."
+      : "Logged as shaky — the option you picked is a belief worth reading twice, not a wrong button.") + "</p>");
+    h.push("</div>");
+    $("rev").innerHTML = h.join("");
+    mark(item.slug, c.id, right);
+  }
+
+  // ---------- run construction ----------
+  function shuffle(a){
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function chapterFile(slug){
+    if (loaded[slug]) return Promise.resolve(loaded[slug]);
+    var meta = index.chapters.filter(function(c){ return c.id === slug; })[0];
+    return fetch("checks/" + (meta ? meta.file : slug + ".json"))
+      .then(function(r){ return r.json(); })
+      .then(function(d){ loaded[slug] = d; return d; });
+  }
+
+  function itemsFor(slug){
+    return chapterFile(slug).then(function(d){
+      return d.checks.map(function(c){
+        return { slug: slug, chapterTitle: d.title, map: d.source && d.source.map, check: c };
+      });
+    });
+  }
+
+  function start(which){
+    mode = which;
+    var slugs = index.chapters.map(function(c){ return c.id; });
+    var wanted = (which === "mixed" || which === "shaky") ? slugs : [which];
+    Promise.all(wanted.map(itemsFor)).then(function(lists){
+      var all = [];
+      lists.forEach(function(l){ all = all.concat(l); });
+      if (which === "shaky"){
+        all = all.filter(function(it){
+          var s = state[key(it.slug, it.check.id)];
+          return s && s.a && s.r === false;
+        });
+        shuffle(all);
+      } else if (which === "mixed"){
+        shuffle(all);
+      }
+      run = all; at = 0;
+      $("pick").value = which;
+      location.hash = which;
+      if (!run.length) { emptyShaky(); return; }
+      render();
+    });
+  }
+
+  function done(){
+    var attempted = run.filter(function(it){
+      var s = state[key(it.slug, it.check.id)]; return s && s.a;
+    }).length;
+    view.innerHTML =
+      '<p class="eyebrow">end of the run</p>' +
+      "<h1>That is the set.</h1>" +
+      "<p>" + attempted + " of " + run.length + " attempted. No score, no streak — the useful artefact is the " +
+      "shaky list, because that is the shape of what you do not have yet.</p>" +
+      '<div class="grade"><button id="toShaky">Run the shaky ones</button>' +
+      '<button id="toHome">Back to progress</button></div>';
+    $("toShaky").addEventListener("click", function(){ start("shaky"); });
+    $("toHome").addEventListener("click", home);
+    paintProgress();
+  }
+
+  function emptyShaky(){
+    view.innerHTML =
+      '<p class="eyebrow">shaky</p>' +
+      "<h1>Nothing in the shaky list.</h1>" +
+      "<p>Either you have not marked anything wrong yet, or you have been back through them. " +
+      "Pick a chapter, or run mixed and see what falls over.</p>" +
+      '<div class="grade"><button id="toMix">Run mixed</button><button id="toHome">Back to progress</button></div>';
+    $("toMix").addEventListener("click", function(){ start("mixed"); });
+    $("toHome").addEventListener("click", home);
+    paintProgress();
+  }
+
+  // ---------- progress ----------
+  function statsFor(meta){
+    var d = loaded[meta.id];
+    var seen = 0, shaky = 0;
+    if (d){
+      d.checks.forEach(function(c){
+        var s = state[key(meta.id, c.id)];
+        if (s && s.a){ seen++; if (s.r === false) shaky++; }
+      });
+    } else {
+      // works without the chapter file loaded: keys are prefixed by slug
+      var pre = meta.id + "/";
+      for (var k in state){
+        if (k.indexOf(pre) === 0 && state[k].a){ seen++; if (state[k].r === false) shaky++; }
+      }
+    }
+    return { seen: seen, shaky: shaky, total: meta.count };
+  }
+
+  function home(){
+    run = []; at = 0; location.hash = "progress";
+    var totalSeen = 0, totalShaky = 0, total = 0;
+    var h = ['<p class="eyebrow">progress</p>',
+             "<h1>Probe the circuit.</h1>",
+             "<p>Each check states a configuration that ships, compiles, and logs nothing, and asks what breaks. " +
+             "Commit to an answer before you look — recognition feels like knowledge, prediction actually tests it. " +
+             "Nothing here is scored.</p>",
+             '<div class="cards">'];
+    index.chapters.forEach(function(m){
+      var s = statsFor(m);
+      totalSeen += s.seen; totalShaky += s.shaky; total += s.total;
+      h.push('<button class="chip" data-go="' + esc(m.id) + '"><b>' + esc(m.title) + "</b><span>" +
+             s.seen + " of " + s.total + " attempted" + (s.shaky ? " · " + s.shaky + " shaky" : "") +
+             '</span><i><u style="width:' + (s.total ? Math.round(100 * s.seen / s.total) : 0) + '%"></u></i></button>');
+    });
+    h.push("</div>");
+    h.push("<p>" + totalSeen + " of " + total + " attempted across " + index.chapters.length + " chapters" +
+           (totalShaky ? ", " + totalShaky + " marked shaky" : "") + ".</p>");
+    h.push('<div class="grade"><button id="toMix">Run mixed</button>' +
+           '<button id="toShaky">Run the shaky ones' + (totalShaky ? " (" + totalShaky + ")" : "") + "</button>" +
+           '<button id="wipe">Forget my answers</button></div>');
+    view.innerHTML = h.join("");
+    var chips = view.querySelectorAll("[data-go]");
+    for (var i = 0; i < chips.length; i++){
+      chips[i].addEventListener("click", function(){ start(this.dataset.go); });
+    }
+    $("toMix").addEventListener("click", function(){ start("mixed"); });
+    $("toShaky").addEventListener("click", function(){ start("shaky"); });
+    $("wipe").addEventListener("click", function(){
+      state = {}; save(); buildPicker(); home();
+    });
+    paintProgress();
+    wrap.scrollTop = 0;
+  }
+
+  function paintProgress(){
+    if (run.length){
+      $("progBar").style.width = Math.round(100 * at / run.length) + "%";
+      var it = run[at];
+      $("state").textContent = it ? (it.check.kind === "predict" ? "write, then commit" : "pick one") : "run complete";
+    } else {
+      $("progBar").style.width = "0%";
+      $("state").textContent = "pick a chapter, or run mixed";
+    }
+  }
+
+  // ---------- controls ----------
+  function next(){
+    if (!run.length) return;
+    at++; render();
+  }
+  // Skipping records nothing, on purpose. It is the same move as Next; the
+  // separate button exists so leaving a check unanswered feels like a choice.
+  var skip = next;
+
+  function buildPicker(){
+    var sel = $("pick"), keep = sel.value;
+    sel.innerHTML = "";
+    function opt(v, t){ var o = document.createElement("option"); o.value = v; o.textContent = t; sel.append(o); }
+    opt("mixed", "Mixed — everything, shuffled (" + index.total + ")");
+    var shaky = 0;
+    for (var k in state) if (state[k].a && state[k].r === false) shaky++;
+    opt("shaky", "Shaky — what you got wrong" + (shaky ? " (" + shaky + ")" : ""));
+    index.chapters.forEach(function(m){
+      var s = statsFor(m);
+      opt(m.id, m.title + " (" + s.seen + "/" + s.total + ")");
+    });
+    if (keep) sel.value = keep;
+  }
+
+  $("pick").addEventListener("change", function(e){ start(e.target.value); });
+  $("next").addEventListener("click", next);
+  $("skip").addEventListener("click", skip);
+  $("home").addEventListener("click", home);
+  $("restart").addEventListener("click", function(){ if (mode) start(mode); });
+
+  document.addEventListener("keydown", function(e){
+    var tag = e.target.tagName;
+    if (tag === "SELECT" || tag === "INPUT") return;
+    if (tag === "TEXTAREA") return;                 // the textarea owns its own Enter
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key.toLowerCase();
+    if (e.key === "Enter"){ e.preventDefault(); commit(); }
+    else if (k === "n"){ e.preventDefault(); next(); }
+    else if (k === "s"){ e.preventDefault(); skip(); }
+    else if (/^[1-4]$/.test(e.key)){
+      var it = current();
+      if (it && it.check.kind === "choice" && !$("rev").childNodes.length){
+        var i = +e.key - 1;
+        if (i < it.check.options.length){ e.preventDefault(); revealChoice(i); }
+      }
+    }
+  });
+
+  // ---------- boot ----------
+  Promise.all([
+    fetch("checks/index.json").then(function(r){ return r.json(); }),
+    fetch("reference/search.json").then(function(r){ return r.json(); }).catch(function(){ return null; })
+  ]).then(function(res){
+    index = res[0];
+    var s = res[1];
+    if (s && s.rows){
+      typeIds = {};
+      for (var i = 0; i < s.rows.length; i++){
+        var name = s.rows[i][1];
+        if (name && !(name in typeIds)) typeIds[name] = s.rows[i][0];
+      }
+    }
+    buildPicker();
+    var h = (location.hash || "").replace("#", "");
+    var known = index.chapters.some(function(c){ return c.id === h; });
+    if (h === "mixed" || h === "shaky" || known) start(h);
+    else home();
+  }).catch(function(){
+    view.innerHTML = "<h1>Checks payload missing</h1><p>Expected <code>checks/index.json</code> next to this page.</p>";
+    $("state").textContent = "no checks found";
+  });
+})();
+</script>
+</body>
+</html>

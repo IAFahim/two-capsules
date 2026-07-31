@@ -1,0 +1,111 @@
+{
+  "id": "40-cheat-surface",
+  "title": "The Trust Boundary",
+  "map": "diagrams/40-cheat-surface.html",
+  "blurb": "What a modified client can assert, and exactly where each assertion is bounded.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "Intent, never results",
+      "focus": null,
+      "text": "The security model is one sentence: the client sends intent and the server computes results. Everything inside the client box belongs to the attacker, including the parts netcode fills in automatically. Everything the server derives from those fields belongs to you. The strength of the whole model is how much the server derives and how little it accepts."
+    },
+    {
+      "id": "mailbox",
+      "title": "A mailbox, not a shared bus",
+      "focus": "packet",
+      "text": "Think of this as a privilege boundary with a mailbox. The client writes a message; the server reads it as a request and executes in its own address space. A design where the client sends a position is a design where the untrusted side has a write port into privileged memory. Every hole on this map is either an unvalidated field in the mailbox, or a read port that was opened too wide."
+    },
+    {
+      "id": "bounded",
+      "title": "What is already bounded for you",
+      "focus": "ring",
+      "text": "A command packet carries at most thirty two commands. The buffer they land in is a ring of sixty four slots keyed by tick, and the prediction loop reads exactly one command per tick. Commands older than the current server tick are rewritten to it. So flooding does not multiply your actions; it wastes your own bandwidth and costs the server a little work."
+    },
+    {
+      "id": "unbounded",
+      "title": "What is not bounded at all",
+      "focus": "sim",
+      "text": "The receive path deserializes your input struct field by field with no range check, no clamp, and no normalisation. A movement vector arrives as whatever bit patterns were sent, and the server then multiplies it by speed and delta time with full authority. That is an authoritative teleport. Clamp on read, and do it in the shared predicted system, because a server only clamp the client does not apply is a permanent misprediction."
+    },
+    {
+      "id": "lag",
+      "title": "What lag compensation gives back",
+      "focus": "rewind",
+      "text": "To rewind the world to what a client saw, the server has to know how far behind that view was, and the client is the one who says. Inflate that number and the server rewinds further than your view required. The structural bound is the history buffer, which holds at most thirty two collision worlds, so your history size is literally your maximum exploitable rewind."
+    },
+    {
+      "id": "read",
+      "title": "The read port",
+      "focus": "relev",
+      "text": "A client can render anything it received, so quantization, obfuscation, and encryption do not stop a wall hack. The only defence is not sending the data. Relevancy in allowlist mode, and marking private state as owner only, are the structural answers. An aimbot that cannot see you cannot aim at you, and that is the netcode contribution to a problem netcode cannot otherwise solve."
+    }
+  ],
+  "nodes": {
+    "client": {
+      "short": "A process the attacker fully controls: memory, code, timing, and clock.",
+      "deep": "Nothing it reports is evidence of anything. It can put any value in any input field, send at any rate, claim any tick, and report any interpolation delay. What it cannot do is write a replicated field, because those flow only from server to client, and it cannot change what the server would have simulated.",
+      "types": [
+        "IInputComponentData",
+        "AutoCommandTarget",
+        "CommandTarget"
+      ]
+    },
+    "packet": {
+      "short": "Input fields and a tick number, at most thirty two commands per packet.",
+      "deep": "The count is five bits, and the number actually sent is the target command slack plus the additional commands setting, which is redundancy against loss rather than a rate. Late arrivals and duplicate resends are both counted in a statistics block on the connection, which is where you detect a client behaving strangely.",
+      "types": [
+        "CommandSendSystem",
+        "ICommandDataSerializer",
+        "CommandArrivalStatistics"
+      ]
+    },
+    "delay": {
+      "short": "The interpolation delay, written into the command header by the sender.",
+      "deep": "The component that receives it is documented as the latest reported delay, which is exactly as trustworthy as it sounds. It is also never reset when the client switches which entity it is controlling, so a stale value from a previous vehicle silently applies to the next one. That is a correctness bug before it is a security one.",
+      "types": [
+        "CommandDataInterpolationDelay",
+        "NetworkSnapshotAck",
+        "NetworkTime"
+      ]
+    },
+    "ring": {
+      "short": "Sixty four slots keyed by tick, read once per tick by the prediction loop.",
+      "deep": "This is what makes flooding pointless. Inserting into an occupied slot replaces its contents and counts as a redundant resend. Commands for future ticks simply wait until the server reaches them, which is normal because clients deliberately run ahead. The only way this becomes a hazard is if your own code reads the buffer directly instead of by tick.",
+      "types": [
+        "ICommandData",
+        "InputBufferData",
+        "CommandDataUtility",
+        "NetworkTick"
+      ]
+    },
+    "rewind": {
+      "short": "The collision history, and the clamp that bounds how far back anyone can reach.",
+      "deep": "The requested delay is clamped to one less than the history size, and the raw buffer holds at most thirty two worlds. At sixty simulation steps per second that is a little over half a second. The lookup returns both the tick you asked for and the tick you got, and the package documentation tells you to compare them to find players sitting on the clamp.",
+      "types": [
+        "PhysicsWorldHistory",
+        "LagCompensationConfig",
+        "PhysicsWorldHistorySingleton"
+      ]
+    },
+    "sim": {
+      "short": "The only writer of truth, running the same rules the client predicted.",
+      "deep": "This is where your input domains have to be enforced, in the shared predicted system so both sides agree. Directions get normalised, non finite values get zeroed, angles get wrapped. Outcomes that decide anything, such as damage, loot, or score, belong in a server only system that the client never runs at all.",
+      "types": [
+        "PredictedSimulationSystemGroup",
+        "Simulate",
+        "GhostOwner"
+      ]
+    },
+    "relev": {
+      "short": "The gate deciding which ghosts each connection is allowed to receive.",
+      "deep": "Allowlist mode sends nothing unless listed, which is the correct posture for a competitive game. Denylist mode leaks anything you forget. Marking a component as owner only removes ammunition, cooldowns, and private state from every other client's snapshot entirely. Distance driven relevancy still leaks through walls at close range, which is exactly where it matters.",
+      "types": [
+        "GhostRelevancy",
+        "GhostRelevancyMode",
+        "SendToOwnerType",
+        "GhostComponentAttribute"
+      ]
+    }
+  }
+}

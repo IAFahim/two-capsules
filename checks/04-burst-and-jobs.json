@@ -1,0 +1,81 @@
+{
+  "id": "04-burst-and-jobs",
+  "title": "Burst and jobs",
+  "source": {"chapter": "04-burst-and-jobs"},
+  "checks": [
+    {
+      "id": "burst-attribute-on-method-only",
+      "kind": "predict",
+      "setup": "Two systems, written by two people the same afternoon, doing comparable work over comparable entity counts. One runs in 0.2 ms. The other runs in 2.4 ms. Same query shape, same math, same allocator. No errors, no warnings, no logs.\n\nThe only difference in the source is where an attribute is:\n\n    // fast one\n    [BurstCompile]\n    public partial struct A : ISystem {\n        [BurstCompile] public void OnUpdate(ref SystemState s) { }\n    }\n\n    // slow one\n    public partial struct B : ISystem {\n        [BurstCompile] public void OnUpdate(ref SystemState s) { }\n    }",
+      "ask": "What is system B actually running as, why did nothing complain, and where do you confirm it in thirty seconds rather than guessing?",
+      "rightIf": [
+        "says B is never Burst-compiled at all — it runs under the Mono JIT, roughly an order of magnitude slower",
+        "explains that [BurstCompile] is required on the struct as well as the method, and its absence on the struct is not an error",
+        "names the Burst Inspector (Jobs → Burst → Open Inspector) as the check: B's method simply is not listed / has no generated assembly"
+      ],
+      "answer": "B is running as plain C# on the Mono JIT, forever, and that is the whole 12x. Burst needs the attribute on the containing struct to know the type is a compilation target at all; the attribute on the method alone is a declaration about a method Burst never goes looking for. There is no diagnostic for this, which is what makes it the most expensive typo in DOTS — the code is correct, the behaviour is correct, and only the clock disagrees. The Burst Inspector settles it without any guessing: a bursted method appears there with real generated assembly, and B's does not appear at all.",
+      "because": "[BurstCompile] on the struct is what puts the type on the compiler's worklist. On the method alone it is a promise nobody reads.",
+      "goDeeper": {"chapter": "04-burst-and-jobs", "types": ["ISystem", "SystemState"]}
+    },
+    {
+      "id": "static-across-the-burst-boundary",
+      "kind": "predict",
+      "setup": "A UI button needs to tell ECS \"start the game\". The obvious bridge:\n\n    public static class AppBridge { public static int Requested; }\n\nThe button click handler — managed code, a UI Toolkit callback — sets `AppBridge.Requested = 1`. A bursted system reads it every frame and does nothing when it is 1.\n\nAdding a Debug.Log next to the write proves the write happens. Adding one inside the system is not possible, so you comment out [BurstCompile] to log the read — and now it works. Put the attribute back and it stops working again.",
+      "ask": "What is happening at the boundary, and what is the supported bridge?",
+      "rightIf": [
+        "says Burst compiles a separate copy of static fields, so the bursted read and the managed write are two different pieces of memory",
+        "explains the debugging behaviour: removing [BurstCompile] puts the read back in Mono, where it sees the same static the writer used",
+        "names SharedStatic<T> as the supported bridge — a global that Burst and Mono agree on"
+      ],
+      "answer": "There are two `Requested` fields. Burst does not share managed statics; it compiles its own copy, so the managed writer and the bursted reader are talking to different addresses and neither of them is wrong about what it stored. Commenting out the attribute \"fixes\" it because the read falls back into Mono and lands on the managed copy — which is why this bug survives a debugging session and reappears in the build. The bridge that actually exists is `SharedStatic<T>`, one allocation both sides address. When you see `SharedStatic` in this stack, read it as \"a global that Burst and Mono agree on\", because that is the entire reason it exists.",
+      "because": "Burst assumes no managed heap. A static field is a managed-heap concept, so it gets a native twin, and nothing tells you which one you just read.",
+      "goDeeper": {"chapter": "04-burst-and-jobs", "types": ["ISystem"]}
+    },
+    {
+      "id": "parallel-for-two-entities",
+      "kind": "choice",
+      "setup": "PlayerMoveSystem moves two capsules with a bursted `SystemAPI.Query` foreach on the main thread. A reviewer asks why it is not `.ScheduleParallel()`, since \"we have eight worker threads sitting idle\". You try it. It is correct, it is safe, and the frame time goes up.",
+      "ask": "Why did parallelising it make it slower?",
+      "options": [
+        {
+          "text": "Scheduling has a fixed cost — building the dependency edge, waking workers, splitting chunks, joining — and two entities cannot amortise it.",
+          "right": true,
+          "why": "Parallelism is a throughput tool with a setup cost, and below a few thousand entities the setup dominates. This is the same instinct as not starting a DMA transfer for four bytes. Measure before you schedule; the crossover is empirical and depends on how much work each entity is."
+        },
+        {
+          "text": "The safety system had to insert a sync point because two jobs touched LocalTransform, and that stalled the main thread.",
+          "right": false,
+          "why": "A plausible-sounding conflation. The safety system builds dependency edges — it does not insert sync points; sync points come from structural changes. And with one job writing LocalTransform there is no conflict to resolve. Blaming the safety system here means you would go looking for a hazard that does not exist."
+        },
+        {
+          "text": "ScheduleParallel cannot Burst-compile the same code the foreach could, so it fell back to Mono.",
+          "right": false,
+          "why": "Job structs are bursted the same way, given the attribute on the type. If this were true you would see it in the Burst Inspector — and you would have a much bigger problem than two capsules. It is worth checking, but it is not the mechanism here."
+        },
+        {
+          "text": "Two entities live in one chunk, so ScheduleParallel could only use one worker and paid for eight.",
+          "right": false,
+          "why": "This is half true and it is the more interesting wrong answer: parallel-for does split by chunk, so one chunk does mean one worker. But you do not \"pay for eight\" idle workers — you pay the scheduling and join cost once. The chunk count explains why there was no upside; the setup cost explains the downside."
+        }
+      ],
+      "answer": "Scheduling is not free and two entities do not repay it. The job system is a scoreboard with real bookkeeping: a handle to record, dependencies to resolve, workers to wake, a join to wait on. Below a few thousand entities the main-thread foreach wins, and the only way to know where your crossover is, is to measure it.",
+      "because": "Parallelism is throughput, not latency. Adding workers to a two-element loop is adding a bus arbiter to a single-master system.",
+      "goDeeper": {"chapter": "04-burst-and-jobs", "types": ["EntityQuery", "SystemState"]}
+    },
+    {
+      "id": "escape-hatch-promise-broken",
+      "kind": "predict",
+      "setup": "A parallel job writes accumulated damage into a `NativeArray<float> byTeam`, indexed by team id. The safety system refuses it — parallel writes to arbitrary indices. Someone adds:\n\n    [NativeDisableParallelForRestriction] public NativeArray<float> ByTeam;\n\nIt compiles, it runs, and the totals are right in every test. Under load, once every few minutes, a team's total is short by exactly one hit.",
+      "ask": "What did the attribute actually turn off, why is the test suite blind to it, and what makes the failure so rare?",
+      "rightIf": [
+        "identifies the attribute as a promise from you to the safety system that indices do not overlap between workers — not a fix",
+        "says teams are shared across entities, so two workers genuinely do write the same index",
+        "describes the lost update: read-modify-write is not atomic, two workers read the same value and one write wins",
+        "notes rarity comes from needing the two accesses to interleave inside a narrow window, which load makes likelier and small tests never hit"
+      ],
+      "answer": "The attribute does not make the write safe; it tells the safety system to stop checking, on your word that indices do not overlap. They do — every entity on team 3 hashes to the same slot — so two workers read `ByTeam[3]`, each adds its own damage to the value it read, and each stores. One of those stores lands on top of the other and a hit vanishes. It is rare because both accesses must interleave inside a few instructions, which needs enough entities and enough workers to be running at once, which is exactly the shape of production and never the shape of a unit test. The honest fixes are the boring ones: per-worker accumulators reduced afterwards, or an atomic add — not a suppressed diagnostic.\n\nThe attribute has legitimate uses; they all look like \"index == entityInQueryIndex\", where the disjointness is a property of the code and not a hope.",
+      "because": "The three escape hatches are you signing a waiver. The safety system was the only thing that would have caught this, and you asked it not to look.",
+      "goDeeper": {"chapter": "04-burst-and-jobs", "types": ["SystemState"]}
+    }
+  ]
+}

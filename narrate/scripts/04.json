@@ -38,19 +38,37 @@
   "nodes": {
     "root": {
       "short": "Always on the active path. Anything here runs in every child state.",
-      "deep": "That is the whole reason the connection tracker lives here. Attach a watchdog to a child state and it stops watching the moment you leave that state, which for a disconnect detector is exactly the wrong time. Shared watchdogs go at the top of the hierarchy."
+      "deep": "That is the whole reason the connection tracker lives here. Attach a watchdog to a child state and it stops watching the moment you leave that state, which for a disconnect detector is exactly the wrong time. Shared watchdogs go at the top of the hierarchy.",
+      "types": [
+        "NetworkStreamConnection",
+        "NetworkStreamDriver",
+        "NetworkId"
+      ]
     },
     "connecting": {
       "short": "The default child. It holds the block that drives the startup gate.",
-      "deep": "Every composite state must declare exactly one default child, and the validator proves that at author time rather than letting you find it at runtime. It also proves your state ids do not collide after hashing, which is a lovely thing to catch offline."
+      "deep": "Every composite state must declare exactly one default child, and the validator proves that at author time rather than letting you find it at runtime. It also proves your state ids do not collide after hashing, which is a lovely thing to catch offline.",
+      "types": [
+        "NetworkStreamRequestConnect",
+        "NetworkStreamConnection"
+      ]
     },
     "gameplay": {
       "short": "The destination, and only reachable through the gate.",
-      "deep": "That is what makes it a falsifiable check. Delete the old workaround, run, and read the state id. If it says gameplay, the graph sent the request, because no other code path can set it. An outcome can have many causes; a mechanism has one."
+      "deep": "That is what makes it a falsifiable check. Delete the old workaround, run, and read the state id. If it says gameplay, the graph sent the request, because no other code path can set it. An outcome can have many causes; a mechanism has one.",
+      "types": [
+        "NetworkStreamInGame",
+        "GhostInstance",
+        "PredictedGhost"
+      ]
     },
     "disconnected": {
       "short": "A recoverable failure. The reason is latched into graph state.",
-      "deep": "Connection events survive exactly one tick, so the tracker copies them immediately into durable state along with the disconnect reason. It also distinguishes voluntary from involuntary: quitting looks different from being kicked at the door, and the interface should say different things."
+      "deep": "Connection events survive exactly one tick, so the tracker copies them immediately into durable state along with the disconnect reason. It also distinguishes voluntary from involuntary: quitting looks different from being kicked at the door, and the interface should say different things.",
+      "types": [
+        "NetworkStreamRequestDisconnect",
+        "ConnectionState"
+      ]
     }
   }
 }

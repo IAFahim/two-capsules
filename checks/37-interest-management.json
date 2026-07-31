@@ -1,0 +1,101 @@
+{
+  "id": "37-interest-management",
+  "title": "Interest management: scale and relevancy",
+  "source": {"chapter": "37-interest-management"},
+  "checks": [
+    {
+      "id": "importance-function-never-called",
+      "kind": "predict",
+      "setup": "You write a custom importance function — distance to the connection's focal point, a team bonus, a threat term. You create the importance singleton on the server, register the function pointer, and declare the three component types it needs.\n\nIt has no effect whatsoever. Not \"the tuning is wrong\": the priority ordering is byte-for-byte what it was before you wrote a line. You add a counter inside your function to prove it is running, and the counter never increments. Nothing is logged, and the singleton exists.",
+      "ask": "What is the precondition you have not met, and how would you have found this in one step instead of by instrumenting your own code?",
+      "rightIf": [
+        "identifies that importance scaling only runs when the connection entity actually carries the declared per-connection component type",
+        "concludes that adding the type to the singleton declaration is not the same as adding the component to each connection entity",
+        "notes the failure is completely silent — no error for a scaling function that is never invoked",
+        "names the packet dump as the one-step diagnosis, since it prints that importance scaling is disabled for exactly this case"
+      ],
+      "answer": "Declaring the per-connection component type on the singleton tells the send system where to *read* your per-connection input from. It does not put that component on anybody. If a connection entity does not carry it, the send system skips scaling entirely for that connection and never calls your function — no error, no warning, priorities computed by the built-in path as though you had never registered anything.\n\nSo the missing step is on the connection: something has to add that component (and keep it updated, if it carries a focal point) to every connection entity, usually as connections are established.\n\nThe one-step diagnosis is the packet dump. In a debug-enabled build it prints, per chunk per tick, the priority assigned and the reason a chunk was skipped — and it prints an explicit line saying importance scaling is disabled when this is the case. Instrumenting your own function tells you it did not run; the dump tells you why, which is a different and much shorter conversation.",
+      "because": "The singleton declares where the input lives. If the input is not there, the whole stage is skipped, and a skipped stage produces no output and no complaint.",
+      "goDeeper": {"chapter": "37-interest-management", "types": ["GhostImportance", "GhostConnectionPosition", "PrioChunk"]}
+    },
+    {
+      "id": "maxiteratechunks-before-relevancy",
+      "kind": "predict",
+      "setup": "Large world, strict relevancy: each player is meant to receive only the ghosts in their own zone. To bound server CPU you cap how many sorted chunks are examined per send, setting the iterate cap equal to the send cap — examining more chunks than you can send from seems like pure waste.\n\nPlayers now report the world being sparse and late: entities right in front of them update slowly or pop in seconds after they should. Server CPU is comfortably under budget. Bandwidth usage is *under* your cap, not over it — the snapshots are going out nearly empty.",
+      "ask": "Why does capping iteration produce under-full packets, given the sort put the most important chunks first?",
+      "rightIf": [
+        "identifies that the iterate cap is applied before relevancy is evaluated",
+        "concludes the examined window can be filled with high-importance chunks whose ghosts are all irrelevant to this connection",
+        "explains that those chunks contribute nothing, and iteration has already stopped, so the packet goes out nearly empty",
+        "notes the fix: set the iterate cap to at least twice the send cap so there is slack for chunks that turn out to be irrelevant",
+        "may note the sort is by importance, which knows nothing about this connection's relevancy set"
+      ],
+      "answer": "The sort ranks chunks by importance, and importance is largely a property of the chunk rather than of your relevancy set. So the top of the sorted list can be entirely chunks belonging to somebody else's zone — genuinely high importance, genuinely irrelevant to this connection. The iterate cap stops you after N chunks; relevancy is evaluated inside those N; all of them contribute zero ghosts; the packet is sent nearly empty even though the ghosts this player actually needs were sitting at position N+1.\n\nThat is why the symptom looks contradictory: the server is not busy and the bandwidth is not full, and things are still arriving late. You did not cap the output, you capped the search.\n\nThe fix is slack. Set the iterate cap to at least twice the send cap so there is room to skip past chunks that turn out to be irrelevant and still find enough that are not. If your relevancy is very selective, the ratio needs to be larger than two — the multiplier is really \"how many irrelevant chunks do I expect to walk past before finding a relevant one\".",
+      "because": "The iterate cap bounds the search, not the send. Applied before relevancy, it can spend its whole budget on chunks that were never going to contribute.",
+      "goDeeper": {"chapter": "37-interest-management", "types": ["GhostSendSystemData", "GhostRelevancy", "PrioChunk"]}
+    },
+    {
+      "id": "tiles-too-small",
+      "kind": "predict",
+      "setup": "Distance-based importance, using the built-in tile partitioning. You want sharp prioritisation, so you set the tile size small — roughly one player's personal space. The priority curve is beautifully graded: things right next to you clearly outrank things ten metres away.\n\nBandwidth is good. Server CPU goes up, not down. The chunk count for your ghost archetypes has exploded — thousands of chunks holding a handful of entities each — and profiler time is spread across serialization and iteration rather than concentrated anywhere.",
+      "ask": "Connect the tile size to the chunk count. What did partitioning actually do to your memory layout, and what is the trade you are really tuning?",
+      "rightIf": [
+        "says the partitioning system adds a shared component carrying the tile index to each ghost",
+        "identifies that shared component values split archetypes into separate chunks — one chunk per distinct value",
+        "concludes small tiles mean many distinct values, so entities of one archetype are scattered across many nearly-empty chunks",
+        "connects that to cost: everything in the send path is per chunk, and half-empty chunks mean more chunk overhead per ghost, plus worse cache behaviour on iteration",
+        "frames the trade: tile size is a cache decision as much as a bandwidth decision"
+      ],
+      "answer": "Tiling is implemented by putting a shared component holding the tile index on every partitioned ghost, and a shared component value is part of what defines a chunk. Every distinct tile index therefore gets its own chunk per archetype. Make tiles the size of a person and you have manufactured thousands of distinct values, so a ghost archetype that used to pack a hundred entities per chunk now holds two or three per chunk across hundreds of chunks.\n\nThat is expensive twice over. The send scheduler operates per chunk — priority, iteration caps, relevancy fast path, static optimisation — so the fixed per-chunk cost is now paid for every two or three ghosts instead of every hundred. And the iteration itself stopped streaming: you are walking chunk headers instead of arrays, which is the exact access pattern the layout exists to avoid.\n\nSo the knob is not \"how sharp do I want my priority curve\". It is a joint bandwidth-and-cache decision: large tiles keep chunks full and the priority coarse, small tiles sharpen priority and fragment memory. And if only a few ghost types need distance prioritisation at all, opt only those in rather than partitioning everything.",
+      "because": "A shared component value is part of the chunk's identity. Partitioning by position is fragmenting your memory layout by position, and the send path pays per chunk.",
+      "goDeeper": {"chapter": "37-interest-management", "types": ["GhostDistancePartitionShared", "GhostDistanceData", "GhostDistanceImportance"]}
+    },
+    {
+      "id": "static-optimization-not-working",
+      "kind": "choice",
+      "setup": "Two thousand decorative props, never move, set to static optimization so the server can skip them entirely. Measuring a fresh join, they are not skipped: for the first several seconds every one of them is being serialised and sent, and only then does the cost drop to nothing.\n\nAfter that it is perfect. It is the join that is expensive, every time, for every client.",
+      "ask": "Why can't static optimization skip them immediately?",
+      "options": [
+        {
+          "text": "Skipping requires a previously-sent zero-change snapshot containing the chunk to have been acked by this connection, so a new client must receive the chunk once before it can be skipped for them.",
+          "right": true,
+          "why": "The whole mechanism is per connection: the server can only say \"nothing changed since what you have\" once it knows what you have. Until this client acks a snapshot containing the chunk there is no agreed baseline to compare against, so it must send. Pre-spawned chunks sidestep it because loading the subscene counts as an implicit ack — which is the real answer for two thousand static props."
+        },
+        {
+          "text": "Static optimization compares values, and the props' transforms differ slightly from their baked values until the first tick settles.",
+          "right": false,
+          "why": "It does not compare values at all — it uses Unity's chunk change version, which is bumped by write access rather than by a value changing. That distinction matters beyond this question: it is also why writing a *non-replicated* field on a replicated component un-optimizes the chunk, a false positive the system cannot currently warn you about."
+        },
+        {
+          "text": "The chunks have structural changes during join as ghosts are created on the client, and structural change disables the optimization.",
+          "right": false,
+          "why": "Order change in a chunk genuinely is one of the conditions that blocks skipping, so this is on the right list — but it is a server-side chunk property, and creating entities on the *client* does not touch the server's chunks. It is the right rule applied to the wrong side of the wire."
+        },
+        {
+          "text": "Relevancy has to be evaluated for the new connection first, and that forces a full send.",
+          "right": false,
+          "why": "Relevancy changes for a chunk do block static optimization on the tick they happen, so the instinct is sound — but it would explain one tick, not several seconds. When a mechanism you name predicts a much shorter symptom than the one you measured, that is the signal to keep looking."
+        }
+      ],
+      "answer": "Static optimization is an agreement between the server and one specific connection: nothing has changed since the snapshot you acknowledged. A brand-new connection has acknowledged nothing, so there is no baseline and the props must be sent once. Pre-spawn them into the subscene and loading the scene counts as the implicit ack — which for two thousand never-moving props is the actual fix.",
+      "because": "\"Unchanged\" is meaningless without \"since what\". The ack is what supplies the second half, and it is per connection.",
+      "goDeeper": {"chapter": "37-interest-management", "types": ["GhostSendSystemData", "GhostInstance", "GhostAuthoringComponent"]}
+    },
+    {
+      "id": "relevancy-churn-at-the-boundary",
+      "kind": "predict",
+      "setup": "Zone-based relevancy with a clean rule: a ghost is relevant to a connection if they are in the same zone, evaluated fresh every tick from current positions.\n\nIt works. Then a player stands at a zone boundary — a doorway, a bridge, the seam between two rooms — and idles there, drifting a few centimetres back and forth. Their client starts hitching, and remote entities near them flicker in and out of existence. Bandwidth for that one connection spikes far above what the zone contents can account for.",
+      "ask": "What is each relevancy flip actually costing, and what is the standard shape of the fix?",
+      "rightIf": [
+        "says a relevant-to-irrelevant transition makes the server clear the ghost's snapshot history and enqueue a despawn to that client",
+        "concludes the client destroys the entity, and the next flip is a full re-spawn with no delta baseline",
+        "identifies relevancy churn as spawn/despawn churn — the most expensive thing per ghost, repeated at boundary-crossing frequency",
+        "notes despawn messages also consume a reserved share of the packet, so churn crowds out real ghost data",
+        "names hysteresis as the fix: different thresholds for entering and leaving, or a dwell time before revoking relevancy"
+      ],
+      "answer": "Relevancy is binary and its transitions are not free. Turning relevant into irrelevant makes the server clear that ghost's snapshot history for this connection and queue a despawn; the client destroys the entity. Turning it back makes the ghost brand new to this connection — full state, no delta baseline to compress against, and the client re-creates it. So a player oscillating across a boundary is running spawn/despawn on every ghost in view, several times a second, and each cycle is the most expensive per-ghost operation there is. The despawn messages have their own reserved share of the packet, so the churn also squeezes out the ghost data you actually wanted to send.\n\nThe fix is the one you would apply to any comparator with a noisy input: hysteresis. Make the leave threshold wider than the enter threshold, or require the condition to hold for a number of ticks before revoking relevancy. Cheap to add, and it converts \"a player standing in a doorway\" from a bandwidth incident back into a player standing in a doorway.\n\nBe suspicious of any relevancy rule computed fresh each tick from a continuous quantity. The boundary is exactly where your players will stand, because doorways are interesting.",
+      "because": "Relevancy edges are spawn and despawn. A rule with no hysteresis turns a shaky input into a stream of the most expensive events in the system.",
+      "goDeeper": {"chapter": "37-interest-management", "types": ["GhostRelevancy", "GhostRelevancyMode", "GhostSendSystemData"]}
+    }
+  ]
+}

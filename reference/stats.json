@@ -1,0 +1,104 @@
+{
+ "generated_by": "tools/extract_api.py",
+ "packages": [
+  {
+   "id": "entities",
+   "pkg": "com.unity.entities",
+   "version": "6.5.0",
+   "display": "Unity Entities",
+   "license": "unity",
+   "files": 807,
+   "loc": 205076,
+   "types": 1766,
+   "members": 12075
+  },
+  {
+   "id": "netcode",
+   "pkg": "com.unity.netcode",
+   "version": "6.6.0",
+   "display": "Netcode for Entities",
+   "license": "unity",
+   "files": 320,
+   "loc": 75544,
+   "types": 860,
+   "members": 4195
+  },
+  {
+   "id": "entities-graphics",
+   "pkg": "com.unity.entities.graphics",
+   "version": "6.5.0",
+   "display": "Entities Graphics",
+   "license": "unity",
+   "files": 118,
+   "loc": 19743,
+   "types": 310,
+   "members": 1261
+  },
+  {
+   "id": "core",
+   "pkg": "com.bovinelabs.core",
+   "version": "2.0.0",
+   "display": "BovineLabs Core",
+   "license": "commercial",
+   "files": 498,
+   "loc": 66479,
+   "types": 667,
+   "members": 4127
+  },
+  {
+   "id": "grove",
+   "pkg": "com.bovinelabs.grove",
+   "version": "2.1.1",
+   "display": "BovineLabs Grove",
+   "license": "commercial",
+   "files": 156,
+   "loc": 11971,
+   "types": 187,
+   "members": 639
+  },
+  {
+   "id": "canopy",
+   "pkg": "com.bovinelabs.canopy",
+   "version": "0.1.0",
+   "display": "BovineLabs Canopy",
+   "license": "commercial",
+   "files": 28,
+   "loc": 2366,
+   "types": 33,
+   "members": 117
+  },
+  {
+   "id": "nerve",
+   "pkg": "com.bovinelabs.nerve",
+   "version": "2.0.0",
+   "display": "BovineLabs Nerve",
+   "license": "commercial",
+   "files": 336,
+   "loc": 21800,
+   "types": 372,
+   "members": 920
+  },
+  {
+   "id": "anchor",
+   "pkg": "com.bovinelabs.anchor",
+   "version": "2.0.0",
+   "display": "BovineLabs Anchor",
+   "license": "commercial",
+   "files": 142,
+   "loc": 14814,
+   "types": 174,
+   "members": 814
+  }
+ ],
+ "parse": {
+  "files_scanned": 2405,
+  "files_failed": 0,
+  "files_unbalanced": 0,
+  "decls_found": 43037,
+  "decls_unparsed": 0,
+  "types_hidden": 766,
+  "members_hidden": 10723,
+  "unparsed_samples": [],
+  "failed_files": []
+ }
+}

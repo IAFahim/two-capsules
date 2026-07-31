@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Where does this body go?",
+    "subtitle": "Deciding replication and prediction per rigid body, and what each choice costs",
+    "output": "diagrams/43-physics-on-the-server.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "free",
+        "label": "The free path",
+        "focus": ["authored", "moves", "staticbake"],
+        "note": "A body that never moves needs no ghost, no snapshot and no prediction."
+      },
+      {
+        "id": "replicated",
+        "label": "Replicated bodies",
+        "focus": ["moves", "touch", "interp", "predict"],
+        "note": "Contact with a predicted body is contagious, so the predicted set is a closure."
+      },
+      {
+        "id": "escape",
+        "label": "The second world",
+        "focus": ["predict", "otherworld"],
+        "note": "Client-only debris must leave physics world zero or validation rejects it."
+      }
+    ],
+    "viewBox": [1240, 660]
+  },
+  "lanes": [
+    { "id": "author", "label": "Authoring" },
+    { "id": "replicated", "label": "Replication choice" },
+    { "id": "cost", "label": "What it costs" },
+    { "id": "escapes", "label": "Non-ghost bodies", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "bake", "label": "Bake", "fromCol": 0, "toCol": 1 },
+    { "id": "decide", "label": "Decide", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "pay", "label": "Pay", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["authored", "moves", "touch", "predict"],
+  "nodes": [
+    {
+      "id": "authored",
+      "lane": "author",
+      "col": 0,
+      "type": "external",
+      "label": "Body",
+      "sublabel": "authored shape"
+    },
+    {
+      "id": "moves",
+      "lane": "replicated",
+      "col": 1,
+      "type": "security",
+      "label": "Moves?",
+      "sublabel": "has velocity"
+    },
+    {
+      "id": "staticbake",
+      "lane": "author",
+      "col": 2,
+      "type": "database",
+      "label": "Static",
+      "sublabel": "no ghost",
+      "tag": "free"
+    },
+    {
+      "id": "touch",
+      "lane": "replicated",
+      "col": 3,
+      "type": "security",
+      "label": "Touched?",
+      "sublabel": "by a player"
+    },
+    {
+      "id": "interp",
+      "lane": "cost",
+      "col": 4,
+      "type": "frontend",
+      "label": "Interp.",
+      "sublabel": "server solves",
+      "tag": "cheap"
+    },
+    {
+      "id": "predict",
+      "lane": "replicated",
+      "col": 5,
+      "type": "backend",
+      "label": "Predicted",
+      "sublabel": "both solve",
+      "tag": "budget"
+    },
+    {
+      "id": "otherworld",
+      "lane": "escapes",
+      "col": 5,
+      "type": "messagebus",
+      "label": "World 1+",
+      "sublabel": "client only"
+    }
+  ],
+  "edges": [
+    {
+      "from": "authored",
+      "to": "moves",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "moves",
+      "to": "staticbake",
+      "label": "no",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "from": "moves",
+      "to": "touch",
+      "label": "yes",
+      "variant": "emphasis"
+    },
+    {
+      "from": "touch",
+      "to": "interp",
+      "label": "no",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "touch",
+      "to": "predict",
+      "label": "yes",
+      "variant": "emphasis"
+    },
+    {
+      "from": "predict",
+      "to": "otherworld",
+      "label": "debris",
+      "variant": "security",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Where the systems live",
+      "items": [
+        "Unity Physics declares no world filter of its own",
+        "It resolves to local, server and client simulation",
+        "So the server solves everything; it just never draws it",
+        "Thin clients get no physics at all"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The re-clocking",
+      "items": [
+        "Netcode moves the physics group into the prediction loop",
+        "The move is a transitive closure over ordering attributes",
+        "A replayed tick re-runs broadphase, narrowphase and the solver",
+        "Server: one solve per tick. Client: one per replayed tick"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Where bandwidth is won",
+      "items": [
+        "Only velocity has a physics ghost variant, sent to predicting clients",
+        "Mass, gravity factor and colliders are never replicated",
+        "Static colliders are agreed by baking, not by snapshots",
+        "Raise quantization before raising tick rate"
+      ]
+    }
+  ]
+}

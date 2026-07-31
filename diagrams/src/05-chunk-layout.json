@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Inside One Chunk",
+    "subtitle": "16 384 bytes, a 64-byte header, and then nothing but arrays — the stride is the entire point",
+    "output": "diagrams/05-chunk-layout.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "layout",
+        "label": "The byte layout",
+        "focus": [
+          "header",
+          "entities",
+          "transform"
+        ],
+        "note": "Header first, cache-line aligned, then one contiguous array per component type."
+      },
+      {
+        "id": "addressing",
+        "label": "One index, every array",
+        "focus": [
+          "slot",
+          "transform",
+          "ghost"
+        ],
+        "note": "An entity is not a struct. It is the same subscript into several unrelated arrays."
+      },
+      {
+        "id": "sweep",
+        "label": "Why the stride wins",
+        "focus": [
+          "transform",
+          "sweep"
+        ],
+        "note": "A job reads one array forward at a fixed stride. The hardware prefetcher can see that coming."
+      },
+      {
+        "id": "capacity",
+        "label": "What decides capacity",
+        "focus": [
+          "archetype",
+          "header"
+        ],
+        "note": "Capacity is the buffer divided by the sum of the strides. Add a component and every chunk holds fewer entities."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "archetype",
+      "type": "cloud",
+      "label": "Archetype",
+      "sublabel": "the exact set of component types",
+      "tag": "shared by all its chunks",
+      "pos": [
+        90,
+        60
+      ],
+      "size": [
+        230,
+        66
+      ]
+    },
+    {
+      "id": "slot",
+      "type": "frontend",
+      "label": "Entity at index 3",
+      "sublabel": "not a struct — a subscript",
+      "tag": "base + 3 × stride",
+      "pos": [
+        90,
+        320
+      ],
+      "size": [
+        230,
+        66
+      ]
+    },
+    {
+      "id": "header",
+      "type": "security",
+      "label": "Header · bytes 0–63",
+      "sublabel": "sequence number · flags · meta entity",
+      "tag": "cache-line aligned",
+      "pos": [
+        560,
+        60
+      ],
+      "size": [
+        270,
+        66
+      ]
+    },
+    {
+      "id": "entities",
+      "type": "database",
+      "label": "Entity[] · 8 B stride",
+      "sublabel": "index + version, one per slot",
+      "tag": "always first",
+      "pos": [
+        560,
+        190
+      ],
+      "size": [
+        270,
+        66
+      ]
+    },
+    {
+      "id": "transform",
+      "type": "database",
+      "label": "LocalTransform[] · 32 B",
+      "sublabel": "position, rotation, scale",
+      "tag": "contiguous",
+      "pos": [
+        560,
+        320
+      ],
+      "size": [
+        270,
+        66
+      ]
+    },
+    {
+      "id": "ghost",
+      "type": "database",
+      "label": "GhostInstance[] · 12 B",
+      "sublabel": "ghost id + type + spawn tick",
+      "tag": "contiguous",
+      "pos": [
+        560,
+        450
+      ],
+      "size": [
+        270,
+        66
+      ]
+    },
+    {
+      "id": "input",
+      "type": "database",
+      "label": "PlayerMoveInput[] · 8 B",
+      "sublabel": "a float2 of intent",
+      "tag": "contiguous",
+      "pos": [
+        560,
+        580
+      ],
+      "size": [
+        270,
+        66
+      ]
+    },
+    {
+      "id": "sweep",
+      "type": "backend",
+      "label": "One job, one chunk",
+      "sublabel": "walk one array forward, ignore the rest",
+      "tag": "no pointer ever dereferenced",
+      "pos": [
+        1070,
+        320
+      ],
+      "size": [
+        240,
+        66
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "one chunk · 16 384 bytes · one allocation · 16 320 usable",
+      "wraps": [
+        "header",
+        "entities",
+        "transform",
+        "ghost",
+        "input"
+      ],
+      "pad": 20
+    }
+  ],
+  "connections": [
+    {
+      "from": "archetype",
+      "to": "header",
+      "label": "capacity = 16 320 / Σ strides",
+      "variant": "dashed"
+    },
+    {
+      "from": "slot",
+      "to": "entities",
+      "label": "same index"
+    },
+    {
+      "from": "slot",
+      "to": "transform",
+      "variant": "emphasis"
+    },
+    {
+      "from": "slot",
+      "to": "ghost"
+    },
+    {
+      "from": "slot",
+      "to": "input"
+    },
+    {
+      "from": "transform",
+      "to": "sweep",
+      "label": "32 bytes apart, forward",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The numbers, from the source",
+      "items": [
+        "kChunkSize = 16 * 1024 · Unity.Entities/Types/Chunk.cs:347",
+        "kBufferOffset = 64, must be cache line aligned · Chunk.cs:343",
+        "kChunkBufferSize = kChunkSize − kBufferOffset = 16 320 · Chunk.cs:351",
+        "The header is a fixed 24 serialized bytes inside that 64 · Chunk.cs:336"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why an entity is not a struct",
+      "items": [
+        "Entity 3's transform and entity 3's input are far apart in memory",
+        "They share only a subscript, and that subscript is the whole identity",
+        "A system that wants both reads two arrays in lockstep, both sequential",
+        "This is structure-of-arrays, chosen because it is what a prefetcher understands"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The consequence nobody warns you about",
+      "items": [
+        "Adding a component changes the archetype, so it changes the chunk",
+        "That is a memcpy of every component of that entity into a different allocation",
+        "It also changes capacity, so a chunk holding 128 entities may now hold 113",
+        "This is why a structural change costs what it costs, and why you batch them"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What the job actually sees",
+      "items": [
+        "One chunk, one archetype, one pass — no branch on type, no virtual call",
+        "Arrays it did not ask for are never touched, so they never enter cache",
+        "The tail of a partly full chunk is still walked as a range, never as a list",
+        "Chunk capacity is why job granularity is a chunk and not an entity"
+      ]
+    }
+  ]
+}

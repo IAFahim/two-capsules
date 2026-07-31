@@ -140,6 +140,11 @@ def build_manifest() -> dict:
                 k: {
                     "short": v if isinstance(v, str) else v["short"],
                     "deep": None if isinstance(v, str) else v.get("deep"),
+                    # bare type names; explore.html resolves them against reference/search.json
+                    "types": [] if isinstance(v, str) else (v.get("types") or []),
+                    # a node may continue into another map
+                    "goto": None if isinstance(v, str) else v.get("goto"),
+                    "gotoLabel": None if isinstance(v, str) else v.get("gotoLabel"),
                     "audio": audio_for(f"node-{k}-short"),
                     "audioDeep": audio_for(f"node-{k}-deep"),
                 }

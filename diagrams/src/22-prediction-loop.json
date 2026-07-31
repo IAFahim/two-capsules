@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "The Rollback Loop",
+    "subtitle": "Restore, replay, carry on — the same machine every frame, whether or not anything went wrong",
+    "output": "diagrams/22-prediction-loop.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "restore",
+        "label": "Where the loop starts",
+        "focus": [
+          "snap",
+          "restore",
+          "start"
+        ],
+        "note": "The oldest prediction start tick across every predicted ghost decides how far back the whole loop rewinds."
+      },
+      {
+        "id": "replay",
+        "label": "The inner loop",
+        "focus": [
+          "start",
+          "step"
+        ],
+        "note": "One iteration per tick. The Simulate bit decides which entities latch this edge."
+      },
+      {
+        "id": "nocompare",
+        "label": "There is no compare",
+        "focus": [
+          "restore",
+          "backup"
+        ],
+        "note": "Nothing checks whether the prediction was right. The server state is written over it either way."
+      },
+      {
+        "id": "starved",
+        "label": "When nothing arrives",
+        "focus": [
+          "nosnap",
+          "backup"
+        ],
+        "note": "With no new snapshot the loop restarts from its own last full tick, so it keeps running on faith."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "arrive",
+      "label": "what arrived"
+    },
+    {
+      "id": "apply",
+      "label": "apply authority"
+    },
+    {
+      "id": "sched",
+      "label": "the loop head"
+    },
+    {
+      "id": "loop",
+      "label": "one replayed tick"
+    },
+    {
+      "id": "present",
+      "label": "the client's present"
+    },
+    {
+      "id": "hist",
+      "label": "history"
+    },
+    {
+      "id": "err",
+      "label": "starvation",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "ph1",
+      "label": "restore",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "ph2",
+      "label": "replay",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "ph3",
+      "label": "carry on",
+      "fromCol": 4,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "snap",
+    "restore",
+    "start",
+    "step",
+    "now"
+  ],
+  "nodes": [
+    {
+      "id": "snap",
+      "lane": "arrive",
+      "col": 0,
+      "type": "messagebus",
+      "label": "Snapshot T",
+      "sublabel": "server state, old",
+      "tag": "unreliable"
+    },
+    {
+      "id": "nosnap",
+      "lane": "err",
+      "col": 0,
+      "type": "external",
+      "label": "No snapshot",
+      "sublabel": "lost, or too early",
+      "tag": "common"
+    },
+    {
+      "id": "restore",
+      "lane": "apply",
+      "col": 1,
+      "type": "database",
+      "label": "Overwrite",
+      "sublabel": "server fields, always",
+      "tag": "no compare"
+    },
+    {
+      "id": "start",
+      "lane": "sched",
+      "col": 2,
+      "type": "security",
+      "label": "Loop head",
+      "sublabel": "chooses the next tick",
+      "tag": "enables Simulate"
+    },
+    {
+      "id": "step",
+      "lane": "loop",
+      "col": 3,
+      "type": "backend",
+      "label": "One tick",
+      "sublabel": "your systems, once",
+      "tag": "idempotent"
+    },
+    {
+      "id": "now",
+      "lane": "present",
+      "col": 4,
+      "type": "frontend",
+      "label": "Client now",
+      "sublabel": "half an RTT ahead",
+      "tag": "rendered"
+    },
+    {
+      "id": "backup",
+      "lane": "hist",
+      "col": 5,
+      "type": "database",
+      "label": "Backup",
+      "sublabel": "memcpy, last full tick",
+      "tag": "next floor"
+    }
+  ],
+  "edges": [
+    {
+      "from": "snap",
+      "to": "restore",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "nosnap",
+      "to": "restore",
+      "role": "branch",
+      "variant": "dashed"
+    },
+    {
+      "from": "restore",
+      "to": "start",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "start",
+      "to": "step",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "step",
+      "to": "start",
+      "label": "tick + 1",
+      "role": "return",
+      "route": "up-channel"
+    },
+    {
+      "from": "step",
+      "to": "now",
+      "role": "main",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "now",
+      "to": "backup",
+      "role": "branch",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The loop, stated as a machine",
+      "items": [
+        "Set the program counter to the oldest prediction start tick of any predicted ghost",
+        "For each tick up to the target: enable Simulate on whoever should run, execute one tick",
+        "After the last full tick, copy the result into the backup",
+        "Repeat next frame — this runs whether or not anything was mispredicted"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "There is no compare in the hot path",
+      "items": [
+        "Nothing branches on prediction was right versus wrong",
+        "The server's fields are written over the predicted ones every time",
+        "If the prediction was correct the write changes nothing, and costs the same",
+        "Comparison exists only for smoothing and for the debug system's error metric"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The bit that eats projects",
+      "items": [
+        "Simulate is enabled per entity per replayed tick, not once per frame",
+        "A query without it integrates every predicted entity on every iteration",
+        "Ten replayed ticks then move the capsule ten times too far",
+        "It looks perfect on a clean link and disintegrates on the first dropped packet"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The cost, and the two valves",
+      "items": [
+        "Cost is replayed ticks × predicted entities × your predicted systems",
+        "Replayed ticks come from round trip time; you do not control that",
+        "Predicted entities you do control, and it is the only honest lever",
+        "Batching replayed ticks is the emergency valve and it changes the result"
+      ]
+    }
+  ]
+}

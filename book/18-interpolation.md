@@ -72,6 +72,9 @@ The bill:
 unacceptable, and take the cheap smooth path for everything else. For a capsule game it is
 free correctness.
 
+For the full decision — real defaults, the cost table, and the contagion rule that decides how
+big your predicted set really is — see [41 · Clock domains](41-clock-domains.md).
+
 ## Smoothing the correction
 
 When a rollback moves your predicted capsule, snapping is visible. NetCode can blend the

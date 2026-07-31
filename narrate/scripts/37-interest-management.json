@@ -1,0 +1,121 @@
+{
+  "id": "37-interest-management",
+  "title": "The Snapshot Budget",
+  "map": "diagrams/37-interest-management.html",
+  "blurb": "One packet per player per tick, and the arbiter that decides what fills it.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "A fixed-width bus",
+      "focus": null,
+      "text": "The server does not send you the world. Once per network tick, per connection, it sends one packet, and that packet is about fourteen hundred bytes minus the pipeline header. Everything on this map exists to answer one question: given a budget that does not grow, which ghosts get to spend it this tick."
+    },
+    {
+      "id": "aging",
+      "title": "Priority times age",
+      "focus": "aging",
+      "text": "Each chunk of ghosts carries a base importance you set on the prefab. The server multiplies that by the number of ticks since the chunk was last sent. That second term is an age counter, and it is the reason a low importance object is never silent forever. This is a priority arbiter with aging, exactly as a bus arbiter avoids starving a low priority requester. Every grant resets that requester's age while everyone else keeps climbing."
+    },
+    {
+      "id": "scaling",
+      "title": "Your own scoring function",
+      "focus": "scale",
+      "text": "Before the sort, the server hands the whole list of chunks to a function pointer you supply. The built in one is distance based: it takes the difference between the chunk's tile and the player's tile, squares the length, and divides priority by it. Anything within one tile in any direction is treated as here, because a player standing near a tile edge must not lose the tile they are looking at."
+    },
+    {
+      "id": "focus",
+      "title": "Where the player is looking",
+      "focus": "focus",
+      "text": "The scaling function needs a focal point per connection, and that lives in a component you put on the connection entity yourself. If you forget it, the scaling function is never called at all, no error appears, and every ghost simply falls back to plain aging. This is the single most common silent failure in interest management."
+    },
+    {
+      "id": "relevancy",
+      "title": "Relevancy is a different verb",
+      "focus": "relset",
+      "text": "Importance answers how often. Relevancy answers whether at all. A relevancy set is a map keyed by connection and ghost, and it runs in one of two modes: an allowlist where nothing is sent unless listed, or a denylist where listed things are excluded. For anything competitive you want the allowlist, because anything you forget to list in a denylist leaks."
+    },
+    {
+      "id": "spend",
+      "title": "Spending the packet",
+      "focus": "serialize",
+      "text": "The serializer walks the sorted list and writes ghosts until the packet is full, delta compressed against whatever this particular client last acknowledged. A chunk that has not changed since an acknowledged zero change snapshot is skipped entirely. And when a ghost stops being relevant, it is not merely omitted; its history is cleared and a despawn is queued, so the entity is destroyed on the client."
+    }
+  ],
+  "nodes": {
+    "chunks": {
+      "short": "Every ghost chunk on the server, with per connection state attached.",
+      "deep": "The send system does not think in entities, it thinks in chunks. Each chunk carries, for each connection separately, the tick it was last sent and the snapshot history used for delta compression. That is why the cost of sending grows with player count even when the world does not change at all.",
+      "types": [
+        "ArchetypeChunk",
+        "GhostChunkSerializationState",
+        "GhostInstance",
+        "GhostCleanup"
+      ]
+    },
+    "aging": {
+      "short": "Base importance multiplied by ticks since this chunk was last sent.",
+      "deep": "The product is compared against a minimum send importance floor, and dropped if it is below. Then it is multiplied by one thousand, purely to give your scaling function room to divide. If the whole chunk was irrelevant last time, the priority is divided down first, so barely relevant things do not churn.",
+      "types": [
+        "GhostSendSystemData",
+        "PrioChunk",
+        "GhostAuthoringComponent",
+        "NetworkTick"
+      ]
+    },
+    "focus": {
+      "short": "The per connection focal point your code puts on the connection entity.",
+      "deep": "Without this component the send system skips importance scaling entirely and logs nothing. The packet dump is the only place it tells you, printing that ghost importance is disabled. Add the component when the player takes control of a pawn, and update it as the pawn moves.",
+      "types": [
+        "GhostConnectionPosition",
+        "GhostDistanceData",
+        "GhostDistancePartitionShared"
+      ]
+    },
+    "scale": {
+      "short": "Your batched scoring function, called once per connection with every chunk.",
+      "deep": "The batched form is preferred because it replaces thousands of function pointer calls with one. It may rewrite each chunk's priority, and it may also flip a whole chunk relevancy flag, which is a fast path that skips the relevancy hash map completely. After it returns, the list is sorted in descending priority order.",
+      "types": [
+        "GhostImportance",
+        "GhostDistanceImportance",
+        "PortableFunctionPointer",
+        "PrioChunk"
+      ]
+    },
+    "relset": {
+      "short": "A map from connection and ghost identifier to relevance for this tick.",
+      "deep": "It is consulted only when the faster archetype masks and the chunk level flag have not already settled the question. There is one asymmetry worth knowing: a ghost matching netcode's own internal relevancy rule can never be marked irrelevant by your code.",
+      "types": [
+        "GhostRelevancy",
+        "GhostRelevancyMode",
+        "RelevantGhostForConnection"
+      ]
+    },
+    "serialize": {
+      "short": "Writes ghosts into the packet, delta compressed against this client's acknowledgement.",
+      "deep": "Three separate limits can stop it early: the number of chunks it is allowed to examine, the number it is allowed to send from, and the packet filling up. Set the examine limit too low and the packet goes out half empty, because that limit is applied before relevancy is even checked.",
+      "types": [
+        "GhostChunkSerializer",
+        "GhostOptimizationMode",
+        "NetworkSnapshotAck"
+      ]
+    },
+    "packet": {
+      "short": "One unreliable packet, sized to the maximum message size minus headers.",
+      "deep": "You can override the size globally, or per connection, which is how you hit a specific bandwidth target for a specific player. Ask for more than the message size and the snapshot quietly moves onto the fragmenting pipeline, which costs you reassembly and makes loss hurt more.",
+      "types": [
+        "NetworkStreamSnapshotTargetSize",
+        "NetworkParameterConstants",
+        "FragmentationPipelineStage"
+      ]
+    },
+    "despawn": {
+      "short": "Ghosts that dropped out of relevance, plus ordinary destroyed entities.",
+      "deep": "A third of the packet is reserved for despawn messages by default, before ghost data gets any of it, and the package suggests raising that toward three quarters at large scale. Because relevancy churn is spawn and despawn churn, a relevancy rule with no hysteresis will spend your packet on nothing but bookkeeping.",
+      "types": [
+        "PendingGhostDespawn",
+        "GhostDespawnSystem",
+        "GhostSendSystemData"
+      ]
+    }
+  }
+}

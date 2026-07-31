@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "The Snapshot Budget",
+    "subtitle": "One packet per connection per tick — and the machine that decides what fills it",
+    "output": "diagrams/37-interest-management.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "aging",
+        "label": "Priority is importance times age",
+        "focus": [
+          "chunks",
+          "aging",
+          "scale"
+        ],
+        "note": "A starvation-preventing arbiter: static priority multiplied by a rising age counter."
+      },
+      {
+        "id": "narrow",
+        "label": "Relevancy narrows the set",
+        "focus": [
+          "focus",
+          "relset",
+          "serialize"
+        ],
+        "note": "Importance decides how often. Relevancy decides whether at all."
+      },
+      {
+        "id": "spend",
+        "label": "Spending the packet",
+        "focus": [
+          "serialize",
+          "packet",
+          "despawn"
+        ],
+        "note": "A third of the packet is reserved for despawns before ghost data gets any."
+      }
+    ],
+    "viewBox": [
+      1180,
+      660
+    ]
+  },
+  "stages": [
+    {
+      "label": "gather"
+    },
+    {
+      "label": "aging + gates"
+    },
+    {
+      "label": "scaling + relevancy"
+    },
+    {
+      "label": "serialization"
+    },
+    {
+      "label": "one packet"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "chunks",
+      "type": "database",
+      "label": "Ghost chunks",
+      "sublabel": "per-connection chunk state",
+      "tag": "server",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "aging",
+      "type": "backend",
+      "label": "Base priority",
+      "sublabel": "importance × ticks since sent",
+      "tag": "MinSendImportance",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "focus",
+      "type": "external",
+      "label": "Connection focus",
+      "sublabel": "GhostConnectionPosition",
+      "tag": "per connection",
+      "stage": 1,
+      "row": 1
+    },
+    {
+      "id": "scale",
+      "type": "backend",
+      "label": "GhostImportance",
+      "sublabel": "batched scaling function",
+      "tag": "sorted after",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "relset",
+      "type": "database",
+      "label": "GhostRelevancySet",
+      "sublabel": "connection id + ghost id",
+      "tag": "allowlist",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "serialize",
+      "type": "backend",
+      "label": "Chunk serializer",
+      "sublabel": "delta vs acked baseline",
+      "tag": "static skip",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "packet",
+      "type": "messagebus",
+      "label": "Snapshot packet",
+      "sublabel": "MTU minus pipeline header",
+      "tag": "MaxSendChunks",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "despawn",
+      "type": "external",
+      "label": "Despawn messages",
+      "sublabel": "irrelevant becomes destroyed",
+      "tag": "33% reserved",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "chunks",
+      "to": "aging",
+      "label": "one entry per chunk",
+      "classification": "state",
+      "variant": "emphasis"
+    },
+    {
+      "from": "aging",
+      "to": "scale",
+      "label": "priority × 1000",
+      "classification": "priority",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "focus",
+      "to": "scale",
+      "label": "tile delta",
+      "classification": "priority"
+    },
+    {
+      "from": "scale",
+      "to": "serialize",
+      "label": "sorted chunks",
+      "classification": "priority",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "relset",
+      "to": "serialize",
+      "label": "per-ghost mask",
+      "classification": "relevancy",
+      "variant": "security"
+    },
+    {
+      "from": "serialize",
+      "to": "packet",
+      "label": "bits until full",
+      "classification": "wire",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "serialize",
+      "to": "despawn",
+      "label": "dropped ghosts",
+      "classification": "relevancy"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The arithmetic, in order",
+      "items": [
+        "baseImportance times ticks since last sent, per chunk",
+        "Divided by IrrelevantImportanceDownScale if the chunk was all irrelevant",
+        "Dropped if below MinSendImportance, then multiplied by 1000",
+        "Your scaling function runs, then the list is sorted descending"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Importance is not relevancy",
+      "items": [
+        "Importance answers how often: a low chunk waits, it is not forgotten",
+        "Relevancy answers whether: an irrelevant ghost is despawned on the client",
+        "PrioChunk.isRelevant is a whole-chunk fast path that skips the hash map",
+        "Relevancy is also the only structural defence against snapshot wallhacks"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Where it silently does nothing",
+      "items": [
+        "No GhostConnectionComponentType on the connection: scaling never runs",
+        "MaxIterateChunks too low: the packet goes out half empty",
+        "Static optimization before the client acks: skipped, no saving",
+        "MaxSendEntities in 6.6: obsolete and non-functional"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How it degrades with players",
+      "items": [
+        "Serialization is per connection, with a per-connection acked baseline",
+        "Cost is roughly connections times chunks examined times ghosts written",
+        "Doubling players roughly doubles send cost with an unchanged world",
+        "Tiling fragments chunks, so tile size is a cache decision too"
+      ]
+    }
+  ]
+}

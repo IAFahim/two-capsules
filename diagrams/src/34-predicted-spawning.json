@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Predicted spawning",
+    "subtitle": "Two independent streams, one matcher, and an entity that is adopted rather than replaced",
+    "output": "diagrams/34-predicted-spawning.html",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "client",
+        "label": "The client half",
+        "focus": [
+          "request",
+          "initsys",
+          "list"
+        ],
+        "note": "The entity exists in the same frame as the input. Ghost id zero marks it as unadopted."
+      },
+      {
+        "id": "match",
+        "label": "The matcher",
+        "focus": [
+          "list",
+          "queue",
+          "match"
+        ],
+        "note": "Same ghost type, spawn ticks within a window. Nothing else is compared by default."
+      },
+      {
+        "id": "outcome",
+        "label": "Adopt or reap",
+        "focus": [
+          "match",
+          "adopt",
+          "reaper"
+        ],
+        "note": "A hit keeps the client entity. A miss leaves it in the list until the interpolation tick passes."
+      }
+    ],
+    "viewBox": [
+      1120,
+      620
+    ]
+  },
+  "stages": [
+    {
+      "label": "client input"
+    },
+    {
+      "label": "initialise"
+    },
+    {
+      "label": "pending vs received"
+    },
+    {
+      "label": "classify"
+    },
+    {
+      "label": "outcome"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "request",
+      "type": "frontend",
+      "label": "SpawnRequest",
+      "sublabel": "enableable, baked disabled",
+      "tag": "on the prefab",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "initsys",
+      "type": "frontend",
+      "label": "PredictedGhostSpawn",
+      "sublabel": "stamps spawn tick, seeds snapshot",
+      "tag": "ghost id zero",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "list",
+      "type": "database",
+      "label": "Pending spawn list",
+      "sublabel": "entity, type, spawn tick",
+      "tag": "searched by key",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "queue",
+      "type": "messagebus",
+      "label": "GhostSpawnBuffer",
+      "sublabel": "server ghost, server spawn tick",
+      "tag": "from snapshot",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "match",
+      "type": "security",
+      "label": "Classification",
+      "sublabel": "same type, tick within window",
+      "tag": "plus or minus five",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "adopt",
+      "type": "backend",
+      "label": "GhostSpawnSystem",
+      "sublabel": "returns the client entity",
+      "tag": "no instantiate",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "reaper",
+      "type": "external",
+      "label": "Despawn sweep",
+      "sublabel": "destroys stale client spawns",
+      "tag": "interpolation tick",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "request",
+      "to": "initsys",
+      "label": "consumed once",
+      "classification": "local",
+      "variant": "emphasis"
+    },
+    {
+      "from": "initsys",
+      "to": "list",
+      "label": "pending record",
+      "classification": "local",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "list",
+      "to": "match",
+      "label": "candidates",
+      "classification": "local",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "queue",
+      "to": "match",
+      "label": "new server ghost",
+      "classification": "authoritative",
+      "variant": "security"
+    },
+    {
+      "from": "match",
+      "to": "adopt",
+      "label": "matched entity",
+      "classification": "authoritative",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "from": "match",
+      "to": "reaper",
+      "label": "no match",
+      "classification": "discard"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Why the client spawns at all",
+      "items": [
+        "A projectile cannot be predicted before it exists",
+        "Waiting for the server puts a full round trip where attention is highest",
+        "So the client creates it, and the server's ghost takes over that same entity",
+        "The adopted entity keeps its transform, its trail, and every local component"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why the match is a window",
+      "items": [
+        "Inside prediction the client stamps the tick it is simulating",
+        "Outside prediction it stamps the last full server tick",
+        "The server stamps its own tick at the end of its frame",
+        "Spawning inside the prediction loop is the single best accuracy fix"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The two failures look nothing alike",
+      "items": [
+        "No match: two projectiles briefly, then the client copy is destroyed",
+        "Wrong match: one projectile adopts another's ghost and snaps to it",
+        "Widening the window converts misses into mismatches",
+        "Narrowing it converts mismatches back into misses"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "When to write your own matcher",
+      "items": [
+        "As soon as two ghosts of one type can spawn within the window",
+        "Shotguns, burst fire, swarms, anything with a fast rate of fire",
+        "Match on a replicated sequence number written identically on both sides",
+        "An exact key removes the window and both failure modes with it"
+      ]
+    }
+  ]
+}

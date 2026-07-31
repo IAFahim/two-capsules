@@ -1,0 +1,68 @@
+{
+  "id": "01-clock-edge",
+  "title": "The first clock edge",
+  "source": {"chapter": "01-clock-edge", "map": "diagrams/01-machine.html"},
+  "checks": [
+    {
+      "id": "moved-out-of-prediction",
+      "kind": "predict",
+      "setup": "You have a dash system that integrates an impulse:\n\n    pos += dir * (Speed * SystemAPI.Time.DeltaTime);\n\nIt was written for PredictedSimulationSystemGroup. To \"keep the prediction group cheap\" someone changes one attribute and moves it to the top level of SimulationSystemGroup. It compiles clean. On the dev box, vsync locked at 60 Hz, LAN, no loss, the dash feels exactly the same.",
+      "ask": "Two things change the moment it leaves the dev box: a 144 Hz monitor, and a dropped packet. What does the dash do in each case, and why does the same line of code now behave differently?",
+      "rightIf": [
+        "says DeltaTime is no longer the tick delta — it is now the variable frame delta",
+        "concludes dash distance now scales with frame rate (a 144 Hz client dashes a different distance than a 60 Hz one)",
+        "notes the system no longer runs inside the rollback loop, so it is never replayed and its result is never re-derived after a correction",
+        "connects that to client/server disagreement: the server runs at its own frame rate and will compute a different distance"
+      ],
+      "answer": "The delta you get depends entirely on where the system is standing. Inside PredictedSimulationSystemGroup, SystemAPI.Time.DeltaTime is one network tick — constant, identical on client and server, and identical again on every replayed tick. At the top of SimulationSystemGroup it is the frame delta: whatever the presentation engine handed you this frame. So the 144 Hz client integrates in small steps and the 60 Hz client in large ones, and because floating point addition is not associative they do not land on the same number. Worse, the system is now outside the rollback loop entirely — when a snapshot corrects the capsule's position, the dash contribution is not recomputed, so the correction fights the dash instead of including it. The one-line move did not make prediction cheaper; it made the dash non-deterministic and un-correctable at the same time.",
+      "because": "A frame is a scheduling quantum, not a unit of time. The only fixed-rate clock in the process is the one NetCode builds; standing outside it means reading a jittering counter and calling it a clock.",
+      "goDeeper": {"chapter": "01-clock-edge", "node": "client", "types": ["PredictedSimulationSystemGroup", "NetworkTime"]}
+    },
+    {
+      "id": "frame-counted-cadence",
+      "kind": "predict",
+      "setup": "A server system spawns a pickup every 90 frames — an int counter incremented in OnUpdate, in SimulationSystemGroup, in ServerWorld. The designer tuned 90 on the dev box because it felt like a good rhythm: one pickup every 1.5 seconds.",
+      "ask": "Ship it headless on a machine with no vsync and no display. What is the pickup rate, and what happens to it during an editor hitch?",
+      "rightIf": [
+        "says the frame loop is free-running and nothing makes it periodic except present blocking on the display",
+        "concludes a headless server with nothing to block on runs the loop as fast as the CPU allows, so the cadence collapses to far faster than 1.5 s",
+        "notes an editor hitch has the opposite effect — the counter stalls with the frame loop",
+        "names the fix as counting ticks (or accumulating a fixed delta), not frames"
+      ],
+      "answer": "The 1.5 seconds was never in the code. It was in the monitor. `present` blocking on vsync is the only thing that made the loop periodic, and a headless server has no swapchain to block on — it spins the PlayerLoop as fast as it can, so 90 iterations arrive in a small fraction of a second and pickups pour out. During an editor hitch the loop stops entirely and so does the counter, so the cadence is now also a function of asset imports. The rate you observed was a property of the dev box's display, and you shipped it as a game rule. Count NetworkTicks, or accumulate against a fixed delta, and the rule stops depending on what monitor anybody owns.",
+      "because": "The frame loop is a free-running superloop, not an ISR. Anything that needs real periodicity has to build its own timebase, which is exactly what the tick system is for.",
+      "goDeeper": {"chapter": "01-clock-edge", "node": "server", "types": ["NetworkTick", "ClientServerTickRate"]}
+    },
+    {
+      "id": "tick-batching-warning",
+      "kind": "choice",
+      "setup": "You are testing in the editor with ClientWorld and ServerWorld both alive in the same process. The console prints:\n\n    Server Tick Batching has occurred\n\nIt appears a couple of times per minute, always in bursts, and never in a standalone build.",
+      "ask": "What is the most likely cause?",
+      "options": [
+        {
+          "text": "The server simulation is genuinely too expensive; profile the server systems and cut work until the warning stops.",
+          "right": false,
+          "why": "It is the reflex answer and it is usually wrong in the editor. Two capsules and a movement system do not saturate a server tick. Chase this and you will spend an afternoon optimising code that was never the bottleneck. It becomes the right answer only when you see the warning in a standalone build."
+        },
+        {
+          "text": "The whole process hitched — domain reload, asset import, GC — and because the client and server worlds run sequentially inside one PlayerLoop, the server world lost wall-clock time and had to catch up by batching ticks.",
+          "right": true,
+          "why": "The client and server are not two machines here; they are two entries in the same function-pointer table, running in sequence in one frame. Anything that stalls the process stalls the server world with it, and NetCode's catch-up is what prints the warning. Standalone builds do not domain-reload, which is why the warning does not follow you there."
+        },
+        {
+          "text": "The client is running too far ahead and flooding the server with commands, forcing it to simulate multiple ticks at once.",
+          "right": false,
+          "why": "The client's prediction lead does make it generate commands early, but commands do not force the server to simulate faster — the server simulates on its own clock and drops or holds commands that do not fit. This confuses the input path with the tick clock; they are separate mechanisms."
+        },
+        {
+          "text": "Packet loss made the server re-simulate ticks it had already run.",
+          "right": false,
+          "why": "The server never re-simulates. Rollback and replay are a client-side mechanism — the server's tick is the truth and it only ever runs forward. If you believe the server replays, most of the prediction chapter will read wrong to you, so it is worth unlearning early."
+        }
+      ],
+      "answer": "In the editor, the batching warning is almost always the editor itself, not your code. One process, one PlayerLoop, worlds ticked in sequence — a stall anywhere is a stall everywhere. The warning is real and worth listening to; it just usually names the wrong culprit until you see it outside the editor.",
+      "because": "Six worlds in one process share one clock and one stall. \"Client and server in the same process\" is a statement about determinism, not about parallelism.",
+      "goDeeper": {"chapter": "01-clock-edge", "node": "server", "types": ["World", "ClientServerTickRate"]}
+    }
+  ]
+}

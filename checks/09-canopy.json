@@ -1,0 +1,83 @@
+{
+  "id": "09-canopy",
+  "title": "Canopy: hierarchical states",
+  "source": {"chapter": "09-canopy", "map": "diagrams/04-clientgraph.html"},
+  "checks": [
+    {
+      "id": "tracker-on-the-wrong-state",
+      "kind": "predict",
+      "setup": "Client graph: `root` contains `connecting`, `gameplay`, `disconnected`. The connection tracker block — the thing that watches for terminal connection events and jumps to `disconnected` — is attached to `gameplay`, on the reasonable grounds that \"that is where the player actually is when a disconnect matters\".\n\nEverything is tested by pulling the network cable mid-match. It works every time.",
+      "ask": "Which disconnect does this graph never notice, and what does the player see instead?",
+      "rightIf": [
+        "says only states on the active path run their blocks, so the tracker runs only while gameplay is current",
+        "identifies the missed case: a disconnect during connecting — server full, timeout, approval failure, wrong version",
+        "concludes the machine sits in connecting forever with no error, because nothing is watching",
+        "notes that putting it on root makes it run in every child, since root stays on the active path"
+      ],
+      "answer": "The active state is a *path*, not a state, and blocks run for every state on that path. Attach the tracker to `gameplay` and it starts watching the moment you arrive in gameplay — which means it is asleep for the entire window in which most disconnects actually happen. Time out on the way in, get refused because the server is full, fail approval, mismatch the protocol version: the event fires, lives for one tick, and nothing is listening. The player gets a connecting screen that never changes and no message, which is the worst possible UI for a failure you had perfect information about. On `root`, the tracker is on the active path in every child state, so it sees the event whichever state you are in — and that is why it lives there.",
+      "because": "Root's blocks run every tick in every child. Anything that must be true regardless of which state you are in belongs on the state that is always active.",
+      "goDeeper": {"chapter": "09-canopy", "node": "root", "types": ["CanopyUpdateState", "NetCodeConnectionEvent"]}
+    },
+    {
+      "id": "missing-exit-check",
+      "kind": "predict",
+      "setup": "Every block in this stack opens with the same line — bail out if the update state is Exit. You write a new block that publishes a HUD value from a component on the entity, and you skip that line because your block is read-only and \"cannot possibly hurt anything on the way out\".\n\nIt runs fine for weeks. Then you add a state transition that tears the entity's HUD data down as part of leaving, and you start getting a crash on exactly one transition, once, in a build.",
+      "ask": "What is the Exit signal for, and what is your block doing when it fires?",
+      "rightIf": [
+        "says blocks receive Enter / Update / Exit and Exit means the state is being torn down, not that it already has been",
+        "concludes the block runs one more time during teardown, typically after the data it depends on is gone",
+        "notes read-only is no defence — reading freed or removed data is the crash",
+        "identifies that the bug appears only on the specific transition that removes the dependency, which is why it hid for weeks"
+      ],
+      "answer": "Exit is not \"you have stopped\", it is \"you are stopping\" — the machine walks the outgoing path and calls every block one final time so each can clean up. Your block treats that call as an ordinary update and does its ordinary work, in the middle of a teardown that is removing the thing it reads. Read-only does not save you; the hazard is the lifetime, not the direction. It hid for weeks because it only bites on a transition whose teardown order happens to remove your dependency first, which is a property of a state you added later — the classic shape of a bug that is introduced in one place and detonates in another.",
+      "because": "Exit is the deassert edge, and it is delivered to you, not around you. Every block gets one last call and has to decide whether it is a shutdown or a work item.",
+      "goDeeper": {"chapter": "09-canopy", "node": "gameplay", "types": ["CanopyUpdateState"]}
+    },
+    {
+      "id": "hash-collision-at-author-time",
+      "kind": "predict",
+      "setup": "You rename two states and the graph refuses to build:\n\n    State id 'x' collides with state id 'y' after FixedString64 hash.\n\nBoth names are perfectly distinct strings. The validator will not let you ship it.",
+      "ask": "What is being compared at runtime, what would this have done in a shipped build, and why is a build-time refusal the right response instead of a warning?",
+      "rightIf": [
+        "says a CanopyStateId is a hash of a FixedString64Bytes, so runtime comparisons are hash comparisons, not string comparisons",
+        "concludes two names that hash equal are the same state as far as the machine is concerned",
+        "describes the shipped symptom: a named jump lands in the wrong state, non-deterministically from a reader's point of view, with no error",
+        "notes the check is cheap offline over a known finite key set and impossible to diagnose in the field"
+      ],
+      "answer": "The strings exist at author time; the runtime holds a hash. Two names that collide are one id, so `CanopyGoTo(\"x\")` and `CanopyGoTo(\"y\")` are the same instruction and the machine will happily enter whichever state got registered under that id. In a build that is a state machine that sometimes goes somewhere plausible-but-wrong, with no log line, no assert, and no way to reason from the symptom back to the cause — you would be reading the transition table for a week. The key set is finite and known at author time, so brute-forcing it during validation costs milliseconds and converts a field heisenbug into a build error you fix by typing a different word.\n\nThe general form: whenever you hash a name down to a fixed-width id for runtime speed, validate the key set offline. The speed is the point; the collision is the price; the validator is how you avoid paying it.",
+      "because": "It is a CAM with collision detection at programming time. You validate the key set when you know it, because at lookup time you no longer have the keys.",
+      "goDeeper": {"chapter": "09-canopy", "types": ["CanopyStateId", "CanopyGoTo"]}
+    },
+    {
+      "id": "ondestroy-without-exit",
+      "kind": "choice",
+      "setup": "The system that drives the state machine implements OnCreate and OnUpdate. OnDestroy is empty — there is nothing in the system itself to dispose, and everything it allocated is owned by the world.\n\nThe game shuts down cleanly. Returning from a match to the menu, which destroys the client world, occasionally leaves something behind: a UI panel still on screen, an audio loop still playing, a subscene still resident.",
+      "ask": "What is missing, and what is the general rule?",
+      "options": [
+        {
+          "text": "The active path is never exited. Blocks that acquired something on Enter never receive their Exit call, so whatever they turned on stays on.",
+          "right": true,
+          "why": "Enter and Exit are a matched pair, and world destruction is not an Exit — it is the machine ceasing to exist mid-state. Walking the active path on destroy and calling every block with Exit is what closes the pairs. The leaks are one-per-block-that-acquired-something, which is why the symptom is a grab bag rather than a single clean failure."
+        },
+        {
+          "text": "The GroveState buffers leak because nothing disposed them.",
+          "right": false,
+          "why": "GroveState lives on entities in the world, and destroying the world destroys them. This is the tempting answer because it is the shape of a resource leak you would worry about in C — but the ECS ownership here is clear, and chasing it means you fix the wrong thing and still have a UI panel on screen."
+        },
+        {
+          "text": "The state machine needs an explicit transition to a shutdown state before the world is destroyed.",
+          "right": false,
+          "why": "A shutdown state would work, and some designs do it — but it is a heavier answer than the mechanism needs, and it puts the burden on every graph author to remember. Exiting the active path on destroy is the same effect with none of the authoring ceremony, and it cannot be forgotten per-graph."
+        },
+        {
+          "text": "OnDestroy runs too late — the entities are already gone, so an Exit walk there would fault.",
+          "right": false,
+          "why": "Worth being suspicious of, and the reason ordering matters. But the system's OnDestroy runs while the world is still tearing down and its data is still addressable; that is exactly the window the Exit walk is designed for. If you assume it is too late you will move the cleanup somewhere it fires on every state change instead."
+        }
+      ],
+      "answer": "Enter/Exit is an acquire/release pair, and a world going away is not a release. The driver has to walk the active path on destroy and hand every block an Exit, or every acquisition made on the way in is simply abandoned.",
+      "because": "Destruction is not a transition. If your cleanup only runs on transitions, it does not run on the one path that skips them.",
+      "goDeeper": {"chapter": "09-canopy", "node": "root", "types": ["CanopyUpdateState", "NerveStateMachine"]}
+    }
+  ]
+}

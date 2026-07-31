@@ -1,0 +1,126 @@
+{
+  "v": 1,
+  "total": 58,
+  "chapters": [
+    {
+      "id": "01-clock-edge",
+      "title": "The first clock edge",
+      "file": "01-clock-edge.json",
+      "count": 3,
+      "chapter": "01-clock-edge",
+      "map": "diagrams/01-machine.html"
+    },
+    {
+      "id": "02-cache-lines",
+      "title": "Cache lines all the way down",
+      "file": "02-cache-lines.json",
+      "count": 3,
+      "chapter": "02-cache-lines",
+      "map": "diagrams/01-machine.html"
+    },
+    {
+      "id": "04-burst-and-jobs",
+      "title": "Burst and jobs",
+      "file": "04-burst-and-jobs.json",
+      "count": 4,
+      "chapter": "04-burst-and-jobs",
+      "map": null
+    },
+    {
+      "id": "08-grove",
+      "title": "Grove: a virtual machine for gameplay logic",
+      "file": "08-grove.json",
+      "count": 3,
+      "chapter": "08-grove",
+      "map": null
+    },
+    {
+      "id": "09-canopy",
+      "title": "Canopy: hierarchical states",
+      "file": "09-canopy.json",
+      "count": 4,
+      "chapter": "09-canopy",
+      "map": "diagrams/04-clientgraph.html"
+    },
+    {
+      "id": "14-ghosts",
+      "title": "Ghosts: replicating state",
+      "file": "14-ghosts.json",
+      "count": 3,
+      "chapter": "14-ghosts",
+      "map": "diagrams/02-keypress.html"
+    },
+    {
+      "id": "15-the-tick",
+      "title": "The tick",
+      "file": "15-the-tick.json",
+      "count": 4,
+      "chapter": "15-the-tick",
+      "map": "diagrams/02-keypress.html"
+    },
+    {
+      "id": "16-commands",
+      "title": "Commands: input on the wire",
+      "file": "16-commands.json",
+      "count": 4,
+      "chapter": "16-commands",
+      "map": "diagrams/02-keypress.html"
+    },
+    {
+      "id": "17-prediction",
+      "title": "Prediction and rollback",
+      "file": "17-prediction.json",
+      "count": 5,
+      "chapter": "17-prediction",
+      "map": "diagrams/02-keypress.html"
+    },
+    {
+      "id": "18-interpolation",
+      "title": "Interpolation",
+      "file": "18-interpolation.json",
+      "count": 4,
+      "chapter": "18-interpolation",
+      "map": "diagrams/02-keypress.html"
+    },
+    {
+      "id": "19-connection-lifecycle",
+      "title": "Connection lifecycle",
+      "file": "19-connection-lifecycle.json",
+      "count": 4,
+      "chapter": "19-connection-lifecycle",
+      "map": "diagrams/03-connect.html"
+    },
+    {
+      "id": "22-ownership",
+      "title": "Ownership and spawning",
+      "file": "22-ownership.json",
+      "count": 4,
+      "chapter": "22-ownership",
+      "map": "diagrams/03-connect.html"
+    },
+    {
+      "id": "29-netcode-settings",
+      "title": "Every knob in NetCode",
+      "file": "29-netcode-settings.json",
+      "count": 4,
+      "chapter": "29-netcode-settings",
+      "map": null
+    },
+    {
+      "id": "37-interest-management",
+      "title": "Interest management: scale and relevancy",
+      "file": "37-interest-management.json",
+      "count": 5,
+      "chapter": "37-interest-management",
+      "map": null
+    },
+    {
+      "id": "41-clock-domains",
+      "title": "Clock domains: choosing a ghost mode",
+      "file": "41-clock-domains.json",
+      "count": 4,
+      "chapter": "41-clock-domains",
+      "map": "diagrams/02-keypress.html"
+    }
+  ]
+}

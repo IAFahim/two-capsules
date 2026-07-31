@@ -1,0 +1,131 @@
+{
+  "id": "00-world",
+  "title": "The Territory",
+  "map": "diagrams/00-world.html",
+  "blurb": "Six regions between a cache line and two capsules on a screen. Start anywhere.",
+  "chapters": [
+    {
+      "id": "intro",
+      "title": "This is a map, not a menu",
+      "focus": null,
+      "text": "What you are looking at is the whole territory on one screen. Six regions, roughly ordered from the silicon at the left to a running game at the right. The arrows are roads, not prerequisites. Nothing here demands that you read it in order, and the fastest way to ruin this is to treat it as a list to get through. Pick the region that annoys you most and go there."
+    },
+    {
+      "id": "ground",
+      "title": "Start on the ground if you think in cache lines",
+      "focus": "chunk",
+      "text": "The far left is memory, and it is the shortest path in for anyone who has ever cared about a stride. Entities are not objects scattered across the heap. They are rows in fixed size blocks of sixteen kilobytes, one contiguous array per component type, and every design decision above this one falls out of that arrangement. If you understand the chunk you can derive most of the rest by reasoning."
+    },
+    {
+      "id": "wire",
+      "title": "The middle is where it stops being local",
+      "focus": "wire",
+      "text": "Then the wire, and the moment the story stops being about one process. The rule is small enough to hold in one sentence. The client sends intent. The server sends truth. Nothing else crosses, ever. Two floats saying which direction somebody wants to move, going one way, and delta compressed snapshots coming back the other way. Every complication in this whole handbook is a consequence of those two sentences and the fact that they take time."
+    },
+    {
+      "id": "hard",
+      "title": "Where it gets genuinely hard",
+      "focus": "clocks",
+      "text": "Just past the wire is the part that catches everyone, and it is the reason this map exists at all. The client is running two clocks. Some entities are played back from the past, some are guessed forward into the future, and which is which depends on who owns them. Then the rollback loop next to it is what fixes the guesses. Then under load, with real latency and a player who is willing to modify the client, everything you assumed gets tested."
+    },
+    {
+      "id": "blank",
+      "title": "The blank regions are real",
+      "focus": "loop",
+      "text": "Two regions on this map have no maps behind them yet. The engine's update loop, and the stack of libraries we build on. Both have written chapters, neither has been drawn. I have left them on the map rather than hiding them, because a map that only shows the surveyed parts is a brochure. The atlas plans forty of these. Twelve exist. That gap is the honest state of the work, and it is also where the interesting problems are."
+    }
+  ],
+  "nodes": {
+    "chunk": {
+      "short": "Sixteen kilobytes, one allocation, one stride. The ground floor.",
+      "deep": "This is where the entity component system stops being a design pattern and becomes an actual memory layout you can measure. A header, then one contiguous array per component type, and an entity that is nothing but a shared subscript into all of them. If you have ever hand tuned a loop for the prefetcher, this will feel familiar in a way that surprises you.",
+      "types": [
+        "Chunk",
+        "ArchetypeChunk",
+        "EntityArchetype"
+      ],
+      "goto": "diagrams/05-chunk-layout.html",
+      "gotoLabel": "Inside one chunk"
+    },
+    "machine": {
+      "short": "Worlds, systems, jobs — one process, several isolated universes.",
+      "deep": "A world is a complete isolated instance: its own entities, its own systems, its own memory. A client world and a server world can sit in the same process, tick one after the other in the same frame, and share absolutely nothing. That isolation is what makes the security model possible and what makes debugging confusing.",
+      "types": [
+        "World",
+        "SystemState",
+        "SimulationSystemGroup"
+      ],
+      "goto": "diagrams/01-machine.html",
+      "gotoLabel": "Into the machine"
+    },
+    "loop": {
+      "short": "Bootstrap, system groups, baking. Chapters written, no map yet.",
+      "deep": "This region covers where your world actually comes from: the custom bootstrap that creates it, the tree of system groups that decides what runs when, and the baking step that turns editor objects into entities. That last one is a compile step that nobody tells you is a compile step, which is why the errors from it are so surprising the first time.",
+      "types": [
+        "ClientServerBootstrap",
+        "SimulationSystemGroup",
+        "EntityCommandBuffer"
+      ]
+    },
+    "stack": {
+      "short": "Core, Grove, Canopy, Nerve. Commercial packages, no map yet.",
+      "deep": "The layer between the engine and our game. The interesting one is Grove, which is a visual graph on the surface and a bytecode virtual machine underneath: nodes bake into a blob image, and generated dispatch walks it. The chapters describe the behaviour; the source is not ours to paste, so everything here is written from the outside in.",
+      "types": []
+    },
+    "wire": {
+      "short": "Intent goes out, snapshots come back, and that is the whole protocol.",
+      "deep": "One direction carries a bounded statement of what the player wants. The other carries delta compressed state, prioritised, cut off at whatever fits in a packet. A snapshot is not the world; it is as much of the world as fits, sorted by importance. Once you accept that, most of the rest of the network layer stops looking arbitrary.",
+      "types": [
+        "GhostSendSystem",
+        "SnapshotData",
+        "AutoCommandTarget"
+      ],
+      "goto": "diagrams/02-keypress.html",
+      "gotoLabel": "Follow one keypress"
+    },
+    "clocks": {
+      "short": "Two timelines on one client, and ownership decides which you are on.",
+      "deep": "This is the single thing most worth understanding before you touch the Inspector. Some entities are played back out of a buffer from the server's past. Others are simulated ahead into the client's future and corrected. The two cannot interact correctly, which turns one innocent dropdown into an architectural commitment.",
+      "types": [
+        "GhostMode",
+        "GhostOwner",
+        "PredictedGhost"
+      ],
+      "goto": "diagrams/41-clock-domains.html",
+      "gotoLabel": "Into the two clock domains"
+    },
+    "rollback": {
+      "short": "Restore, replay, carry on. The correction machine.",
+      "deep": "Every frame the client rewinds its predicted entities to the last tick the server confirmed and resimulates forward to the present. What surprises people is that there is no comparison step. The server's state is written over the prediction whether or not the prediction was right, and when it was right the write simply changes nothing.",
+      "types": [
+        "PredictedSimulationSystemGroup",
+        "Simulate",
+        "GhostPredictionHistoryState"
+      ],
+      "goto": "diagrams/22-prediction-loop.html",
+      "gotoLabel": "Into the rollback loop"
+    },
+    "adversary": {
+      "short": "Physics under rollback, lag compensation, and a client that lies.",
+      "deep": "This region is where the comfortable assumptions get tested. Physics inside a loop that runs the same tick repeatedly. A server rewinding its collision world to the moment a shooter actually saw. And the standing assumption that the machine on the other end is modified, which is not paranoia, it is the default.",
+      "types": [
+        "GhostRelevancy",
+        "GhostImportance",
+        "NetworkStreamConnection"
+      ],
+      "goto": "diagrams/35-lag-compensation.html",
+      "gotoLabel": "Rewind the collision world"
+    },
+    "capsules": {
+      "short": "The destination: two capsules, one server, and nothing else.",
+      "deep": "The whole handbook is built around the smallest project that is genuinely a networked game rather than a demo. Two players, two capsules, a real client and server split, and a real connection lifecycle. Small enough to hold entirely in your head, complete enough that nothing important has been faked.",
+      "types": [
+        "NetworkStreamConnection",
+        "GhostOwner",
+        "LocalToWorld"
+      ],
+      "goto": "diagrams/04-clientgraph.html",
+      "gotoLabel": "The client state graph"
+    }
+  }
+}
