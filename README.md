@@ -17,14 +17,15 @@ The goal is not "can you use this". The goal is **could you write it**.
 ## The interactive maps
 
 Standalone HTML — dark/light, pan/zoom, search, focus, guided views, PNG/SVG export.
-Open them directly, or serve the folder and browse from [`index.html`](index.html).
+They render on the site — GitHub will only show you their source.
+**Hub: https://iafahim.github.io/two-capsules/**
 
 | Map | Type | What it shows |
 |---|---|---|
-| [`01-machine`](diagrams/01-machine.html) | architecture | ECS worlds in one process, who owns what, what may cross |
-| [`02-keypress`](diagrams/02-keypress.html) | dataflow | one float2 of intent, from key to pixel |
-| [`03-connect`](diagrams/03-connect.html) | sequence | socket → NetworkId → approval → in game → spawn |
-| [`04-clientgraph`](diagrams/04-clientgraph.html) | lifecycle | the Canopy state machine that arms replication |
+| [`01-machine`](https://iafahim.github.io/two-capsules/diagrams/01-machine.html) | architecture | ECS worlds in one process, who owns what, what may cross |
+| [`02-keypress`](https://iafahim.github.io/two-capsules/diagrams/02-keypress.html) | dataflow | one float2 of intent, from key to pixel |
+| [`03-connect`](https://iafahim.github.io/two-capsules/diagrams/03-connect.html) | sequence | socket → NetworkId → approval → in game → spawn |
+| [`04-clientgraph`](https://iafahim.github.io/two-capsules/diagrams/04-clientgraph.html) | lifecycle | the Canopy state machine that arms replication |
 
 **Companion repo** — [`grove-archify`](https://github.com/IAFahim/grove-archify)
 ([live](https://iafahim.github.io/grove-archify/)) holds a separate, narrated Grove learning
@@ -116,6 +117,15 @@ If you keep nothing else:
 5. **Nobody on screen is seeing "now", and your job is to make that invisible.**
 
 ---
+
+## Two places to read it
+
+| | Where | Why |
+|---|---|---|
+| **Chapters** | [github.com](https://github.com/IAFahim/two-capsules/tree/main/book) | GitHub renders Markdown **and** the Mermaid diagrams inside it |
+| **Maps** | [the Pages site](https://iafahim.github.io/two-capsules/) | they are interactive HTML; GitHub shows only source |
+
+The hub page links both ways, so start there.
 
 ## Reading it locally
 
