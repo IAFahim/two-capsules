@@ -4929,7 +4929,7 @@
           <li>&bull; Types is an array sorted by type index, TypesCount long · Unity.Entities/Types/Archetype.cs:35</li>
           <li>&bull; Adding a type builds a new sorted array on the stack · EntityComponentStoreCreateArchetype.cs:508</li>
           <li>&bull; Then GetOrCreateArchetype hashes and probes it · EntityComponentStoreCreateArchetype.cs:14</li>
-          <li>&bull; The hash covers the whole array and is confirmed by MemCmp · ChunkListMap.cs:234, :312</li>
+          <li>&bull; The hash covers the whole array and is confirmed by MemCmp · ChunkListMap.cs:236, :312</li>
         </ul>
       </div>
 
@@ -4953,8 +4953,8 @@
         </div>
         <ul>
           <li>&bull; Both type arrays are sorted, so Convert walks them as a two-pointer merge</li>
-          <li>&bull; Type in both: one MemCpy of count times stride · ChunkDataUtility.cs:623</li>
-          <li>&bull; Type only in the destination: MemClear, and new enableable bits set enabled · ChunkDataUtility.cs:633</li>
+          <li>&bull; Type in both: one MemCpy of count times stride · ChunkDataUtility.cs:625</li>
+          <li>&bull; Type only in the destination: MemClear, and new enableable bits set enabled · ChunkDataUtility.cs:635, :641</li>
           <li>&bull; Type only in the source: dropped, and deallocated if it owned memory</li>
         </ul>
       </div>

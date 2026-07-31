@@ -20,7 +20,7 @@ ECS is the fix, and the fix is *just* struct-of-arrays with a scheduler bolted o
 
 | Noun | What it really is |
 |---|---|
-| **Entity** | A 64-bit handle: `{ int Index; int Version; }`. Not an object. An index. |
+| **Entity** | A 64-bit handle — one `ulong` packed `[Version:24 | TypeId:12 | Index:28]` (`Unity.Entities/Types/Entity.cs:31`), byte-identical to the engine's own id type. Not an object. An index. And the version is an **even/odd generation counter**: low bit clear means the slot holds no live entity (`EntityComponentStoreEntities.cs:55`). Older docs, including an earlier draft of this table, describe it as two separate `int`s. |
 | **Component** | A plain struct. No methods that matter, no inheritance, no vtable. |
 | **Chunk** | A **16 KiB block** holding many entities that share the same component set. |
 

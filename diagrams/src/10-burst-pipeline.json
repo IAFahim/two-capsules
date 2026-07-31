@@ -193,7 +193,7 @@
       "items": [
         "Marking the method but not the containing type raises warning EA0010 · Diagnostics.cs:72",
         "The message names the fix: add the attribute to the type as well · Diagnostics.cs:73",
-        "The analyzer returns without warning for anything implementing the system interface · BurstCompilerAnalyzer.cs:56",
+        "The analyzer returns without warning for anything implementing the system interface · BurstCompilerAnalyzer.cs:65",
         "So the one case the handbook warns you about is exactly the case that stays silent"
       ]
     },
@@ -203,8 +203,8 @@
       "items": [
         "A method marked discard has no body in the native build · ECBInterop.interop.gen.cs:26",
         "Calling it and seeing nothing happen is how the code detects it is native",
-        "The managed address is parked in a shared static both worlds read · ECBInterop.interop.gen.cs:53",
-        "And handed over by marshalling a delegate to a function pointer · ECBInterop.interop.gen.cs:69"
+        "The managed address is parked in a shared static both worlds read · ECBInterop.interop.gen.cs:55",
+        "And handed over by marshalling a delegate to a function pointer · ECBInterop.interop.gen.cs:71"
       ]
     },
     {

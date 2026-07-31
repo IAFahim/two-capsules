@@ -41,7 +41,10 @@ public partial struct PlayerMoveSystem : ISystem
 ```
 
 > **💀 Trap** — `[BurstCompile]` on the methods but **not** on the struct silently does
-> nothing. No error, no warning. Your system just runs at Mono speed forever. This is the
+> nothing. There *is* an analyzer for this — **EA0010**, "Containing Type is missing
+> BurstCompile attribute" (`SourceGenerators/.../Diagnostics.cs:72`) — but it returns without
+> warning for `ISystem` types (`BurstCompilerAnalyzer.cs:65`), which is exactly the case here.
+> So the warning exists everywhere except where you need it. Your system just runs at Mono speed forever. This is the
 > single most common invisible perf bug in DOTS.
 
 Inside a bursted method you may not touch: `class`, `string`, `object`, `try/catch` (in

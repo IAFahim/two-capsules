@@ -219,8 +219,8 @@
       "dot": "rose",
       "title": "The bill nobody shows you",
       "items": [
-        "After the change, new archetypes are pushed to every query · EntityDataAccess.cs:487",
-        "Then every changed archetype drops its queries' chunk caches · EntityDataAccess.cs:490",
+        "After the change, new archetypes are pushed to every query · EntityDataAccess.cs:489",
+        "Then every changed archetype drops its queries' chunk caches · EntityDataAccess.cs:492",
         "The walk follows a linked list of archetypes touched this batch · EntityComponentStore.cs:2682",
         "Those caches are rebuilt lazily, so the cost lands on the next system to iterate"
       ]

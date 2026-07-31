@@ -19,13 +19,13 @@ You already know cache lines and clock edges. These maps say which hardware idea
 |---|---|---|---|---|
 | 01 | `01-machine` | architecture | The whole stack, one screen: CPU → chunks → worlds → wire | built |
 | 05 | `05-chunk-layout` | architecture | Inside one 16 KiB chunk: header, entity array, per-component arrays, why the stride is the whole point | built |
-| 06 | `06-archetype-graph` | architecture | An archetype is a *set*. Adding a component is an edge walk to a different chunk, and that is why it costs a structural change | built |
-| 07 | `07-entity-identity` | architecture | `Entity` is index plus version. The version field is what makes a stale reference detectable rather than catastrophic | built |
-| 08 | `08-query-matching` | dataflow | `EntityQuery` → matched archetypes → chunk iteration → enableable bitmask. Where the filtering actually happens, and what it costs | built |
+| 06 | `06-archetype-graph` | architecture | An archetype is a *set*, and there is **no graph in memory** — adding a component copies the sorted type array, inserts one element, hashes the whole array and probes an open-addressed table. The set *is* the key; nothing caches an edge | built |
+| 07 | `07-entity-identity` | architecture | One `ulong` packed `[Version:24 | TypeId:12 | Index:28]` — not two ints. The version is an **even/odd generation counter**: low bit clear means the slot is empty | built |
+| 08 | `08-query-matching` | dataflow | A **Bloom filter** rejects most archetypes in one AND before any type comparison, then chunk iteration, then the enableable bitmask. Note the version/shared filter caps at **two** each | built |
 | 09 | `09-job-graph` | workflow | The dependency graph the safety system builds for you, and how a read/write conflict becomes a `JobHandle` edge | built |
-| 10 | `10-burst-pipeline` | dataflow | C# → IL → Burst → native, and the exact things that silently kick you back to Mono | built |
+| 10 | `10-burst-pipeline` | dataflow | The `[BurstDiscard]` doorway and the shared static where both sides meet. Burst 2.0 ships no source, so the compile chain is one node, not the spine | built |
 | 11 | `11-sync-points` | lifecycle | The stall: structural change → complete all tracked jobs → resume. Every sync point is a barrier you paid for | built |
-| 12 | `12-ecb-playback` | workflow | Record now, play back at a known point. Ordering, determinism, and the parallel writer | built |
+| 12 | `12-ecb-playback` | workflow | Per-thread lock-free chains merged by a min-heap. Entity ids are **allocated in the job**, never placeholders — playback supplies storage, not identity. Main-thread commands sort to `Int32.MaxValue`, so they always play last | built |
 
 ## II · World, systems, and the update loop
 

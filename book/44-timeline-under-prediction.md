@@ -37,6 +37,19 @@ That is where the shipped package and the netcode loop disagree.
 
 ## Accumulate versus derive
 
+> **📐 A sharper statement of the rule, learned by building it.**
+> "Never accumulate" is the slogan, and it is *almost* right. A predicted movement system
+> accumulates into `PhysicsVelocity` every single tick and that is perfectly correct — because
+> `PhysicsVelocity` is a ghost field, so the prediction history backs it up and rollback puts
+> it back. The real rule is:
+>
+> **Only accumulate into state that rollback restores.**
+>
+> A clip's local time is the one thing that never qualifies, because `Timer.Time` is not a
+> ghost field and nothing in NetCode has ever heard of it. That is why the timeline playhead
+> specifically must be derived while the physics it drives may happily accumulate.
+
+
 Here is the entire chapter in two lines of pseudocode.
 
 ```csharp
@@ -313,6 +326,19 @@ replay and cap effects at the tick rate.
 **Use a predicted evaluator** for anything that decides an outcome: hitboxes, i-frames, root
 motion, force emission, stat changes, spawns. If a server-side check would ever disagree with
 a client-side one, it belongs on the tick clock.
+
+> **⚡ Two things that only show up once you build this.**
+>
+> **The fourth kind is not a clip kind.** An authority event is not a way of writing a clip —
+> it is a statement that the effect does not belong on the client's timeline at all. In
+> practice one authored ability decomposes into a value clip, a cosmetic clip, and a
+> server-side event firing at the same tick offset: three systems hanging off one metronome,
+> from one thing the designer dragged onto a track.
+>
+> **The expensive decision is not in this model at all.** It is whether your clip-driven
+> forces live in `PredictedSimulationSystemGroup` or `PredictedFixedStepSimulationSystemGroup`.
+> For a game where every force comes from a clip, that placement decides whether forces are
+> double-applied on partial ticks — and it is invisible until you profile packet by packet.
 
 **Derive, never accumulate, inside prediction.** `elapsed = tick − start` costs a subtraction
 and buys correctness under replay. `elapsed += dt` costs nothing today and a save/restore path

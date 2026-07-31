@@ -233,7 +233,7 @@
         "Types is an array sorted by type index, TypesCount long · Unity.Entities/Types/Archetype.cs:35",
         "Adding a type builds a new sorted array on the stack · EntityComponentStoreCreateArchetype.cs:508",
         "Then GetOrCreateArchetype hashes and probes it · EntityComponentStoreCreateArchetype.cs:14",
-        "The hash covers the whole array and is confirmed by MemCmp · ChunkListMap.cs:234, :312"
+        "The hash covers the whole array and is confirmed by MemCmp · ChunkListMap.cs:236, :312"
       ]
     },
     {
@@ -251,8 +251,8 @@
       "title": "What the copy actually is",
       "items": [
         "Both type arrays are sorted, so Convert walks them as a two-pointer merge",
-        "Type in both: one MemCpy of count times stride · ChunkDataUtility.cs:623",
-        "Type only in the destination: MemClear, and new enableable bits set enabled · ChunkDataUtility.cs:633",
+        "Type in both: one MemCpy of count times stride · ChunkDataUtility.cs:625",
+        "Type only in the destination: MemClear, and new enableable bits set enabled · ChunkDataUtility.cs:635, :641",
         "Type only in the source: dropped, and deallocated if it owned memory"
       ]
     },

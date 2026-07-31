@@ -4919,7 +4919,7 @@
           <li>&bull; Matching runs at query creation and when a new archetype is born · EntityQueryManager.cs:945</li>
           <li>&bull; A match adds a record to the query and a back pointer to the archetype · lines 967, 970</li>
           <li>&bull; The chunk list is rebuilt only after an invalidation, not every update · EntityQueryManager.cs:1593</li>
-          <li>&bull; Archetypes holding zero entities are skipped during that rebuild · EntityQueryManager.cs:1602</li>
+          <li>&bull; Archetypes holding zero entities are skipped during that rebuild · EntityQueryManager.cs:1604</li>
         </ul>
       </div>
 
@@ -4942,10 +4942,10 @@
           <h3>The filter has a hard ceiling</h3>
         </div>
         <ul>
-          <li>&bull; Shared component filtering holds at most two values · EntityQueryFilter.cs:11</li>
-          <li>&bull; Change filtering holds at most two component types · EntityQueryFilter.cs:23</li>
+          <li>&bull; Shared component filtering holds at most two values · EntityQueryFilter.cs:12</li>
+          <li>&bull; Change filtering holds at most two component types · EntityQueryFilter.cs:22</li>
           <li>&bull; Both compare a stored version, so the unit of skipping is a whole chunk</li>
-          <li>&bull; Filtering is skipped entirely unless one of those counts is non-zero · EntityQueryFilter.cs:33</li>
+          <li>&bull; Filtering is skipped entirely unless one of those counts is non-zero · EntityQueryFilter.cs:35</li>
         </ul>
       </div>
 
@@ -4955,9 +4955,9 @@
           <h3>Inside a surviving chunk</h3>
         </div>
         <ul>
-          <li>&bull; The enableable state is two 64-bit words, one bit per slot · ChunkEntityEnumerator.cs:16</li>
-          <li>&bull; The next entity is count-trailing-zeros of the low word · ChunkEntityEnumerator.cs:63</li>
-          <li>&bull; Then the lowest set bit is cleared with a single AND · ChunkEntityEnumerator.cs:64</li>
+          <li>&bull; The enableable state is two 64-bit words, one bit per slot · ChunkEntityEnumerator.cs:17</li>
+          <li>&bull; The next entity is count-trailing-zeros of the low word · ChunkEntityEnumerator.cs:62</li>
+          <li>&bull; Then the lowest set bit is cleared with a single AND · ChunkEntityEnumerator.cs:63</li>
           <li>&bull; With nothing enableable the mask is all ones and the loop is a plain range</li>
         </ul>
       </div>

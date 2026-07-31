@@ -244,7 +244,7 @@
       "title": "What never becomes an edge",
       "items": [
         "A zero-sized type that is not enableable is dropped from both lists · CalculateReaderWriterDependency.cs:13",
-        "Declaring a write removes that type from the reading list · CalculateReaderWriterDependency.cs:36",
+        "Declaring a write removes that type from the reading list · CalculateReaderWriterDependency.cs:39",
         "A job declaring no types at all is registered as a reader of Entity · ComponentDependencyManager.cs:278",
         "That exists only so the job is still caught by the next full sync point"
       ]
@@ -256,7 +256,7 @@
         "Before your update the system marks itself as needing the fences · SystemState.cs:581",
         "The fences are fetched the first time you touch the dependency · SystemState.cs:406",
         "After your update the jobs are batch-submitted and the handle recorded · SystemState.cs:590",
-        "Assign the dependency yourself and the fetch is skipped entirely · SystemState.cs:421"
+        "Assign the dependency yourself and the fetch is skipped entirely · SystemState.cs:423"
       ]
     }
   ]
