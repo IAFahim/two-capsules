@@ -1,0 +1,213 @@
+{
+  "id": "book-37-interest-management",
+  "title": "37 · Interest management: scale and relevancy",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b1",
+      "title": "b1",
+      "focus": null,
+      "text": "37 · Interest management: scale and relevancy"
+    },
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "The server has one packet per connection per network tick. Everything in this chapter is about deciding what goes in it."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "📋 Honesty label, chapters 19, 23 were verified at runtime on a two-player capsule build. This chapter is not. Every claim here is read out of the installed com.unity.netcode@6.6.0 source and cited by file and line. Nothing in it was measured on a populated server, because this project never had one. Treat the mechanism as accurate and the tuning advice as reasoned, not benchmarked."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Ghost Send System is designed to send one snapshot packet per connection per network tick (Runtime/Snapshot/Ghost Send System.cs:433). Its size is resolved in this order (Ghost Send System.cs:1009): Network Stream Snapshot Target Size.Value on the connection entity if present, else Ghost Send System Data.Default Snapshot Packet Size if non-zero, else the driver's payload capacity minus the pipeline header."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Unity Transport's Network Parameter Constants.Max Message Size is 1400 bytes (Runtime/Network Params.cs:82 in com.unity.transport@6.7.0), and Net Code clamps any request to a floor of 100 bytes (Ghost Send System.cs:96). Ask for more than the message size and the snapshot silently moves onto the fragmenting pipeline (Ghost Send System.cs:1034)."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Up to a third of that packet can go to despawn messages before ghost data gets any of it, Percent Reserved For Despawn Messages defaults to.33f (Ghost Send System.cs:405)."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Two different verbs: importance and relevancy"
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Importance answers how often. A low-importance ghost is still replicated; it just waits its turn. Rate control. Relevancy answers whether. An irrelevant ghost is not sent, and if the client already had it, the server queues a despawn (Runtime/Snapshot/Ghost Chunk Serializer.cs:1817). Interest management, and a security boundary."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "The importance pipeline, in execution order"
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "The arithmetic is literal. chunk Priority = chunk State.base Importance * ticks Since Last Sent (Ghost Send System.cs:1612), then the irrelevance divisor, then the Min Send Importance gate, then multiplication by m_Importance Scaling Multiplier on insertion (Ghost Send System.cs:1624), then the user function, then the sort (Ghost Send System.cs:1680)."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Hardware analogy, this is a priority arbiter with aging. base Importance is the static request priority; ticks Since Last Sent is the age counter a starvation- prevention arbiter adds so a low-priority requester eventually wins the bus. A cone with importance 1 is not silent forever for the same reason a low-priority D M A channel is not starved forever: its age term keeps climbing while everyone else's resets on grant."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "The multiplier exists because that product is a small integer and your scaling function needs headroom to divide. It defaults to 1000 (Ghost Send System.cs:416)."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Defaults are from Ghost Send System Data.Initialize (Ghost Send System.cs:401)."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Trap, chapter 29 lists Max Send Entities as a \"hard cap on ghosts per snapshot\". In 6.6 that field carries [Obsolete(\"No longer functional!.\")] (Ghost Send System.cs:242). Use Max Send Chunks and Max Iterate Chunks: the send scheduler thinks in chunks, not entities."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Max Iterate Chunks has a second-order failure the source calls out directly (Ghost Send System.cs:204): the cap is applied before relevancy. If the highest-importance chunks within it hold only irrelevant ghosts, the snapshot goes out nearly empty. Set it to at least twice Max Send Chunks."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "From Runtime/Authoring/Base Ghost Settings.cs:"
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Max Send Rate is enforced as a tick interval before priority is computed (Ghost Send System.cs:1583) and is deliberately ignored when the chunk has structural changes, so a ghost type that spawns and despawns every tick blows straight through its own rate limit."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Custom importance: the Ghost Importance singleton"
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Ghost Importance (Runtime/Snapshot/Ghost Importance.cs:82) is a server singleton you create yourself. It carries a function pointer and three Component Type declarations:"
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "The batched form mutates Prio Chunk.priority in place. It may also set Prio Chunk.is Relevant, a whole-chunk relevancy fast path that skips the hash map entirely (Ghost Importance.cs:29)."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Trap, importance scaling only runs when the connection entity actually carries Ghost Connection Component Type (Ghost Send System.cs:1637). Forget to add it and your scaling function is never called, with no error. The packet dump prints Ghost Importance(.) disabled! for exactly this case (Ghost Send System.cs:1711)."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "Ghost Distance Partitioning System adds a Ghost Distance Partition Shared { int3 Index } to every server ghost with a transform and updates it when the ghost crosses into a new tile (Runtime/Snapshot/Ghost Distance Partitioning System.cs:15). Tile geometry comes from Ghost Distance Data { Tile Size, Tile Center, Tile Border Width } (Runtime/Snapshot/Ghost Distance Importance.cs:37); the per-connection focal point comes from Ghost Connection Position (Ghost Distance Importance.cs:15)."
+    },
+    {
+      "id": "b28",
+      "title": "b28",
+      "focus": null,
+      "text": "The default scaling function is four lines of arithmetic (Ghost Distance Importance.cs:118): take the tile-index delta, square its length, and if that squared distance exceeds 3, divide priority by it. The threshold of 3 makes all 26 adjacent tiles count as \"here\", so a player near a tile edge does not lose the tile they are looking at. The relevancy-aware variant Batch Scale With Relevancy goes further and marks any chunk beyond a squared tile distance of 16 as irrelevant outright (Ghost Distance Importance.cs:152)."
+    },
+    {
+      "id": "b29",
+      "title": "b29",
+      "focus": null,
+      "text": "Trap, the partitioning system's own docs warn that adding a shared component per ghost fragments chunks: two ghosts of one archetype in one tile means a chunk holding two entities (Ghost Distance Partitioning System.cs:33). Tile size is therefore a cache decision as much as a bandwidth decision. Large tiles keep chunks full; small tiles give sharper priority. Set Automatically Add Ghost Distance Partition Shared Component = false (Ghost Distance Partitioning System.cs:60) to opt only some ghost types in."
+    },
+    {
+      "id": "b31",
+      "title": "b31",
+      "focus": null,
+      "text": "Ghost Relevancy (Runtime/Snapshot/Ghost Relevancy.cs:93) is a singleton with a mode, a set, and a query."
+    },
+    {
+      "id": "b32",
+      "title": "b32",
+      "focus": null,
+      "text": "Three inputs combine per ghost (Ghost Chunk Serializer.cs:1786): an internal always-relevant archetype mask, your Default Relevancy Query mask, and the Prio Chunk.is Relevant chunk flag. Only if none of those settles it is the Ghost Relevancy Set hash map consulted, keyed by (connection Id, ghost Id). A ghost matching netcode's internal rule can never be made irrelevant by you (Ghost Chunk Serializer.cs:1804)."
+    },
+    {
+      "id": "b33",
+      "title": "b33",
+      "focus": null,
+      "text": "When a relevant ghost turns irrelevant, the server clears its snapshot history and enqueues a pending despawn (Ghost Chunk Serializer.cs:1823); on the client the entity is destroyed. Relevancy churn is spawn/despawn churn, which is why hysteresis matters."
+    },
+    {
+      "id": "b35",
+      "title": "b35",
+      "focus": null,
+      "text": "Optimization Mode.Static lets a chunk be skipped completely. Can Use Static Optimization (Ghost Chunk Serializer.cs:1865) returns true only when all of these hold:"
+    },
+    {
+      "id": "b36",
+      "title": "b36",
+      "focus": null,
+      "text": "no relevancy changes for this chunk this tick, no structural (order) change in the chunk, at least one previously-sent zero-change snapshot has been acked by this connection, a valid zero-change version exists, chunk.Did Change is false for every replicated component against that version."
+    },
+    {
+      "id": "b37",
+      "title": "b37",
+      "focus": null,
+      "text": "Point 3 is the one people miss: static optimization does nothing until the client has acked a snapshot containing the chunk. Prespawned chunks get it free, loading the subscene counts as an implicit ack (Ghost Chunk Serializer.cs:1896)."
+    },
+    {
+      "id": "b38",
+      "title": "b38",
+      "focus": null,
+      "text": "Point 5 uses Unity's chunk change version, not a value comparison. Writing a non-replicated field on a replicated component bumps the version and un-optimizes the chunk, a false positive the source notes it cannot currently warn about (Ghost Chunk Serializer.cs:1943)."
+    },
+    {
+      "id": "b40",
+      "title": "b40",
+      "focus": null,
+      "text": "Serialization is per connection, each one has its own acked baseline, chunk states and sorted chunk list, so per-tick cost is roughly connections × chunks examined × ghosts written. Doubling players roughly doubles Ghost Send System cost with an unchanged world."
+    },
+    {
+      "id": "b42",
+      "title": "b42",
+      "focus": null,
+      "text": "Choose in that order. Relevancy first, because a ghost you never send costs nothing. Static optimization second, because an unchanged ghost costs nothing. Importance last, because it only decides who spends a budget you have already minimised."
+    },
+    {
+      "id": "b43",
+      "title": "b43",
+      "focus": null,
+      "text": "Probe, the packet dump is ground truth here. Enable Net Code Debug Config.Dump Packets (Runtime/Debug/Net Code Debug Config.cs:23) in a NETCODE_DEBUG build. It logs, per chunk per tick, the priority assigned and the exact reason a chunk was skipped, Min Send Importance, Max Send Rate, or an unacked prespawn scene, plus how many chunks your importance function culled."
+    }
+  ],
+  "nodes": {}
+}

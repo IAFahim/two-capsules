@@ -93,12 +93,6 @@
       "title": "b21",
       "focus": null,
       "text": "With com.unity.dedicated-server installed, UNITY_USE_MULTIPLAYER_ROLES is defined and Multiplayer Roles override this per virtual player. Chapter 23 shows why that is the difference between a working second player and a port-bind crash."
-    },
-    {
-      "id": "b22",
-      "title": "b22",
-      "focus": null,
-      "text": "Probe, what the driver actually bound: ``csharp var d = System API.Get Singleton<Network Stream Driver>(); // Play Mode Tools shows the same thing: [I P C.] [U D P.] ``"
     }
   ],
   "nodes": {}

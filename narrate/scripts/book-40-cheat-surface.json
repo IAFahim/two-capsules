@@ -1,0 +1,213 @@
+{
+  "id": "book-40-cheat-surface",
+  "title": "40 · The cheat surface",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "The security model of this stack is one sentence: the client sends intent, the server computes results. This chapter is what that sentence buys, what it does not, and which holes are closed by structure versus only ever detected."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "📋 Honesty label, chapters 19, 23 were verified at runtime on a two-player capsule build. This chapter is not. Every mechanism below is read out of the installed com.unity.netcode@6.6.0 source and cited by file and line. No attack was performed and no mitigation was measured. This is defensive material: it exists so you can find the holes in your server and close them."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Everything in the client box is the attacker's, memory, code, input field values, packet timing, the local clock, including the parts Net Code fills in automatically. Everything the server derives from those fields is yours. The model's strength is how much the server derives and how little it accepts."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Hardware analogy, this is a privilege boundary with a mailbox, not a shared bus. The client writes a mailbox; the server reads it as a request and executes in its own address space. A client that writes a position is an untrusted side with a write port into privileged memory. Every hole below is either an unvalidated field in the mailbox or a read port opened too wide."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "What a modified client controls, and what it does not"
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "The middle column is the value of server authority. Note what is not in it: nothing about the plausibility of the values on the left. That is your job."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Hole 1, input content is not validated, at all"
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "The command receive path deserializes your input struct field by field into the target entity's command buffer (Runtime/Command/Command Receive System.cs:217). No range check, no clamp, no normalisation. A float two Move arrives as whatever bit patterns the client sent, including (1e30, 1e30). Your prediction system then multiplies it by speed and delta time, on the server, with full authority. That is an authoritative teleport."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Mitigation is structural and yours to write. Clamp on read, in the shared movement system:"
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Two rules follow. Every input field needs a domain, enforced where it is consumed. And enforce it in the shared predicted system, because a server-only clamp the client does not apply is a permanent prediction mismatch seen as rollback jitter. One rule, executed twice, chapter 20's principle."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Hole 2, input rate and tick manipulation"
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Here the package defends you, partially. Exactly how far:"
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "A command packet carries at most 32 commands, five bits of count (Runtime/Command/Command Send System.cs:132:138). The per-entity command buffer is a ring of 64 slots keyed by tick (Runtime/Command/ICommand Data.cs:163). Commands older than the current server tick are rewritten to it before insertion (Runtime/Command/Command Receive System.cs:258), counted as Num Arrived Too Late (:184). Inserting into an occupied tick slot replaces it and increments Num Redundant Resends (Command Receive System.cs:261)."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "The consequence: flooding does not multiply your actions. The prediction loop reads one command per tick, by tick key, so a thousand packets per second still yields one command per tick. What flooding does buy is server CPU and ingress, denial of service, not unfair advantage. Command Arrival Statistics (Runtime/Connection/Command Arrival Statistics.cs:10) is where you detect it."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Commands for future ticks simply sit in the ring until the server reaches them, the normal mechanism, since clients run ahead by Target Command Slack. It only becomes a concern if your gameplay code reads the buffer directly instead of by tick."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Hole 3, look direction and the limit of the model"
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Aim direction arrives as an input field, already bounded, a unit vector is a unit vector, so hole 1's clamping does not help. An aimbot's aim is perfectly legal."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "There is no mechanism in server authority that distinguishes a human's aim from a program's. Say it out loud, because design time is wasted looking for one. What authority gives you is that the aimbot cannot hit what the server would not have let it hit: no shooting through unseen walls, no range beyond your weapon, no rate above your fire rate, provided you check those server-side. Beyond that it is detection: trajectory and hit-distribution analysis, off the critical path. The netcode contribution to anti-aimbot is hole 4, an aimbot that cannot see you cannot aim at you."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "A client can render anything it received. Send the position of an enemy behind a wall because that enemy is merely far away but relevant, and the client has a wallhack no client-side code prevents. Four mechanisms narrow the read port:"
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Modes: Runtime/Snapshot/Ghost Relevancy.cs:11. Send To Owner Type has four values, None, Send To Owner, Send To Non Owner, All, at Runtime/Authoring/Ghost Modifiers.cs:78. All four rows are structural: the bytes never leave the server."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "Trap, quantization, obfuscation and encryption do not close this hole. The client must decode the snapshot to render the game, so whatever it renders it can read. The only defence is not sending it."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Distance-driven relevancy leaks through walls at close range, exactly where it matters. Visibility-driven relevancy is more expensive and more correct, but flipping a ghost to irrelevant despawns it on the client (Runtime/Snapshot/Ghost Chunk Serializer.cs:1823), so per-frame visibility trades wallhack resistance for pop-in. Hysteresis is the compromise."
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "Hole 5, what lag compensation gives back"
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "Lag compensation judges a client's shot against the world it actually saw (chapter 30). To do that the server must know how far behind that view was, and the client tells it. The interpolation delay is written into the command packet header by the sender (Runtime/Command/Command Send System.cs:251) and copied onto the target entity as Command Data Interpolation Delay (Runtime/Command/Command Receive System.cs:165), whose documentation calls it \"the latest reported interpolation delay\" (Runtime/Command/Command Data Interpolation Delay.cs:23). Inflate it and the server rewinds further than your view required."
+    },
+    {
+      "id": "b28",
+      "title": "b28",
+      "focus": null,
+      "text": "The structural bound is the history buffer. Physics World History clamps the requested delay to Size − 1 (Runtime/Physics/Physics World History.cs:299); the raw buffer holds at most 32 collision worlds (Physics World History.cs:112), sized by Lag Compensation Config.Server History Size (Runtime/Physics/Lag Compensation Config.cs:25). Your history size is your maximum exploitable rewind. At 60 hertz, 32 ticks is a little over half a second; size it to realistic worst-case ping, not to the maximum."
+    },
+    {
+      "id": "b29",
+      "title": "b29",
+      "focus": null,
+      "text": "The detection hook comes with it: Get Collision World From Tick returns expected Tick and returned Tick, and the doc comment says to compare them to find players hitting the clamp (Runtime/Physics/Physics World History.cs:34)."
+    },
+    {
+      "id": "b30",
+      "title": "b30",
+      "focus": null,
+      "text": "Trap, the reported delay is never reset when the client changes command target (Command Data Interpolation Delay.cs:26), so a stale delay from a previous vehicle silently applies to the new one."
+    },
+    {
+      "id": "b32",
+      "title": "b32",
+      "focus": null,
+      "text": "By default, a connection that completes the transport handshake and the protocol version check is in the game. Network Stream Driver.Require Connection Approval (Runtime/Connection/Network Stream Driver.cs:76) inserts an authentication step first, and must be set before listening, the setter refuses once a driver is bound (Network Stream Driver.cs:86). The flow is deliberately game-specific:"
+    },
+    {
+      "id": "b33",
+      "title": "b33",
+      "focus": null,
+      "text": "The connection enters Connection State.State.Approval (Runtime/Connection/Network Stream Connection Component.cs:226). Only remote procedure calls implementing IApproval Rpc Command (Runtime/Rpc/IRpc Command.cs:89) are accepted; anything else disconnects with Invalid Rpc (Runtime/Rpc/Rpc System.cs:439). Your system validates the token against your own backend. Net Code has no opinion about what valid means. Success adds Connection Approved (Runtime/Connection/Network Stream Connection Component.cs:116); failure disconnects with Approval Failure (:176). Neither within Client Server Tick Rate.Handshake Approval Timeout MS, default 5000 milliseconds (Runtime/Client Server World/Client Server Tick Rate.cs:305), drops the connection with Approval Timeout (:182)."
+    },
+    {
+      "id": "b34",
+      "title": "b34",
+      "focus": null,
+      "text": "The remote procedure call layer hardens itself too: an out-of-range remote procedure call index disconnects the connection (Rpc System.cs:451), as does a declared-versus-actual bit count mismatch (Rpc System.cs:464), whose error text honestly notes the malformed remote procedure call may already have executed. Treat remote procedure call handlers as untrusted input parsers."
+    },
+    {
+      "id": "b35",
+      "title": "b35",
+      "focus": null,
+      "text": "Network Protocol Version (Runtime/Connection/Network Protocol Version.cs:28) carries a netcode version, your Game Version, an remote procedure call collection hash and a component collection hash. It is a compatibility check: it stops mismatched builds, not modified ones."
+    },
+    {
+      "id": "b37",
+      "title": "b37",
+      "focus": null,
+      "text": "That last row is the honest one. On a listen server the authority runs on hardware the host controls: everything here still protects the guests from each other, and nothing protects them from the host. If that matters, the answer is a dedicated server (chapter 39), not a configuration."
+    },
+    {
+      "id": "b39",
+      "title": "b39",
+      "focus": null,
+      "text": "The rule underneath all of it: if a client can state it, a client can lie about it, so make the server derive it instead. Chapter 31's table F is the same rule as a design question rather than a threat."
+    },
+    {
+      "id": "b40",
+      "title": "b40",
+      "focus": null,
+      "text": "Probe, the cheapest security audit in this stack is to list every field of every IInput Component Data in your project and write its enforced domain next to it. A field without one is an unvalidated write from an untrusted process straight into your authoritative simulation."
+    }
+  ],
+  "nodes": {}
+}

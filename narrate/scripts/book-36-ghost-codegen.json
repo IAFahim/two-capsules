@@ -1,0 +1,213 @@
+{
+  "id": "book-36-ghost-codegen",
+  "title": "36 · Ghost serializer code generation",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Chapter 14 said the prefab is the schema and that baking generates serializer code per ghost type. This chapter opens that box: what the generator reads, what it writes, where the written code goes, and how the runtime dispatches into it."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "📄 Provenance, derived from reading the Netcode for Entities package source at version 6.6.0, including the generator project under Runtime/Source Generators/Source~. Not measured on the two-capsule project; the runtime-verified chapters of this book are 19 through 23. Every default value names the file and line it came from."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "It is a Roslyn generator, not a baking step"
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Net Code Source Generator implements ISource Generator and runs during C# compilation, once per assembly (Runtime/Source Generators/Source~/Net Code Source Generator/Generators/Net Code Source Generator.cs:85). It registers a syntax receiver that sweeps every syntax tree and sorts candidates into seven buckets: components, remote procedure calls, commands, inputs, variants, ghost behaviours, and remotes (Runtime/Source Generators/Source~/Net Code Source Generator/Generators/Net Code Source Generator.cs:88)."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "This is why replication has no runtime reflection cost. By the time the world exists, the serialization code is already compiled machine code with a Burst function pointer attached to it."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "It also explains a category of confusing failure. If your component lives in an assembly that does not reference Unity.Net Code, the generator skips that assembly entirely (Runtime/Source Generators/Source~/Net Code Source Generator/Generators/Net Code Source Generator.cs:112), and your [Ghost Field] attributes do nothing at all, with no error, because nothing ran."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "What it reads: three attributes and a pile of templates"
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "The attributes are the schema declaration."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "[Ghost Field] goes on fields and properties, and every option has a default worth knowing (Runtime/Authoring/Ghost Field Attribute.cs:14):"
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "[Ghost Component] goes on the type and controls the component as a whole (Runtime/Authoring/Ghost Component Attribute.cs:12):"
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "[Ghost Enabled Bit] goes on the type and takes no arguments (Runtime/Authoring/Ghost Field Attribute.cs:77). It is only legal on an IEnableable Component, and the generator reports a diagnostic if you put it anywhere else (Runtime/Source Generators/Source~/Net Code Source Generator/Generators/Type Information Builder.cs:79). Without it, an enableable component still replicates its fields while disabled; the enabled flag itself is simply not on the wire."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "The templates are the code shapes. They live as.Net Code Source Generator.additionalfile files under Runtime/Source Generators/Templates, one per supported field type, with separate quantized and unquantized variants, Ghost Snapshot Value Float and Ghost Snapshot Value Float Unquantized, Ghost Snapshot Value Quaternion and its unquantized twin, and so on down to every fixed string size."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "For each replicated component the generator instantiates the component serializer template and produces a struct containing a private Snapshot layout plus these methods:"
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Alongside them it emits one Ghost Component Serializer Registration System per assembly, ordered into Ghost Component Serializer Collection System Group and created before Default Variant System Group (Runtime/Source Generators/Templates/Ghost Component Serializer Registration System.Net Code Source Generator.additionalfile:24). Its whole job is to call Add Serializer once per generated serializer (Runtime/Snapshot/Ghost Component Serializer Collection System Group.cs:320)."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Ghost Component Serializer.State is the descriptor the registration system hands over (Runtime/Snapshot/Ghost Component Serializer.cs:222). It ends up as a dynamic buffer on the Ghost Collection singleton entity."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Hardware analogy, this buffer is a descriptor table, and each entry is a device descriptor with a small vtable of entry points. Dispatch is an index into a buffer followed by an indirect call, exactly like a driver jump table. Nothing is looked up by name, and nothing is reflected over, at any point after startup."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Ghost Collection System then composes these per-component descriptors into per-prefab descriptors, Ghost Collection Prefab Serializer, which is where the totals live: Snapshot Size, Change Mask Bits, Enableable Bits, and the number of buffers. Those totals are what the spawn and send paths read when they size a snapshot slot."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "A snapshot slot begins with a tick, then the change mask words, then the enabled-bit mask words, then the component data, all aligned. Predicted Ghost Spawn System computes exactly that layout when it initialises a client-spawned ghost, which makes it the clearest place in the package to read the arithmetic (Runtime/Snapshot/Predicted Ghost Spawn System.cs:141)."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Each replicated field contributes one bit by default. Composite = true collapses a nested struct to a single bit for the whole struct. Enabled bits are counted separately from change bits and get their own mask array."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "The mask is what makes a snapshot cheap. Serialize writes a field only when its bit is set; Deserialize copies from the baseline when it is not. An unchanged component costs its change mask bits and nothing more."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Quantization, and why it is a compression trick"
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "The quantized float template does exactly two arithmetic operations. On the way out it rounds value * scale to an int; on the way in it multiplies the int by 1 / scale."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "The important part is the ordering. Quantization happens in Copy To Snapshot, which runs before Calculate Change Mask. The comparison is therefore between integers, not floats. A position that jitters in the eighth decimal place produces the same integer two ticks running, its change bit stays clear, and it costs nothing."
+    },
+    {
+      "id": "b28",
+      "title": "b28",
+      "focus": null,
+      "text": "That is the real reason quantization saves bandwidth. The narrower field width is secondary; the primary win is that quantized values compare equal far more often."
+    },
+    {
+      "id": "b29",
+      "title": "b29",
+      "focus": null,
+      "text": "Trap, the same ordering is why over-coarse quantization causes continuous micro-rollbacks. The client compares its prediction against the dequantized server value. If your quantization step is larger than the distance your simulation moves in one tick, the two can never agree, and you rollback every single tick forever."
+    },
+    {
+      "id": "b31",
+      "title": "b31",
+      "focus": null,
+      "text": "Serialization does not delta against the previous value. It deltas against a prediction of the current value derived from three baselines."
+    },
+    {
+      "id": "b32",
+      "title": "b32",
+      "focus": null,
+      "text": "Ghost Delta Predictor takes the current tick and three baseline ticks and computes two fractions in sixteenths (Runtime/Snapshot/Ghost Delta Predictor.cs:28). Predict Int extends the trend from baseline two to baseline one, checks whether that extrapolation is actually better than simply using baseline zero, and returns the better of the two (Runtime/Snapshot/Ghost Delta Predictor.cs:41). A body moving at constant velocity therefore produces a predicted baseline that is nearly exact, and the delta written to the wire is close to zero."
+    },
+    {
+      "id": "b33",
+      "title": "b33",
+      "focus": null,
+      "text": "The zero itself is then encoded with a Stream Compression Model, a Huffman model over small magnitudes, so near-zero deltas cost a handful of bits. Baselines older than Max Baseline Age are refused (Runtime/Snapshot/Ghost Send System.cs:89), and the snapshot ring the baselines come from is Ghost System Constants.Snapshot History Size, which is 32 by default and can be compiled down to 16 or 6 with a define (Runtime/Snapshot/Ghost Send System.cs:65)."
+    },
+    {
+      "id": "b34",
+      "title": "b34",
+      "focus": null,
+      "text": "Hardware analogy, a linear predictor feeding an entropy coder. Same structure as a lossless image or audio codec: predict from history, encode the residual, and let the entropy stage reward you for predicting well."
+    },
+    {
+      "id": "b36",
+      "title": "b36",
+      "focus": null,
+      "text": "The generator writes its output to disk when you enable it, and the switch is a Roslyn global config file rather than a project setting."
+    },
+    {
+      "id": "b37",
+      "title": "b37",
+      "focus": null,
+      "text": "The menu item Assets then Create then Multiplayer then Source Generator Analyzer Config writes a Default.globalconfig at the root of Assets with all of these pre-filled (Editor/Source Generator Settings.cs:14). Two more menu items exist: Assets then Multiplayer then Open Source Generated Folder and Assets then Multiplayer then Force Code Generation, the latter forcing a reimport of the netcode runtime folder because templates are not tracked as compilation dependencies (Editor/Code Gen Menu.cs:8)."
+    },
+    {
+      "id": "b38",
+      "title": "b38",
+      "focus": null,
+      "text": "Read a generated serializer for a component you already understand. Serialize will show you one if per field guarding one packed-delta write; that is the entire wire format for that component, in plain C#."
+    },
+    {
+      "id": "b40",
+      "title": "b40",
+      "focus": null,
+      "text": "[Ghost Field] with no options. Integers, booleans, enums, and anything already discrete. Quantization does not apply and the defaults are correct. Quantization = 1000 with Smoothing = Interpolate And Extrapolate. Positions and rotations on a human-scale character. Half a millimetre of error, smooth on interpolated clients. Quantization = 0. Full precision, thirty-two bits per component. Use for values where any rounding is a correctness bug, and expect to pay for it every tick the field changes. Composite = true. A tightly coupled struct whose fields always change together, a colour, a two-component aim vector. One bit instead of four, and no loss, because they never change independently anyway. Send Data = false. A field inside an otherwise replicated struct that is derived, cached, or local. Keeps the struct's shape without paying for the member. Owner Send Type = Send To Owner. Ammo counts, cooldowns, private state. A bandwidth saving and an anti-cheat measure in one attribute: data never sent cannot be extracted. Sub Type and a custom template. The last resort, for a domain-specific encoding that the built-in templates cannot express, a compressed direction, a bit-packed state machine. You are writing a codec; make sure the bandwidth saving justifies owning it. A [Ghost Component Variation] instead. When the type belongs to someone else and you cannot attach attributes to it. That is exactly how the package replicates Physics Velocity, as chapter 33 showed."
+    },
+    {
+      "id": "b41",
+      "title": "b41",
+      "focus": null,
+      "text": "then 37 · Interest management: scale and relevancy"
+    }
+  ],
+  "nodes": {}
+}

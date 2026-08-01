@@ -56,7 +56,7 @@
       "id": "b10",
       "title": "b10",
       "focus": null,
-      "text": "Probe, after creating a settings asset, confirm the link: ``bash grep -A2 \"settings:\" \"./Settings/Authoring/Client Settings.prefab\" ``"
+      "text": "Probe, after creating a settings asset, confirm the link:"
     },
     {
       "id": "b11",

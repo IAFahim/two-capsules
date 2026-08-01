@@ -89,12 +89,6 @@
       "text": "We used exactly this ladder to land the client graph, and steps 5, 7 are where the two non-obvious hops live."
     },
     {
-      "id": "b24",
-      "title": "b24",
-      "focus": null,
-      "text": "Probe, step 7, in play mode: ``csharp foreach (var w in World.All) Debug.Log($\"{w.Name}: {w.Entity Manager.Create Entity Query( Component Type.Read Only<Nerve State Machine>()).Calculate Entity Count()}\"); ``"
-    },
-    {
       "id": "b25",
       "title": "b25",
       "focus": null,

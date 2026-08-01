@@ -68,7 +68,7 @@
       "id": "b13",
       "title": "b13",
       "focus": null,
-      "text": "Probe, the only reliable check. If your assembly is missing from this list, its constraints failed: ``bash ls Library/Script Assemblies/ | grep -i nerve ``"
+      "text": "Probe, the only reliable check. If your assembly is missing from this list, its constraints failed:"
     },
     {
       "id": "b14",

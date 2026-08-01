@@ -1,0 +1,327 @@
+{
+  "id": "book-44-timeline-under-prediction",
+  "title": "44 · Timeline under prediction",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Chapter 43 put rigid bodies on the server. This chapter puts the thing that drives them there: an authored timeline, where every jump, slide and combat action is a clip, and every force is emitted by a clip. Nothing about that design is unusual on a single machine. Under prediction it changes shape completely, and the change is one line of arithmetic."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "📄 Provenance, source-derived, not measured. Bovine Labs Timeline, Core and Nerve were read in the tertle-monorepo working tree at commit d55ffc7d, where Timeline reports version 2.0.0. Netcode for Entities 6.6.0 and Entities were read in vex-ee-3. The older, locally modified copy of the Timeline package in the sibling project vex-ee reports version 1.0.3 and is cited only where the two differ. Bovine Labs Timeline is a commercial package; every path below is a citation, and no package source is reproduced. The runtime-verified chapters of this book are 19 through 23. Nothing here was measured."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "A timeline is a pure function. The authored asset is a blob, clip start and end times, curves, track bindings, identical on every machine because it was baked from the same source and shipped in the same build. Given that blob, the entire visible state of a playing timeline is determined by two numbers: which timeline, and how far into it."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "That is six bytes. A ushort identifying the authored timeline, and a Network Tick marking the tick it started, which is a single uint (Runtime/Prediction Ticking/Network Tick.cs:234 in Netcode). Both are written once, when the action begins, and never change for the rest of playback. A field that does not change contributes only its change-mask bit to a snapshot, because Deserialize copies unchanged fields from the baseline, chapter 36 walks that machinery in detail. So a two-second combat action costs six bytes on the tick it starts and effectively nothing for the hundred and twenty ticks that follow."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Compare that against streaming the result. Replicating the transform of a moving character costs bytes on every tick it changes, which is every tick. Replicating the cause costs bytes once. That is the whole argument for timeline-driven gameplay in a networked game."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "But it only holds if both machines derive the same \"how far in\" from the same tick counter. That is where the shipped package and the netcode loop disagree."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "📐 A sharper statement of the rule, learned by building it. \"Never accumulate\" is the slogan, and it is almost right. A predicted movement system accumulates into Physics Velocity every single tick and that is perfectly correct, because Physics Velocity is a ghost field, so the prediction history backs it up and rollback puts it back. The real rule is: Only accumulate into state that rollback restores. A clip's local time is the one thing that never qualifies, because Timer.Time is not a ghost field and nothing in Net Code has ever heard of it. That is why the timeline playhead specifically must be derived while the physics it drives may happily accumulate."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Here is the entire chapter in two lines of pseudocode."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "The first is a register with feedback. Its value at tick N depends on its value at tick N−1, all the way back to the start. Rewind the machine and the register is wrong unless someone explicitly saved and restored it. In a rollback loop every such register is a liability, and there is one per accumulator you write."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "The second is combinational logic hanging off a counter. It reads the tick, subtracts a constant, produces an answer. It has no memory, so there is nothing to restore. Replay tick 104 nine times and it produces the same number nine times, because the only input is the tick, and Net Code already restores the tick, every frame, for free."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "This is not a metaphor stretched to fit. It is the same distinction a hardware engineer draws between a counter that needs a reset line and a decoder that does not. The state you do not keep is the state you cannot corrupt."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "The shipped package accumulates. Timer Update System assigns the per-clock delta at Bovine Labs.Timeline/Schedular/Timer Update System.cs:474 and accumulates it into Timer.Time at:475. That delta comes from Clock Data, which Clock Update System fills from System API.Time.Delta Time for Clock Update Mode.Game Time (Bovine Labs.Timeline/Schedular/Clock Update System.cs:32), from Unity Engine.Time.unscaled Delta Time for Unscaled Game Time (:33), or from an authored constant (:61). Downstream, Clip Local Time System converts the timer position into per-clip local time (Bovine Labs.Timeline/Timeline/Clip Local Time System.cs:78) and sets the Clip Active enable bit from it (:95); Clip Weight System evaluates the authored weight curve at that local time (Bovine Labs.Timeline/Timeline/Clip Weight System.cs:38)."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Everything from Local Time downward is already pure. The only sequential element in the chain is that one addition. Replace its input and the rest of the package becomes rollback-safe untouched."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Timeline System Group declares Worlds.Simulation | Presentation | Editor | Menu for both its own flags and its children's (Bovine Labs.Timeline/Timeline System Group.cs:20:21), and Worlds.Simulation is Server Simulation | Local Simulation | Client Simulation (Bovine Labs.Core/Worlds.cs:21:22). The monorepo package is present in the server world. Settled."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "The group chain needs a correction. Timeline System Group is placed in Before Transform System Group (Timeline System Group.cs:23, under BL_NERVE, which is always defined because Nerve is a hard dependency of the Timeline package). Before Transform System Group inherits BLSimulation System Group (Bovine Labs.Nerve/Groups/Before Transform System Group.cs:17), but BLSimulation System Group is an abstract base class carrying the IDisable While Paused marker (Bovine Labs.Nerve/Groups/BLSimulation System Group.cs:10), it is not a node in the update tree. Before Transform System Group carries no [Update In Group], only [Update Before(typeof(Transform System Group))] (:16), so it lands directly in Simulation System Group. The real chain is:"
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Simulation System Group then Before Transform System Group then Timeline System Group then Schedule System Group, then Timeline Update System Group."
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Predicted Simulation System Group is a sibling of Before Transform System Group inside Simulation System Group, ordered first (Runtime/Prediction Ticking/Ghost Prediction System Group.cs:183). The timeline runs strictly after the entire prediction loop has finished. Outside prediction, confirmed."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "One more correction, for anyone reading the older package. The vex-ee copy does use World System Filter Flags.Default (Bovine Labs.Timeline/Timeline System Group.cs:20), but Default on a system's filter never means Local Simulation | Presentation. That expansion is on the world-request side, in Get System Type Indices (Unity.Entities/Types/Type Manager Systems.cs:817). On the system side the bit is stripped (:1431) and replaced by a walk up the [Update In Group] chain (:1388:1416), falling back to Local Simulation | Server Simulation | Client Simulation at a system with no parent group (:1386). Chapter 42 traces that split in full. vex-ee has no Nerve package, so BL_NERVE is undefined, so Timeline System Group there carries no [Update In Group] at all and lands on that fallback, including the server."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "What removes the client in that copy is a local hand-patch narrowing Clock Update System to Worlds.Server Local | Worlds.Menu, with a comment explaining the intent (Bovine Labs.Timeline/Schedular/Clock Update System.cs:20:22, vex-ee copy). No clock update, no timer advance. I cannot ground the original \"client only\" observation against the code as it stands; the filter that would have caused it is not there any more."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Now the central question: does the client's timeline genuinely free-run relative to the server's? Yes, and the mechanism is worse than drift."
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "On a dedicated server, Netcode Server Rate Manager re-enters the whole Simulation System Group once per pending simulation tick, running while Remaining Ticks To Run > 0 (Runtime/Prediction Ticking/Update Rate Management/Netcode Server Rate Manager.cs:48:51) and pushing a fresh Time Data on each entry (:65:81) whose delta is Simulation Fixed Time Step times the batch length (Runtime/Prediction Ticking/Update Rate Management/Netcode Time Tracker.cs:201:204, pushed at:141). The server's timeline is evaluated once per tick, at integer tick boundaries, with a tick-quantised delta. Genuinely tick-locked."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "On the client, Netcode Client Rate Manager.Should Group Update returns true once and false on the immediately following call, popping the time it pushed (Runtime/Prediction Ticking/Update Rate Management/Netcode Client Rate Manager.cs:54:63:142:144). The client's Simulation System Group runs exactly once per rendered frame. Its delta is not wall-clock either, it is (delta Ticks + server Tick Fraction − previous Fraction) × Simulation Fixed Time Step (:108), how far the predicted target tick moved this frame, fractional part included."
+    },
+    {
+      "id": "b28",
+      "title": "b28",
+      "focus": null,
+      "text": "So the two sides advance the same accumulator with differently-shaped deltas. The server steps in whole ticks; the client steps once per frame and lands on a fraction of a tick. Over a long run the sums track each other, because both are ultimately counting server ticks. At any instant they disagree by up to one tick of phase, and nothing brings them back together."
+    },
+    {
+      "id": "b29",
+      "title": "b29",
+      "focus": null,
+      "text": "That last part is the real finding: there is no correction channel at all. The Timeline package contains no reference to Unity.Net Code, Ghost Field, Ghost Component or Network Tick anywhere, grep the whole package, in either copy, and it returns nothing. Timer.Time is not a ghost field, so the server never sends it, the client never receives it, and no amount of divergence is ever noticed."
+    },
+    {
+      "id": "b30",
+      "title": "b30",
+      "focus": null,
+      "text": "Nor is it restored. Rollback restores a predicted ghost's state from Ghost Prediction History System, whose backup is a memcopy of ghost components into memory attached to the chunk, and which on restore copies back only the fields serialised as part of the snapshot (Runtime/Snapshot/Ghost Prediction History System.cs:184:187); Ghost Update System performs that restore before the next prediction loop (Runtime/Snapshot/Ghost Update System.cs:26). A non-Ghost Field value is deliberately preserved across the restore, exactly right for local scratch state, exactly wrong for a clock."
+    },
+    {
+      "id": "b31",
+      "title": "b31",
+      "focus": null,
+      "text": "Put the two together. The timeline runs outside Predicted Simulation System Group, so it does not re-run during replay; its state is neither replicated nor restored, so it is not rewound either. When the client rolls back ten ticks and re-predicts them, the timeline does nothing at all, then advances once, by one frame's worth, as if nothing had happened."
+    },
+    {
+      "id": "b32",
+      "title": "b32",
+      "focus": null,
+      "text": "A sharper hazard rides alongside. Clock Update Mode.Unscaled Game Time reads Unity Engine.Time.unscaled Delta Time (Clock Update System.cs:33), a per-frame engine global. On a server catching up, Simulation System Group re-enters N times in one frame, so a clock in that mode consumes the same frame delta N times and runs N times as fast as the client's. Game Time clocks escape this because System API.Time.Delta Time is the pushed netcode time. Unscaled Game Time is not netcode time at all."
+    },
+    {
+      "id": "b34",
+      "title": "b34",
+      "focus": null,
+      "text": "Rollback restores component values. It does not restore entity existence."
+    },
+    {
+      "id": "b35",
+      "title": "b35",
+      "focus": null,
+      "text": "The backup is a memcopy of component data into a side buffer keyed by chunk (Ghost Prediction History System.cs:184). There is no create and no destroy in it. An entity your clip spawned on tick 104 is still there when tick 104 is replayed, and your clip will happily spawn a second one."
+    },
+    {
+      "id": "b36",
+      "title": "b36",
+      "focus": null,
+      "text": "Net Code's answer is not to undo the spawn but to make the duplicate reconcilable. A client predicting a spawn adds Predicted Ghost Spawn Request (Runtime/Snapshot/Ghost Component.cs:364), disabled on add and consumed by Predicted Ghost Spawn System; when the authoritative ghost arrives, a classification system matches it against the predicted one instead of spawning a second (Runtime/Snapshot/Ghost Spawn Classification System.cs:178), and unmatched predicted spawns are destroyed once they age out (Runtime/Snapshot/Predicted Ghost Spawn System.cs:411:414)."
+    },
+    {
+      "id": "b37",
+      "title": "b37",
+      "focus": null,
+      "text": "The same asymmetry covers cosmetics: a particle burst is not a component value, and replay cannot un-emit it. The tool there is Network Time.Is First Time Fully Predicting Tick (Runtime/Prediction Ticking/Network Time.cs:159), set only when a tick is fully predicted for the first time (Runtime/Prediction Ticking/Update Rate Management/Netcode Client Prediction Rate Manager.cs:230:233) and cleared on partial ticks (:256)."
+    },
+    {
+      "id": "b39",
+      "title": "b39",
+      "focus": null,
+      "text": "Once the boundary is stated, clips sort into exactly four kinds, and each has a different correct home."
+    },
+    {
+      "id": "b40",
+      "title": "b40",
+      "focus": null,
+      "text": "The instinct is to write this table into a wiki page and ask designers to respect it. That fails in the worst possible way: silently, on one machine, under load, months later."
+    },
+    {
+      "id": "b41",
+      "title": "b41",
+      "focus": null,
+      "text": "Make it a type-system concern instead. A clip's kind should be carried by the interface it implements, and the interface should decide which system group evaluates it. A cosmetic clip that physically cannot run outside the gated client system is not a clip a designer can misuse. A spawn clip whose only spawn API emits a Predicted Ghost Spawn Request cannot produce an unclassified duplicate. Make the wrong thing unrepresentable, not discouraged."
+    },
+    {
+      "id": "b42",
+      "title": "b42",
+      "focus": null,
+      "text": "Then close the remaining gap at bake time. A clip marked cosmetic that writes a replicated component is a static fact about the authored asset, checkable before the game runs and reportable as a bake error. This is not a new idiom for the stack, Canopy already does this shape of check: Canopy Graph Validation.Validate (Bovine Labs.Canopy.Authoring/Canopy Graph Validation.cs:14) returns structural errors for a graph, and Canopy State Machine Authoring.Should Bake logs them and aborts baking for that authoring component (Bovine Labs.Canopy.Authoring/Canopy State Machine Authoring.cs:27:30)."
+    },
+    {
+      "id": "b43",
+      "title": "b43",
+      "focus": null,
+      "text": "The runtime gate itself is four lines, and it is the only netcode-aware code most clip authors will ever see:"
+    },
+    {
+      "id": "b44",
+      "title": "b44",
+      "focus": null,
+      "text": "Kinematic versus dynamic, the bandwidth lever"
+    },
+    {
+      "id": "b45",
+      "title": "b45",
+      "focus": null,
+      "text": "Chapter 43 established the contagion rule: touch a predicted body and you join the predicted set. Timelines give you a lever on that rule."
+    },
+    {
+      "id": "b46",
+      "title": "b46",
+      "focus": null,
+      "text": "A root-motion move driven entirely by a timeline is genuinely f(id, elapsed). The character goes where the clip says regardless of what it brushes past, so both machines compute the same path from the same six bytes, and the transform need not replicate during the move at all. That is the cheap case, and it is cheap precisely because it is kinematic."
+    },
+    {
+      "id": "b47",
+      "title": "b47",
+      "focus": null,
+      "text": "The moment a clip emits force into a dynamic body, that stops being true. The outcome now depends on contact, mass, restitution, and which other bodies were where at that instant, and none of that is derivable from the authored asset. The result has to replicate. Chapter 43 has the table of what goes on the wire for a physics body and the arithmetic on what a predicted body costs per frame."
+    },
+    {
+      "id": "b48",
+      "title": "b48",
+      "focus": null,
+      "text": "So the rule is blunt. Kinematic root motion is a compression scheme. Force emission is a bandwidth commitment. Choose per clip, deliberately."
+    },
+    {
+      "id": "b49",
+      "title": "b49",
+      "focus": null,
+      "text": "What adopting the monorepo package buys you"
+    },
+    {
+      "id": "b50",
+      "title": "b50",
+      "focus": null,
+      "text": "It does get you present-on-the-server. Timeline System Group.cs:20 includes Worlds.Simulation; the timer, clip local time and clip weight systems all run in the server world; server-side gameplay logic can read Clip Active and Local Time. That is a real upgrade over a client-only build."
+    },
+    {
+      "id": "b51",
+      "title": "b51",
+      "focus": null,
+      "text": "It does not get you rollback-safe. The advance at Timer Update System.cs:475 is still an accumulator, the group is still outside Predicted Simulation System Group, and nothing in the package is a ghost field. Present on the server and correct under prediction are two different properties, and the package has the first one."
+    },
+    {
+      "id": "b52",
+      "title": "b52",
+      "focus": null,
+      "text": "One structural note: Timeline Crossing System and the Timer Evaluation / Timeline Crossing types do not exist in the vex-ee copy at all. It emits every cue and clip boundary crossed by forward timer movement, refuses to emit when time did not move forward (Bovine Labs.Timeline/Timeline/Timeline Crossing System.cs:70:73), and keeps a cursor into the authored definition list across ticks (:75:80). The right primitive for event clips, but that cursor is itself sequential state, so it inherits every problem in this chapter."
+    },
+    {
+      "id": "b54",
+      "title": "b54",
+      "focus": null,
+      "text": "In order, and none of these steps forks the authoring pipeline."
+    },
+    {
+      "id": "b55",
+      "title": "b55",
+      "focus": null,
+      "text": "Adopt the monorepo package unchanged. You get the server-side systems and Timeline Crossing System without editing anything. Verify by querying Clip Active in a server-world system. Replicate the start, not the state. Add a small ghost component holding (ushort timeline Id, Network Tick start Tick) to whatever entity owns the action. Six bytes, written on activation, static thereafter. Add a second runtime consumer of the same authored blob. Do not fork Timeline System Group. Write a predicted evaluator in Predicted Simulation System Group, filtered Client Simulation | Server Simulation, that reads the same baked clip data and computes local time from Network Time.Server Tick − start Tick. Authoring pipeline, blob format and designer workflow are all untouched. Move gameplay clips across, kind by kind. Value clips first, pure, mechanical. Then spawn clips, through Predicted Ghost Spawn Request. Then authority clips, stripped from the client prefab with Ghost Prefab Type.Server (Runtime/Authoring/Ghost Modifiers.cs:26). Leave presentation where it is. The shipped Timeline System Group keeps running on the client for VFX, audio, animation blending and UI, once per frame, as designed. Make the presentation clock a follower. Instead of accumulating its own delta, have the presentation timer read its position from the predicted gameplay clock and interpolate between ticks for smoothness. Add the bake-time validator last, once the kinds exist."
+    },
+    {
+      "id": "b56",
+      "title": "b56",
+      "focus": null,
+      "text": "Step 6 is the one people skip, and it is the one that makes the two clocks agree. A presentation clock that accumulates is a second source of truth. One that samples is a display."
+    },
+    {
+      "id": "b58",
+      "title": "b58",
+      "focus": null,
+      "text": "Use the shipped Timeline System Group as-is for anything cosmetic, for single-player, and for menu and UI timelines. Frame-rate evaluation is the correct clock for a thing whose only consumer is a human eye; moving it into prediction would re-run particle spawns on every replay and cap effects at the tick rate."
+    },
+    {
+      "id": "b59",
+      "title": "b59",
+      "focus": null,
+      "text": "Use a predicted evaluator for anything that decides an outcome: hitboxes, i-frames, root motion, force emission, stat changes, spawns. If a server-side check would ever disagree with a client-side one, it belongs on the tick clock."
+    },
+    {
+      "id": "b60",
+      "title": "b60",
+      "focus": null,
+      "text": "Two things that only show up once you build this. The fourth kind is not a clip kind. An authority event is not a way of writing a clip, it is a statement that the effect does not belong on the client's timeline at all. In practice one authored ability decomposes into a value clip, a cosmetic clip, and a server-side event firing at the same tick offset: three systems hanging off one metronome, from one thing the designer dragged onto a track. The expensive decision is not in this model at all. It is whether your clip-driven forces live in Predicted Simulation System Group or Predicted Fixed Step Simulation System Group. For a game where every force comes from a clip, that placement decides whether forces are double-applied on partial ticks, and it is invisible until you profile packet by packet."
+    },
+    {
+      "id": "b61",
+      "title": "b61",
+      "focus": null,
+      "text": "Derive, never accumulate, inside prediction. elapsed = tick − start costs a subtraction and buys correctness under replay. elapsed += dt costs nothing today and a save/restore path forever after."
+    },
+    {
+      "id": "b62",
+      "title": "b62",
+      "focus": null,
+      "text": "Keep the asset singular and the consumers plural. One baked blob, one predicted gameplay clock, one presentation clock that follows it. Forking the authoring pipeline is the expensive way to buy what a second system gives you free."
+    }
+  ],
+  "nodes": {}
+}

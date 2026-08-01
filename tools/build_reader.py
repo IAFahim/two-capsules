@@ -104,7 +104,10 @@ SUBS = [
 
 
 def speakable(text: str) -> str:
-    s = text
+    # A blockquote can contain a fenced code block. Its contents are not speech —
+    # they reach the TTS frontend as raw punctuation and produce no phonemes at all,
+    # which kills the worker rather than just skipping the clip.
+    s = re.sub(r"`{3}\w*.*?(?:`{3}|$)", " ", text, flags=re.S)
     for pat, rep in SUBS:
         s = re.sub(pat, rep, s)
     s = s.replace("⚡", "").replace("💀", "").replace("🔬", "").replace("✅", "yes").replace("❌", "no")

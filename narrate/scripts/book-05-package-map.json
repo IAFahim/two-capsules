@@ -44,7 +44,7 @@
       "id": "b14",
       "title": "b14",
       "focus": null,
-      "text": "Probe, the real resolved graph, including transitives: ``bash cat Library/Package Manager/Project Cache | head -50 ls Library/Package Cache/ ``"
+      "text": "Probe, the real resolved graph, including transitives:"
     },
     {
       "id": "b15",

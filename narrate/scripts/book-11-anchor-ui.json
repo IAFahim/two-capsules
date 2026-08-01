@@ -14,77 +14,89 @@
       "id": "b4",
       "title": "b4",
       "focus": null,
-      "text": "App UI gives you the widget set and a navigation stack (Anchor Settings.Start Destination is \"splash\" in our sample). Anchor gives you View Model objects that a U X M L binding can read and an E C S system can write, plus the UXMLService that resolves types at import."
+      "text": "App UI gives you the widget set and a navigation stack (Anchor Settings.Start Destination is \"splash\" in our sample)."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "There is no change-detection system. The thing most people assume exists here does not. Detection is an inline field.Equals(new Value) inside the generated setter (Binding/Binding Object Notify Data Extensions.cs:34), and the notification crosses the Burst boundary synchronously at the write site through a function-pointer trampoline. The view model's data is pinned in a Data Box so its address is stable, UIHelper holds a raw TD* to it (Utility/UIHelper.cs:23), and that address is the dictionary key. No system polls anything. Map 29-anchor-ui draws it."
     },
     {
       "id": "b6",
       "title": "b6",
       "focus": null,
-      "text": "Buttons rendered. Buttons highlighted on hover. Buttons did nothing when clicked."
+      "text": "Anchor gives you View Model objects that a U X M L binding can read and an E C S system can write, plus the UXMLService that resolves types at import."
     },
     {
       "id": "b8",
       "title": "b8",
       "focus": null,
-      "text": "THE TRAP, data-source-type in U X M L is resolved when the asset is imported, not when the panel is built. If the assembly containing that type has not been compiled yet, the reference is silently dropped and never retried."
-    },
-    {
-      "id": "b9",
-      "title": "b9",
-      "focus": null,
-      "text": "The fix is one line, and it is worth memorising:"
+      "text": "Buttons rendered. Buttons highlighted on hover. Buttons did nothing when clicked."
     },
     {
       "id": "b10",
       "title": "b10",
       "focus": null,
-      "text": "Force-reimport the.uxml after scripts compile. Any time you add U X M L and C# in the same operation, you owe yourself this."
+      "text": "THE TRAP, data-source-type in U X M L is resolved when the asset is imported, not when the panel is built. If the assembly containing that type has not been compiled yet, the reference is silently dropped and never retried."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "The fix is one line, and it is worth memorising:"
     },
     {
       "id": "b12",
       "title": "b12",
       "focus": null,
-      "text": "I inspected button.data Source at runtime, found null, and declared that the proof. It was not: data Source inherits down the visual tree, and reading it on a leaf does not report the inherited value. The real evidence was clickable.command == null."
+      "text": "Force-reimport the.uxml after scripts compile. Any time you add U X M L and C# in the same operation, you owe yourself this."
     },
     {
-      "id": "b13",
-      "title": "b13",
+      "id": "b14",
+      "title": "b14",
       "focus": null,
-      "text": "The lesson generalises past UI: a null read is only evidence if you know the read is authoritative. In a stack with inheritance, resolution order, or lazy binding, it usually is not."
+      "text": "I inspected button.data Source at runtime, found null, and declared that the proof. It was not: data Source inherits down the visual tree, and reading it on a leaf does not report the inherited value. The real evidence was clickable.command == null."
     },
     {
       "id": "b15",
       "title": "b15",
       "focus": null,
-      "text": "Two Shared Statics, and that is the entire API surface:"
-    },
-    {
-      "id": "b16",
-      "title": "b16",
-      "focus": null,
-      "text": "Hardware analogy, a doorbell register. The managed side writes a bit; the fast side polls and clears it. No allocation, no callback across the Burst boundary, no ownership question."
+      "text": "The lesson generalises past UI: a null read is only evidence if you know the read is authoritative. In a stack with inheritance, resolution order, or lazy binding, it usually is not."
     },
     {
       "id": "b17",
       "title": "b17",
       "focus": null,
-      "text": "This is exactly how we drove the game from the CLI during testing:"
+      "text": "Two Shared Statics, and that is the entire API surface:"
     },
     {
       "id": "b18",
       "title": "b18",
       "focus": null,
-      "text": "One eval call, no mouse. Because the UI is just a writer to a register, anything can be that writer."
+      "text": "Hardware analogy, a doorbell register. The managed side writes a bit; the fast side polls and clears it. No allocation, no callback across the Burst boundary, no ownership question."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "This is exactly how we drove the game from the CLI during testing:"
     },
     {
       "id": "b20",
       "title": "b20",
       "focus": null,
+      "text": "One eval call, no mouse. Because the UI is just a writer to a register, anything can be that writer."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
       "text": "Never put game logic in a UI callback. Write a request; let a system act. If a binding looks broken, suspect import order before you suspect the binding. [Settings World]-style world targeting applies to UI too, the menu UI lives in the menu world and dies with it. Prefer one Shared Static request struct per direction over a growing event bus. It stays greppable."
     },
     {
-      "id": "b21",
-      "title": "b21",
+      "id": "b23",
+      "title": "b23",
       "focus": null,
       "text": "then 12 · From editor node to runtime bytes"
     }

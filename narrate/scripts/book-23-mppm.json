@@ -74,7 +74,7 @@
       "id": "b21",
       "title": "b21",
       "focus": null,
-      "text": "Probe, from a script, confirm what a given instance actually built: ``csharp foreach (var w in World.All) Debug.Log($\"{w.Name} {w.Flags}\"); ` One Server World` total across all instances. If you see two, roles are not applied."
+      "text": "Probe, from a script, confirm what a given instance actually built: One Server World total across all instances. If you see two, roles are not applied."
     },
     {
       "id": "b22",

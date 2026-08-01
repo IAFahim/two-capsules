@@ -1,0 +1,171 @@
+{
+  "id": "book-41-clock-domains",
+  "title": "41 · Clock domains: choosing a ghost mode",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b1",
+      "title": "b1",
+      "focus": null,
+      "text": "41 · Clock domains: choosing a ghost mode"
+    },
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Chapters 17 and 18 described prediction and interpolation as two techniques. They are not two techniques. They are two clock domains, and every ghost on a client lives in exactly one of them."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "Once you see it that way, the Ghost Authoring Component dropdown stops being a preference and becomes what it actually is: a decision about which timeline an entity exists on, made per prefab at bake time, and, for one of the three values, re-made per machine at runtime."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "There is exactly one authoritative timeline, and it is on the server. A client is never on it. A client runs two clocks, both offset from the server, in opposite directions."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Interpolated, the entity lives in the server's past. Snapshots land in a ring buffer; a read pointer trails the write pointer by a fixed number of ticks; the client lerps between the two entries bracketing that read position. The client never simulates this entity. Not once, not partially. It is a delay line with an interpolator on the output. Like every elastic buffer between two clock domains, it can be late but it cannot be wrong. The package says so in one line: interpolated ghosts \"perform no simulation on the client\" (Runtime/Snapshot/Ghost Prefab Creation.cs:45)."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Predicted, the entity lives in the client's future. Every frame the client restores it to the last tick the server confirmed and re-simulates every tick from there forward to the present, re-feeding the recorded input for each replayed tick. Each arriving snapshot is a checkpoint that either confirms the speculation or forces a different replay result. The package's own summary is blunt: prediction is \"both expensive and non-authoritative\" (Ghost Prefab Creation.cs:54)."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Hardware analogy, this is a branch predictor with speculative execution and a pipeline flush sitting next to an elastic FIFO across a clock domain crossing. You already know both circuits. What is new is that you get to choose, per entity, which one an object is wired into."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "Owner Predicted, the selector. The owning client predicts; every other client interpolates (Ghost Prefab Creation.cs:82, 85). This is the only setting in Net Code whose effect differs between machines: the same prefab, spawned once on the server, is simultaneously in different time domains on different clients. That is why staring at one Inspector never explains the behaviour you are seeing."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "A predicted entity cannot correctly interact with an interpolated one."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "They are not simulating the same instant. One is roughly half a round trip ahead of the server; the other is roughly round trip time/2 + interpolation buffer behind it. At 60 milliseconds round trip and a two-tick buffer at 60 hertz that is a gap of about 95 milliseconds. A collision between them is a collision between two different moments in time, resolved as if they were the same moment. It will look plausible and be wrong, and it will be wrong differently on every machine."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Therefore: anything a predicted entity touches must itself be predicted."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Prediction is contagious. You set out to predict one capsule; you discover you have signed up to predict the crate it pushes, the platform it rides, the door it opens, and, the moment physics is involved, every dynamic body sharing its physics world. This is the rule that wrecks real projects, and it wrecks them late, because a single predicted capsule in an empty test scene works perfectly."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "THE TRAP, the contagion is transitive. Predicting A forces B; B touching C forces C. Draw the interaction graph before you set the dropdown, and treat the predicted set as a connected component of that graph, not as a list of individual choices."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "The physics integration makes the same point structurally: a dynamic body that is not a ghost cannot be rolled back, so Net Code's validation system finds those bodies and errors on them (Runtime/Physics/Predicted Physics System Group.cs:240, and chapter 33)."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "The settings, and what they actually default to"
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "All four live on Ghost Authoring Component, which is a thin authoring wrapper over Base Ghost Settings. These are the real defaults, from the field initialisers:"
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Two of those defaults cost you something quietly."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Default Ghost Mode = Interpolated means a freshly authored player prefab does not predict. Your capsule will feel exactly one round trip late until you change it. This is the correct default, most ghosts should be interpolated, but it is not the default you want on the thing the player is holding."
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Supported Ghost Modes = All is the expensive one. Leaving it at All keeps runtime prediction switching available, and in exchange it disables the Ghost Send Type optimisation entirely. The reasoning is in the package: the server can infer which mode an Owner Predicted ghost is in on each client, owner predicts, everyone else interpolates, and it can infer the mode of a ghost whose mask is narrowed at authoring time. It cannot infer the mode of a ghost that might switch at runtime, so it must serialise identically for everyone (Runtime/Authoring/Ghost Modifiers.cs:41, 50). The internal flag that gates this is literally Supported Ghost Modes != Ghost Mode Mask.All || Default Ghost Mode == Ghost Mode.Owner Predicted (Base Ghost Settings.cs:169)."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "So: narrowing the mask, or choosing Owner Predicted, lets the server stop sending predicted-only components (velocity, for instance) to clients that are only interpolating. All pays full bandwidth for flexibility you probably never use."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "The interpolation buffer that defines \"the past\" is two network ticks by default (Client Tick Rate.Interpolation Time Net Ticks = 2, Runtime/Prediction Ticking/Network Time System.cs:214), with extrapolation clamped at 20 simulation ticks (Network Time System.cs:215)."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "Two ticks is a floor, not the value. The effective depth is max(configured, avg Arrival Gap + 1.25 × deviation), clamped at six network intervals (Network Time System.cs:553). A lossy link deepens the buffer without telling anyone, so the latency you measure on a clean link is not the latency your players get."
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "The term that surprises people is ticks_behind. It is the same for every predicted ghost, because there is one prediction loop for the whole set and it rewinds as far as the oldest member requires. Doubling the predicted set doubles the cost of every replayed tick. A 200 milliseconds spike at 60 hertz is 12 replayed ticks; with 40 predicted entities that is 480 entity-tick simulations crammed into one frame."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "You do not control ticks_behind, that is round-trip time. You control the set size. That is the only honest lever, and the contagion rule is exactly what makes it leak."
+    },
+    {
+      "id": "b29",
+      "title": "b29",
+      "focus": null,
+      "text": "Does the player's own input have to feel instant on this entity? No then Interpolated. Stop. This covers most of your world. Yes, and exactly one client owns it? then Owner Predicted. This is the player capsule, the player's vehicle, the player's cursor. Yes, and every client needs it responsive? then Predicted. A ball in a sports game; a shared physics prop; anything two players contend for. Now close the set. List everything a predicted entity can touch. Every one of those must be Predicted too. Repeat until the list stops growing. If it does not stop growing, you have discovered that you are building a fully predicted game, decide that on purpose, not by accident. Then narrow the mask. If a ghost will never switch modes at runtime, set Supported Ghost Modes to just the one it uses and take the bandwidth back."
+    },
+    {
+      "id": "b30",
+      "title": "b30",
+      "focus": null,
+      "text": "Probe, in the Multiplayer Play Mode window, run two clients and watch the same ghost in both. Under Owner Predicted one of them has Predicted Ghost on that entity and the other does not. That single asymmetry is the whole chapter, visible in the Entity Inspector."
+    },
+    {
+      "id": "b31",
+      "title": "b31",
+      "focus": null,
+      "text": "Two constraints worth knowing before they surprise you: an Owner Predicted ghost cannot be placed as a scene instance, the baker throws (Runtime/Authoring/Hybrid/Ghost Authoring Component Baker.cs:78), and pre-spawned ghosts are forced to Predicted with a Static optimization mode regardless of what you authored (Runtime/Snapshot/Prespawn/Prespawn Helper.cs:55, 57). Runtime prediction switching also refuses to run on an Owner Predicted ghost, because ownership already decides the mode (Runtime/Game Object Layer/Facades/Prediction Switching.cs:190)."
+    }
+  ],
+  "nodes": {}
+}

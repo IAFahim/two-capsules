@@ -113,12 +113,6 @@
       "text": "No references. A component cannot hold a class. It holds an Entity handle and you look it up, which is a random access, i.e. the exact thing you were avoiding. Structural changes are expensive. Design so they are rare and batched. Debugging is different. There is no object to inspect. You inspect chunks. Get comfortable with the Entities Hierarchy and Entity Query in the debugger."
     },
     {
-      "id": "b25",
-      "title": "b25",
-      "focus": null,
-      "text": "Probe, count what is actually resident: ``csharp var q = em.Create Entity Query(Component Type.Read Only<Unity.Net Code.Ghost Instance>()); q.Calculate Entity Count(); // entities q.Calculate Chunk Count(); // chunks, the number that predicts your cost ``"
-    },
-    {
       "id": "b26",
       "title": "b26",
       "focus": null,

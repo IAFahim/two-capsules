@@ -20,7 +20,7 @@
       "id": "b5",
       "title": "b5",
       "focus": null,
-      "text": "That third one is delightful and worth pausing on. Canopy State Id is a hash of a Fixed String64Bytes, so two different names can collide. The validator brute-forces the check at author time rather than letting you ship a 1-in-2^n heisenbug."
+      "text": "That third one is delightful and worth pausing on. Canopy State Id is a single 32-bit int (Canopy.Data/Canopy State Id.cs:12) hashed from the lowercased string (:26). Two consequences the name does not advertise: state ids are case-insensitive, Gameplay and gameplay are the same state, and 32 bits is a small enough space that collisions are worth brute-forcing for. The validator brute-forces the check at author time rather than letting you ship a 1-in-2^n heisenbug."
     },
     {
       "id": "b6",
@@ -83,38 +83,44 @@
       "text": "This is deliberate. Edges in a visual graph get unreadable fast; a named jump is a goto and is honest about it. The validator still checks that every Canopy Go To target exists."
     },
     {
-      "id": "b20",
-      "title": "b20",
+      "id": "b19",
+      "title": "b19",
       "focus": null,
-      "text": "Remember History on a composite state makes re-entry resume the child you left, instead of the default child. Classic UML shallow history. Free, and occasionally exactly what a pause menu wants."
+      "text": "Re-entrancy. Every transition bumps a version counter in grove state, and the enter and update loops recheck it to abandon a stale walk. A jump fired from inside Exit throws (Canopy State Machine.cs:461). So \"check for Exit and bail\" is necessary but not sufficient, you must not start a transition from a teardown path at all."
     },
     {
-      "id": "b22",
-      "title": "b22",
+      "id": "b21",
+      "title": "b21",
       "focus": null,
-      "text": "Three calls, and that is the whole driver system:"
+      "text": "Remember History on a composite state makes re-entry resume the child you left, instead of the default child. Classic UML shallow history. Free, and occasionally exactly what a pause menu wants."
     },
     {
       "id": "b23",
       "title": "b23",
       "focus": null,
-      "text": "Plus Exit on destroy, which walks the active path calling every block with Canopy Update State.Exit so nothing leaks. Our Client App State System.On Destroy does this, skip it and the last state never cleans up."
+      "text": "Three calls, and that is the whole driver system:"
     },
     {
-      "id": "b25",
-      "title": "b25",
+      "id": "b24",
+      "title": "b24",
       "focus": null,
-      "text": "Because \"app flow\" is a hierarchical state machine, and once it is data:"
+      "text": "Plus Exit on destroy, which walks the active path calling every block with Canopy Update State.Exit so nothing leaks. Our Client App State System.On Destroy does this, skip it and the last state never cleans up."
     },
     {
       "id": "b26",
       "title": "b26",
       "focus": null,
-      "text": "a designer can see it the validator can prove it well-formed the tests can build one in six lines (Client Connection Tracker Execution Tests does) and you can ship a different one per world without recompiling"
+      "text": "Because \"app flow\" is a hierarchical state machine, and once it is data:"
     },
     {
       "id": "b27",
       "title": "b27",
+      "focus": null,
+      "text": "a designer can see it the validator can prove it well-formed the tests can build one in six lines (Client Connection Tracker Execution Tests does) and you can ship a different one per world without recompiling"
+    },
+    {
+      "id": "b28",
+      "title": "b28",
       "focus": null,
       "text": "That last point is the one we exploited today: the sample shipped a service graph and a menu graph, and we added a client graph without touching a single package file."
     }

@@ -1,0 +1,189 @@
+{
+  "id": "book-33-predicted-physics",
+  "title": "33 · Predicted physics",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Chapter 17 built a rollback loop out of your own systems. This chapter puts a third-party rigid body solver inside that loop and explains exactly what survives the trip."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "📄 Provenance, this chapter is derived from reading the Netcode for Entities package source at version 6.6.0. It was not measured on the two-capsule project, which does not have Unity Physics installed at all; the runtime-verified chapters of this book are 19 through 23. Every default value quoted below names the file and line it came from, so you can check it against your own package version."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Unity Physics normally runs in Fixed Step Simulation System Group, driven by an accumulator against wall-clock time. That is the wrong clock for prediction, because prediction needs to run the same tick several times."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "So Net Code moves it. At the first world update, Predicted Physics Config System walks Fixed Step Simulation System Group, collects Physics System Group and every system ordered before or after it, removes them from that group, and adds them to Predicted Fixed Step Simulation System Group (Runtime/Physics/Predicted Physics System Group.cs:189). It then installs a custom rate manager on the physics group and removes itself from the update list, because the move only needs to happen once (Runtime/Physics/Predicted Physics System Group.cs:184)."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Hardware analogy, this is a clock domain crossing. The same combinational block is unchanged; only the clock feeding it is swapped. It used to be driven by a free-running wall clock at one edge per frame. It is now driven by the prediction tick clock, which can issue ten edges in a single frame after a correction."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "The consequence follows immediately. Any system you wrote that assumed Fixed Step Simulation System Group ordering relative to physics is now in a different group from the thing it was ordering against, and it will silently run at the wrong time."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Netcode Physics Rate Manager.Should Group Update decides, once per frame per tick, whether physics runs at all (Runtime/Physics/Predicted Physics System Group.cs:79). It keeps a m_Did Update flag so the group runs exactly once per invocation rather than looping."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "The condition it evaluates is configurable, and the default is the narrowest of the three."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "There is a second gate above it. On the client the prediction loop itself only runs when predicted ghosts exist, unless you set Client Tick Rate.Prediction Loop Update Mode to Always Run (Runtime/Client Server World/Client Server Tick Rate.cs:657). Both gates must open. This is the mechanism behind the most common report on the forums: a raycast against static level geometry returns nothing on the client, because no predicted ghost exists yet and the collision world was never built."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "When no entities match and lag compensation is the only reason to run, the manager runs physics only on Network Time.Is First Time Fully Predicting Tick (Runtime/Physics/Predicted Physics System Group.cs:107)."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Predicted Fixed Step Simulation System Group is a fixed-rate group and does not do partial ticks (Runtime/Prediction Ticking/Ghost Prediction System Group.cs:196). Its timestep is 1 / (Simulation Tick Rate × Predicted Fixed Step Simulation Tick Ratio) (Runtime/Client Server World/Client Server Tick Rate.cs:130), with the ratio defaulting to 1 (Runtime/Client Server World/Client Server Tick Rate.cs:304)."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "So a rigid body's transform advances at most once per simulation tick, no matter how fast you render. Anything smoother than that has to come from graphical smoothing, not from re-simulating."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Nothing here is physics-specific, which is the point worth internalising. Physics bodies are restored by the same two paths as every other predicted ghost."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "The backup is taken after the last full tick of each frame's prediction loop (Runtime/Snapshot/Ghost Prediction History System.cs:181), and it is a raw memory copy of the whole component. On restore, only the fields that are actually serialised are copied back, through the generated Restore From Backup function pointer (Runtime/Snapshot/Ghost Component Serializer.cs:316)."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Trap, that last sentence is the whole trap. Physics Mass, Physics Gravity Factor, Physics Collider Blob and your own gameplay state are not replicated by default and are therefore never rolled back. Mutate one inside the prediction loop, a mass change on pickup, a gravity flip on a dash, and the mutation is applied once per replayed tick and never undone. It will look correct on a perfect connection."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "The package ships two default serialization variants for physics, and they carry the whole replication contract."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Quantization of 1000 means the velocity on the wire is rounded to 0.001 units per second, and velocity is only sent to clients that predict the ghost. Position and rotation come from the transform variants, not from here."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "The second row is a deletion, not an addition. Physics Graphical Smoothing is restricted to predicted prefab variants so that interpolated clients do not have physics smoothing fighting the snapshot interpolation that is already positioning the body."
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "The integration does not require your client and server to produce bit-identical physics results, and it does not claim cross-platform bitwise determinism anywhere in the package."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "What it requires is weaker and more useful: that per-tick divergence stays small enough that the quantized correction, when it lands, moves the body less than a player can notice. That is why the guidance in the package documentation is to raise quantization for physics ghosts when you see visible corrections, and why velocity is replicated at all, correcting position without correcting velocity would leave the client re-diverging immediately from the same wrong momentum."
+    },
+    {
+      "id": "b28",
+      "title": "b28",
+      "focus": null,
+      "text": "Within one machine, replay is repeatable: the same bodies in the same broadphase order with the same inputs produce the same result. Across machines, treat agreement as a tuning target, not a guarantee."
+    },
+    {
+      "id": "b30",
+      "title": "b30",
+      "focus": null,
+      "text": "The predicted physics world can only contain things that roll back. A dynamic body that is not a ghost cannot be rolled back, so it would be simulated forward several times per frame and never corrected."
+    },
+    {
+      "id": "b31",
+      "title": "b31",
+      "focus": null,
+      "text": "Predicted Physics Validation System queries for entities with Physics Velocity and Physics World Index but no Ghost Instance in world index 0, and logs an error naming the offending entities (Runtime/Physics/Predicted Physics System Group.cs:240). If you add a Predicted Physics Non Ghost World singleton, it instead moves them to the world index you specify (Runtime/Physics/Predicted Physics System Group.cs:224). That singleton is baked from the Client Non Ghost World Index field, which defaults to 0, meaning off (Runtime/Physics/Hybrid/Net Code Physics Config.cs:48)."
+    },
+    {
+      "id": "b33",
+      "title": "b33",
+      "focus": null,
+      "text": "Between two simulation ticks the body does not move. Unity Physics fills that gap with Smooth Rigid Bodies Graphical Motion, and Net Code orders its own prediction-switch smoothing after it so that the switch smoothing wins when a ghost changes between predicted and interpolated (Runtime/Physics/Predicted Physics System Group.cs:304)."
+    },
+    {
+      "id": "b34",
+      "title": "b34",
+      "focus": null,
+      "text": "Trap, smoothing writes a render pose. It must never be read back into simulation. The moment a smoothed value feeds a force, you have a feedback loop that diverges under exactly the conditions that produce corrections."
+    },
+    {
+      "id": "b35",
+      "title": "b35",
+      "focus": null,
+      "text": "A name that is not in this package, Enable Physics Sync does not exist anywhere in Netcode for Entities 6.6.0. Search the package and you get nothing. The knob people mean is usually Net Code Physics Config.Enable Lag Compensation (Runtime/Physics/Hybrid/Net Code Physics Config.cs:35), or the graphical smoothing variant above. If a tutorial tells you to tick Enable Physics Sync, it is describing a different package or an older API."
+    },
+    {
+      "id": "b37",
+      "title": "b37",
+      "focus": null,
+      "text": "All defaults below are the field initialisers in Runtime/Physics/Hybrid/Net Code Physics Config.cs."
+    },
+    {
+      "id": "b39",
+      "title": "b39",
+      "focus": null,
+      "text": "Rollback cost is predicted entities times replayed ticks, and physics multiplies both terms. A solver step is not a transform integration; it is broadphase, narrowphase, and a constraint solve over every body in the predicted world, repeated once per replayed tick."
+    },
+    {
+      "id": "b41",
+      "title": "b41",
+      "focus": null,
+      "text": "Batching is a real accuracy loss. A batched step integrates a larger delta through the solver, so contacts resolve differently. It is the correct emergency valve and the wrong default."
+    },
+    {
+      "id": "b43",
+      "title": "b43",
+      "focus": null,
+      "text": "Interpolated physics ghosts. Everything the local player does not push: falling debris, world props, vehicles you only watch. The server simulates, the client interpolates, and the client's solver is never involved. Predicted physics ghosts. Only what must answer your input in zero frames: the local character body, a shoved crate, a ball you can hit. Every one you add costs a full solve per replayed tick. A second physics world. Client-only debris, ragdolls, and cosmetic impacts. Set Client Non Ghost World Index and give the prefabs a matching Physics World Index; the validation system stops complaining and the predicted world stays small. Physic Group Run Mode.Always Run plus Prediction Loop Update Mode.Always Run. Use when you need to raycast static geometry before any predicted ghost exists, the classic case is raycasting to decide where to spawn the first predicted ghost. Pay for it with systems that now update every frame, so guard them with Require For Update. Raise quantization before you raise tick rate. Visible physics corrections are far more often a precision problem than a rate problem, and quantization is the cheaper fix."
+    }
+  ],
+  "nodes": {}
+}

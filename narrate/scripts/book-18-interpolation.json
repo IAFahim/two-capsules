@@ -26,53 +26,59 @@
       "id": "b6",
       "title": "b6",
       "focus": null,
-      "text": "Always between two known-good points. Never extrapolating. Never guessing."
+      "text": "Always between two known-good points, while it has two."
     },
     {
       "id": "b7",
       "title": "b7",
       "focus": null,
-      "text": "Prediction vs interpolation, side by side"
+      "text": "An earlier draft of this chapter said \"never extrapolating.\" That is wrong. When no snapshot newer than the interpolation tick has arrived and the ghost is dynamic, Net Code runs the last known pair forward and inverts the interpolation factor (Runtime/Snapshot/Snapshot Data.cs:256, the maths at:77), clamped at Max Extrapolation Time Sim Ticks, 20 by default. So the smooth line you see under packet loss is partly a guess, a bounded one. Chapter 41 states this correctly."
     },
     {
       "id": "b8",
       "title": "b8",
       "focus": null,
-      "text": "In our game both are on screen at once. Your capsule is drawn ~25 milliseconds ahead of the server; the other player's is drawn ~100 milliseconds behind. Neither of you sees \"now\". Nobody ever does."
+      "text": "Prediction vs interpolation, side by side"
     },
     {
       "id": "b9",
       "title": "b9",
       "focus": null,
-      "text": "Hardware analogy, an elastic buffer between two clock domains. You accept latency to absorb jitter. Make it too small and you underrun (visible stutter); too large and you add pointless lag. Same knob, same trade, same tuning instinct."
+      "text": "In our game both are on screen at once. Your capsule is drawn ~25 milliseconds ahead of the server; the other player's is drawn ~100 milliseconds behind. Neither of you sees \"now\". Nobody ever does."
     },
     {
       "id": "b10",
       "title": "b10",
       "focus": null,
-      "text": "Ghost Importance and the interpolation buffer"
+      "text": "Hardware analogy, an elastic buffer between two clock domains. You accept latency to absorb jitter. Make it too small and you underrun (visible stutter); too large and you add pointless lag. Same knob, same trade, same tuning instinct."
     },
     {
       "id": "b11",
       "title": "b11",
       "focus": null,
-      "text": "The buffer must hold enough history to bracket the interpolation tick even when packets drop. Net Code sizes it from the tick rate and observed jitter. If a ghost's data is missing for the bracketing ticks, the client holds the last known value, which reads as a brief freeze rather than a teleport. That is the correct failure mode."
+      "text": "Ghost Importance and the interpolation buffer"
     },
     {
-      "id": "b13",
-      "title": "b13",
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "The buffer must hold enough history to bracket the interpolation tick even when packets drop. Net Code sizes it from the tick rate and observed jitter. If a ghost's data is missing for the bracketing ticks, a static ghost holds its last known value, a brief freeze rather than a teleport. A dynamic ghost extrapolates first and only then holds, so the freeze arrives late and after a short drift. Both are the correct failure mode; they are not the same one."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
       "focus": null,
       "text": "You can. Default Ghost Mode = Predicted on every ghost, and every client simulates the whole world. Fighting games and some shooters do this."
     },
     {
-      "id": "b15",
-      "title": "b15",
+      "id": "b16",
+      "title": "b16",
       "focus": null,
       "text": "Every ghost replays on every rollback. Cost scales with predicted entities × replayed ticks. Every predicted entity must be deterministic across machines. Physics, if predicted, must be deterministic, which is a large commitment."
     },
     {
-      "id": "b16",
-      "title": "b16",
+      "id": "b17",
+      "title": "b17",
       "focus": null,
       "text": "Owner Predicted says: pay that price for exactly the one entity where latency is unacceptable, and take the cheap smooth path for everything else. For a capsule game it is free correctness."
     },
@@ -80,29 +86,35 @@
       "id": "b18",
       "title": "b18",
       "focus": null,
-      "text": "When a rollback moves your predicted capsule, snapping is visible. Net Code can blend the visual position toward the corrected one over a few frames (Ghost Prediction Smoothing / Smoothing Action)."
-    },
-    {
-      "id": "b19",
-      "title": "b19",
-      "focus": null,
-      "text": "Trap, smoothing operates on the rendered transform, not the simulated one. Never read a smoothed value back into simulation, or you have built a feedback loop between presentation and truth. Presentation reads from simulation. Never the reverse."
+      "text": "For the full decision, real defaults, the cost table, and the contagion rule that decides how big your predicted set really is, see 41 · Clock domains."
     },
     {
       "id": "b20",
       "title": "b20",
       "focus": null,
-      "text": "What to check when the other capsule looks wrong"
+      "text": "When a rollback moves your predicted capsule, snapping is visible. Net Code can blend the visual position toward the corrected one over a few frames (Ghost Prediction Smoothing / Smoothing Action)."
     },
     {
       "id": "b21",
       "title": "b21",
       "focus": null,
-      "text": "Probe, Ghost Snapshot Inspector shows arrival timing per ghost. Irregular arrival with regular sends means the problem is the wire, not your code."
+      "text": "Trap, smoothing operates on the rendered transform, not the simulated one. Never read a smoothed value back into simulation, or you have built a feedback loop between presentation and truth. Presentation reads from simulation. Never the reverse."
     },
     {
       "id": "b22",
       "title": "b22",
+      "focus": null,
+      "text": "What to check when the other capsule looks wrong"
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Probe, Ghost Snapshot Inspector shows arrival timing per ghost. Irregular arrival with regular sends means the problem is the wire, not your code."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
       "focus": null,
       "text": "Part III done. You now know the wire. Time to trace one keypress all the way through it."
     }

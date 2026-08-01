@@ -86,7 +86,7 @@
       "id": "b29",
       "title": "b29",
       "focus": null,
-      "text": "Probe, the one-liner that separates the first three rows: ``csharp // in Client World and Server World, per tick Debug.Log($\"{world.Name} move={input.Move} pos={transform.Position}\"); ` If client move is non-zero and server move` is zero, it is hop 12, 14. Every time."
+      "text": "Probe, the one-liner that separates the first three rows: If client move is non-zero and server move is zero, it is hop 12, 14. Every time."
     }
   ],
   "nodes": {}

@@ -18,12 +18,12 @@ The goal is not "can you use this". The goal is **could you write it**.
 
 | | | |
 |---|---|---|
-| **[🗺️ Walk into it](https://iafahim.github.io/two-capsules/explore.html#00-world)** | the world map | 18 narrated maps. Hover a box, it explains itself. Maps lead to maps — the graph is a cycle, not a tree. |
+| **[🗺️ Walk into it](https://iafahim.github.io/two-capsules/explore.html#00-world)** | the world map | 45 narrated maps. Hover a box, it explains itself. Maps lead to maps — the graph is a cycle, not a tree. |
 | **[🔌 Test yourself](https://iafahim.github.io/two-capsules/check.html)** | predict the failure | 58 checks. Each is a config that ships fine and breaks silently. Commit before the answer appears. |
 | **[📖 Read it to me](https://iafahim.github.io/two-capsules/read.html)** | narrated reader | 44 chapters, Mermaid inline, read aloud paragraph by paragraph. |
 | **[🔎 Reach into anything](https://iafahim.github.io/two-capsules/reference.html)** | complete reference | 4,369 public types across Entities, NetCode and the BovineLabs stack — signature, attributes, members, real `file:line`. |
 
-**44 chapters · 18 maps · 4,369 types indexed · 58 checks · 883 narrated clips**
+**45 chapters · 45 maps · 4,369 types indexed · 58 checks · 1429 narrated clips**
 
 Every spoken line is also on screen as selectable text. Narration is never the only channel.
 

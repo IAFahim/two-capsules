@@ -14,7 +14,7 @@
       "id": "b5",
       "title": "b5",
       "focus": null,
-      "text": "Probe, this one command answers \"where did it stop\": ``csharp foreach (var w in World.All) { var em = w.Entity Manager; var conn = em.Create Entity Query(Component Type.Read Only<Network Stream Connection>()); var in Game = em.Create Entity Query(Component Type.Read Only<Network Stream Connection>(), Component Type.Read Only<Network Stream In Game>()); var ghosts = em.Create Entity Query(Component Type.Read Only<Ghost Instance>()); Debug.Log($\"{w.Name}: conns={conn.Calculate Entity Count()} \" + $\"in Game={in Game.Calculate Entity Count()} ghosts={ghosts.Calculate Entity Count()}\"); } ` conns=1 in Game=0 then step 5 or 6. in Game=1 ghosts=0` then step 7."
+      "text": "Probe, this one command answers \"where did it stop\": conns=1 in Game=0 then step 5 or 6. in Game=1 ghosts=0 then step 7."
     },
     {
       "id": "b8",

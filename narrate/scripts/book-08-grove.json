@@ -50,77 +50,83 @@
       "id": "b11",
       "title": "b11",
       "focus": null,
-      "text": "Blob Ptr<T> is a relative offset, not an address. That is what makes the whole image memcpy-able, cache-friendly, and shareable read-only across every entity running the graph."
+      "text": "Nodes is a hash map, not an array, and that detail earns its keep: a runtime lookup by name is a scan, not an index. It is why Canopy resolves a named jump the way it does."
     },
     {
       "id": "b12",
       "title": "b12",
       "focus": null,
-      "text": "Hardware analogy, position-independent code with PC-relative addressing. Same trick, same reason: you do not know where it will be loaded."
+      "text": "Blob Ptr<T> is a relative offset, not an address. That is what makes the whole image memcpy-able, cache-friendly, and shareable read-only across every entity running the graph."
     },
     {
       "id": "b13",
       "title": "b13",
       "focus": null,
-      "text": "Dispatch: source generation, not virtual calls"
+      "text": "Hardware analogy, position-independent code with PC-relative addressing. Same trick, same reason: you do not know where it will be loaded."
     },
     {
       "id": "b14",
       "title": "b14",
       "focus": null,
-      "text": "A blob cannot hold a delegate. So Grove's source generator scans for [Execute Node], collects every opcode, and generates a switch:"
+      "text": "Dispatch: source generation, not virtual calls"
     },
     {
       "id": "b15",
       "title": "b15",
       "focus": null,
-      "text": "Burst compiles that switch into a jump table. No virtual dispatch, no function pointer indirection, fully inlinable. This is why Grove is fast enough to run per-entity."
+      "text": "A blob cannot hold a delegate. So Grove's source generator scans for [Execute Node], collects every opcode, and generates a switch:"
     },
     {
       "id": "b16",
       "title": "b16",
       "focus": null,
-      "text": "The generic <T> on every Execute is the context type. The generator instantiates the switch once per context type, so Client App Context gets its own specialised copy with everything monomorphised."
+      "text": "Burst compiles that switch into a jump table. No virtual dispatch, no function pointer indirection, fully inlinable. This is why Grove is fast enough to run per-entity."
     },
     {
-      "id": "b18",
-      "title": "b18",
+      "id": "b17",
+      "title": "b17",
       "focus": null,
-      "text": "Every node receives ref T context. Nodes are pure functions over (their data, the context). The context is how a node reaches the world."
+      "text": "The generic <T> on every Execute is the context type. The generator instantiates the switch once per context type, so Client App Context gets its own specialised copy with everything monomorphised."
     },
     {
       "id": "b19",
       "title": "b19",
       "focus": null,
-      "text": "partial matters: the generator adds Create Generated / Update Generated / Set Chunk Generated and the IContext Generator<T> implementation by scanning your Buffer Container<> / Component Container<> fields."
+      "text": "Every node receives ref T context. Nodes are pure functions over (their data, the context). The context is how a node reaches the world."
     },
     {
-      "id": "b21",
-      "title": "b21",
+      "id": "b20",
+      "title": "b20",
       "focus": null,
-      "text": "The blob is read-only and shared. Anything a node needs to remember goes in Dynamic Buffer<Grove State> on the entity, a hash map keyed by Graph State Util.Get Key(grove Context, node Id, local Key)."
+      "text": "partial matters: the generator adds Create Generated / Update Generated / Set Chunk Generated and the IContext Generator<T> implementation by scanning your Buffer Container<> / Component Container<> fields."
     },
     {
       "id": "b22",
       "title": "b22",
       "focus": null,
-      "text": "That is exactly how Client Go In Game remembers \"I already sent the remote procedure call for this connection\" across ticks, and how Client Connection Tracker publishes the snapshot the gate reads."
+      "text": "The blob is read-only and shared. Anything a node needs to remember goes in Dynamic Buffer<Grove State> on the entity, a hash map keyed by Graph State Util.Get Key, which has three overloads, (context, key), (context, scope Id, key) and (context, Hash128) (Grove/Core/Graph State Util.cs:20:31:41). The middle parameter is a scope, not a node id, a node id is merely the most common scope. The key itself is Grove State Key { graph Id, scope Id, key0, key1 }, so two graphs and two scopes never collide."
     },
     {
       "id": "b23",
       "title": "b23",
       "focus": null,
+      "text": "That is exactly how Client Go In Game remembers \"I already sent the remote procedure call for this connection\" across ticks, and how Client Connection Tracker publishes the snapshot the gate reads."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
       "text": "Hardware analogy, blob = ROM, Grove State = RAM, Grove Context = the register file plus MMIO window. The VM is Harvard architecture."
     },
     {
-      "id": "b25",
-      "title": "b25",
+      "id": "b26",
+      "title": "b26",
       "focus": null,
       "text": "Note the ordering that makes our client system work: Get Execution copies the context by value, so writing execution.Context.Connection afterwards is what the run actually sees."
     },
     {
-      "id": "b27",
-      "title": "b27",
+      "id": "b28",
+      "title": "b28",
       "focus": null,
       "text": "Now: what happens when you build a state machine on top of it."
     }

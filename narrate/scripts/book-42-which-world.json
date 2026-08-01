@@ -1,0 +1,345 @@
+{
+  "id": "book-42-which-world",
+  "title": "42 · Which world am I in?",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Chapter 03 named the worlds. This chapter is the definitive account: what creates each one, what runs inside it, and which one you should be reasoning about when a specific thing is wrong."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "📄 Provenance, source-derived. Entities and Netcode for Entities were read in the vex-ee-3 project at the monorepo fork pinned in Packages/manifest.json; Netcode reports version 6.6.0 in its package.json. Unity Physics is not installed in vex-ee-3, so every com.unity.physics and com.unity.physics.custom path below was read in the sibling project vex-ee, whose lock file resolves Unity Physics to 6.5.0. The runtime-verified chapters of this book are 19 through 23. Nothing here was measured. Everything here names a file and a line."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "\"World zero\" is a physics index, not an E C S world"
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "The phrase is real. It does not mean what it sounds like."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Physics World Index is a shared component carried by every physics body. Its documentation comment says the default physics world is built from entities whose value is zero (Unity.Physics/E C S/Base/Components/Physics Components.cs:11, package com.unity.physics), and the field itself is a uint that defaults to zero (Unity.Physics/E C S/Base/Components/Physics Components.cs:17). Custom Physics Authoring puts it in the inspector with the tooltip \"The index of the physics world this body belongs to. Default physics world has index 0\" (Unity.Physics.Custom/Bodies/Physics Body Authoring.cs:61, package com.unity.physics.custom). Build Physics World builds exactly that partition: it constructs its world data with a default-constructed Physics World Index, which is index zero (Unity.Physics/E C S/Base/Systems/Build Physics World.cs:142)."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "So Physics World Index zero is a partition of bodies. An E C S World is an address space. One E C S world contains as many physics world indices as you build groups for, and every one of those indices exists separately inside the client world and inside the server world. Saying \"physics runs in world zero\" is like saying a process runs in heap arena zero: true of the allocator, silent about the process."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "Three different things answer to \"the default world\". Separate them once."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "None of the three is \"the world where gameplay lives\" in a netcode build. The last one is purely an artefact of who was constructed first."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Each row names the constructor call and the system filter the world was populated with. Both are in Runtime/Client Server World/Client Server Bootstrap.cs in com.unity.netcode unless stated otherwise."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Read the second and third columns together. The World Flags say what the world is; the filter flags say what got put in it. They are different enums and they are not interchangeable. World Flags lives in Unity.Entities/World.cs:19; World System Filter Flags lives in Unity.Entities/World System Filtering.cs:47."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "The important asymmetry is on the server row. Create Server World asks for Server Simulation only, no Presentation (Runtime/Client Server World/Client Server Bootstrap.cs:444). The client asks for Client Simulation | Presentation (:342). That single difference is why rendering, graphical smoothing and camera code are simply absent from the server world rather than disabled in it."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Every filter flag, and what Default really is"
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "This is the enum at Unity.Entities/World System Filtering.cs:47."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Bits 4 and 5 are absent from the enum. Do not reuse them; Bovine Labs adds its own kinds much higher up, at bits 21 and 22 (Bovine Labs.Core/Worlds.cs:12 and:13)."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "Now the question this chapter exists to answer. World System Filter Flags.Default has two different expansions, and which one applies depends on who is asking."
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "When a world is being populated, Default expands to Local Simulation | Presentation. That is a literal line of code: Type Manager.Get System Type Indices strips the Default bit and ORs in exactly those two (Unity.Entities/Types/Type Manager Systems.cs:817)."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "When a system is being classified, Default expands to whatever its parent group declares as Child Default Filter Flags, walking up the [Update In Group] chain. If the walk reaches a group with no parent, the fallback is Local Simulation | Server Simulation | Client Simulation (Unity.Entities/Types/Type Manager Systems.cs:1386)."
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "The walk itself is short. A system with no [World System Filter] starts at Default (Unity.Entities/Types/Type Manager Systems.cs:1424), the Default bit is stripped and replaced by the parent-group lookup (:1429:1433), and each group in the chain contributes its Child Default Filter Flags (:1408), which is itself Default unless the group's attribute passed a second argument, because that is the constructor's default value (Unity.Entities/World System Filtering.cs:140)."
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "Two consequences follow, and both matter every day."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "First, Simulation System Group carries no [World System Filter] at all (Unity.Entities/Default World.cs:683) and has no [Update In Group], so any chain that terminates there lands on the:1386 fallback. That is the mechanism behind chapter 03's trap: an unfiltered gameplay system runs in local, client and server worlds."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Second, Presentation System Group is the one root group that overrides the child default. Its attribute passes Presentation as the second argument (Unity.Entities/Default World.cs:768), so an unfiltered system placed in it is presentation-only and will never exist on the server."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "Hardware analogy, the filter flags are a decoder's address map. Default is not an address; it is a \"decode from the enclosing region\" instruction. Which chip select asserts depends on the region you were placed in, not on the strap you left floating."
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "This is the table to keep open while debugging."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "The one-line version: the server world is truth, the client world is a prediction plus a renderer, the thin client is a keyboard with a socket, and the baking world already finished."
+    },
+    {
+      "id": "b28",
+      "title": "b28",
+      "focus": null,
+      "text": "Simulation and presentation are different things"
+    },
+    {
+      "id": "b29",
+      "title": "b29",
+      "focus": null,
+      "text": "This is the misconception worth killing outright, because everything else in this section depends on it."
+    },
+    {
+      "id": "b30",
+      "title": "b30",
+      "focus": null,
+      "text": "The server spawns a fireball. The server has no mesh, no material, no camera. It is therefore tempting to conclude that the server does not know where the fireball is. It does. The server computes the fireball's position every single tick, including its full rigid-body trajectory, because Unity Physics carries Server Simulation in its resolved filter, chapter 43 walks that derivation."
+    },
+    {
+      "id": "b31",
+      "title": "b31",
+      "focus": null,
+      "text": "What the server lacks is rendering, and rendering is a separate flag. Local Simulation, Server Simulation and Client Simulation are bits 8, 9 and 10; Presentation is bit 12 (Unity.Entities/World System Filtering.cs:83:87:91:99). Create Server World asks for Server Simulation alone (Runtime/Client Server World/Client Server Bootstrap.cs:444), so the systems that turn a transform into pixels were never added to that world. The transform is computed; nobody draws it."
+    },
+    {
+      "id": "b32",
+      "title": "b32",
+      "focus": null,
+      "text": "Simulation is where the truth is. Presentation is a consumer of truth. A headless server is not a partial simulation, it is a complete simulation with the display driver unloaded."
+    },
+    {
+      "id": "b33",
+      "title": "b33",
+      "focus": null,
+      "text": "There is no attachment between the two entities"
+    },
+    {
+      "id": "b34",
+      "title": "b34",
+      "focus": null,
+      "text": "The second half of the question is \"how is the server's fireball connected to the client's fireball\", and the honest answer is: it is not connected at all."
+    },
+    {
+      "id": "b35",
+      "title": "b35",
+      "focus": null,
+      "text": "They are two entities in two address spaces, and nothing points from one to the other. Entity references cannot cross a world boundary. What crosses is an integer."
+    },
+    {
+      "id": "b36",
+      "title": "b36",
+      "focus": null,
+      "text": "Ghost Instance carries ghost Id and ghost Type (Runtime/Snapshot/Ghost Component.cs:78:82). ghost Type is documented as \"the ghost prefab type, as index inside the ghost prefab collection\" (:80:82). The client receives that index, looks up the matching row of its own Ghost Collection Prefab buffer, reads the Ghost Prefab entity out of it (Runtime/Snapshot/Ghost Collection Component.cs:216), and instantiates its own local copy of a prefab it baked itself."
+    },
+    {
+      "id": "b37",
+      "title": "b37",
+      "focus": null,
+      "text": "So the correlation is an integer plus a shared agreement about what that integer names. Both worlds baked the same authored prefab from the same asset, so both already know what ghost type 7 means. The wire carries the number, not the thing."
+    },
+    {
+      "id": "b38",
+      "title": "b38",
+      "focus": null,
+      "text": "ghost Id alone is not a unique identifier, the server recycles it when a ghost dies. The pair (ghost Id, spawn Tick) is the guaranteed-unique key (Runtime/Snapshot/Ghost Component.cs:73:76)."
+    },
+    {
+      "id": "b39",
+      "title": "b39",
+      "focus": null,
+      "text": "One authored prefab, several baked entities"
+    },
+    {
+      "id": "b40",
+      "title": "b40",
+      "focus": null,
+      "text": "Here is the mechanism that actually answers \"the client needs the visual and the server does not\". Net Code does not bake one prefab and share it. It bakes one prefab and a set of per-world edit lists, then edits the prefab differently in each world before anything is instantiated from it."
+    },
+    {
+      "id": "b41",
+      "title": "b41",
+      "focus": null,
+      "text": "Ghost Prefab Type is the flag enum that drives it (Runtime/Authoring/Ghost Modifiers.cs:15)."
+    },
+    {
+      "id": "b42",
+      "title": "b42",
+      "focus": null,
+      "text": "You set it through Ghost Component Attribute.Prefab Type, which defaults to Ghost Prefab Type.All (Runtime/Authoring/Ghost Component Attribute.cs:17), so a component you say nothing about exists everywhere."
+    },
+    {
+      "id": "b43",
+      "title": "b43",
+      "focus": null,
+      "text": "The baking pass converts those flags into four blob arrays on the prefab's metadata: Remove On Server Only World, Remove On Client Worlds, Disable On Predicted Client and Disable On Interpolated Client (Runtime/Snapshot/Ghost Collection Component.cs:67:77:81:85). The classification loop is short and readable: a component marked Ghost Prefab Type.All short-circuits immediately and is added to every list of survivors (Runtime/Snapshot/Ghost Prefab Creation.cs:572); otherwise anything without the Server bit goes on the server removal list (:597), anything without the Client bit goes on the client removal list (:608), and where a ghost supports both client modes at runtime the difference between them becomes a disable rather than a remove (:617:623), because the same entity may switch modes later."
+    },
+    {
+      "id": "b44",
+      "title": "b44",
+      "focus": null,
+      "text": "At runtime, Runtime Strip Prefabs picks the removal list for the world it is in by testing Is Server() (Runtime/Snapshot/Ghost Collection System.cs:940) and removes each listed component from the prefab entity (:962). Then it drops the marker that says stripping is pending (:967)."
+    },
+    {
+      "id": "b45",
+      "title": "b45",
+      "focus": null,
+      "text": "That is the whole trick. One authored asset, one baked entity graph, and a per-world subtraction applied before the first instance exists."
+    },
+    {
+      "id": "b46",
+      "title": "b46",
+      "focus": null,
+      "text": "A worked projectile makes it concrete. The Physics Graphical Smoothing row is quoted from source (Runtime/Physics/Physics Velocity Variant.cs:32); the rest is how you would author it."
+    },
+    {
+      "id": "b47",
+      "title": "b47",
+      "focus": null,
+      "text": "Chapter 36 covers how these flags reach the generated serializer; chapter 26 shows the attribute in an authoring example. This section is the world-level view: the same authored prefab yields different entities per world because each world subtracts a different set."
+    },
+    {
+      "id": "b48",
+      "title": "b48",
+      "focus": null,
+      "text": "Telling which world you are in at runtime"
+    },
+    {
+      "id": "b49",
+      "title": "b49",
+      "focus": null,
+      "text": "Inside a system, state.World.Is Server() and state.World.Is Client() are flag tests, not role guesses (Runtime/Client Server World/Client Server Bootstrap.cs:683 and:665). Note that Is Client deliberately returns true for thin clients as well (:665), so a thin-client guard needs Is Thin Client (:647)."
+    },
+    {
+      "id": "b50",
+      "title": "b50",
+      "focus": null,
+      "text": "World.Is Host() is the one to be careful with. It is defined as Is Client(world) && Is Server(world) (Runtime/Client Server World/Client Server Bootstrap.cs:702), a test on one world carrying both flags. Only the experimental single-world host constructs such a world (:322). In a normal Client World-plus-Server World topology, which is what this project builds, Is Host() is false on both worlds even though the process is unquestionably hosting. If you want \"am I the hosting process\", the netcode-side answer is Netcode.Is Host Role, which additionally checks the requested play type (Runtime/Game Object Layer/Netcode.cs:61)."
+    },
+    {
+      "id": "b53",
+      "title": "b53",
+      "focus": null,
+      "text": "ICustom Bootstrap is a single method: return true and you own world creation entirely (Unity.Entities/World.cs:91). Default World Initialization.Initialize calls it, and only falls through to constructing a default world if it returns false (Unity.Entities/Default World Initialization.cs:158:170)."
+    },
+    {
+      "id": "b54",
+      "title": "b54",
+      "focus": null,
+      "text": "Client Server Bootstrap implements that interface by calling Create Default Client Server Worlds (Runtime/Client Server World/Client Server Bootstrap.cs:125), which branches purely on Requested Play Type: server world for Server or Client And Server, client world for Client or Client And Server (:231:234), plus thin clients in the editor (:240)."
+    },
+    {
+      "id": "b55",
+      "title": "b55",
+      "focus": null,
+      "text": "Nerve's Bovine Labs Bootstrap layers a lifecycle on top of that. It is an ICustom Bootstrap in its own right (Bovine Labs.Nerve/Utility/Bovine Labs Bootstrap.cs:22) and separately extends Client Server Bootstrap (Bovine Labs.Nerve/Utility/Bovine Labs Bootstrap.Net Code.cs:20). The shape is a persistent Service World built from the Worlds.Service filter (Bovine Labs.Nerve/Utility/Bovine Labs Bootstrap.cs:214 and:218), a Menu World from Worlds.Menu (:123:127), and client/server worlds created and destroyed on demand through Create Client Server Worlds (Bovine Labs Bootstrap.Net Code.cs:45). Those extra world kinds are plain flag constants: Worlds.Service is filter bit 21 and Worlds.Service World is World Flags bit 16 (Bovine Labs.Core/Worlds.cs:12:34)."
+    },
+    {
+      "id": "b56",
+      "title": "b56",
+      "focus": null,
+      "text": "The practical rule that falls out: netcode decides whether client and server worlds exist, Nerve decides when."
+    },
+    {
+      "id": "b57",
+      "title": "b57",
+      "focus": null,
+      "text": "Singletons are per-world, and that is the expensive one"
+    },
+    {
+      "id": "b58",
+      "title": "b58",
+      "focus": null,
+      "text": "A singleton is an entity in one world's Entity Manager. There is no process-wide registry. Get Singleton<T> in the client world cannot see a singleton created in the server world, and the failure mode is not a null, it is a query that matches nothing and throws, or a system that silently never updates because Require For Update<T> was never satisfied."
+    },
+    {
+      "id": "b59",
+      "title": "b59",
+      "focus": null,
+      "text": "This is the most common source of \"works in the editor, fails in the build\", for a mechanical reason. In the editor with Client And Server, both worlds exist in one process, so a system that reaches for a singleton it does not own often finds a copy anyway, the wrong one, but a plausible one. Ship a dedicated server and the client world is not there; ship a client and the server world is not there. The lookup that was quietly wrong becomes loudly absent."
+    },
+    {
+      "id": "b60",
+      "title": "b60",
+      "focus": null,
+      "text": "Physics makes this concrete. Physics World Singleton (Unity.Physics/E C S/Base/Components/Physics Components.cs:476) and Simulation Singleton (:417) exist once per world that runs the physics systems. A raycast in the client world queries the client's collision world, which is a prediction. The same raycast in the server world queries authority. They are different answers to the same call, and which one you got depends entirely on which world your system was filtered into."
+    },
+    {
+      "id": "b61",
+      "title": "b61",
+      "focus": null,
+      "text": "Chapter 43 takes that one step further and asks where the physics systems actually live."
+    }
+  ],
+  "nodes": {}
+}

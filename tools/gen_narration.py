@@ -95,7 +95,12 @@ def gen(path: Path, *, force: bool, speed: float) -> int:
     for clip_id, text in clips_for(script):
         dest = AUDIO / lesson / f"{clip_id}.wav"
         final = dest.with_suffix(".opus")
-        if final.exists() and not force and final.stat().st_size > 0:
+        # The spoken text is stored beside the audio. Editing a chapter shifts block
+        # ids, so a clip that already exists may now belong to different words —
+        # stale audio silently attached to new text is worse than no audio at all.
+        stamp = dest.with_suffix(".txt")
+        fresh = stamp.exists() and stamp.read_text(encoding="utf-8") == text
+        if final.exists() and fresh and not force and final.stat().st_size > 0:
             continue
         if not re.search(r"[A-Za-z]{2}", text):
             continue
@@ -109,6 +114,7 @@ def gen(path: Path, *, force: bool, speed: float) -> int:
                 dest.with_suffix(".partial.wav").unlink()
             continue
         final = encode(dest)
+        stamp.write_text(text, encoding="utf-8")
         print(f"    -> {final.stat().st_size:,} bytes in {time.time() - t0:.1f}s", flush=True)
         made += 1
     return made

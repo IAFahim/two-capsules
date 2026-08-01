@@ -81,12 +81,6 @@
       "title": "b19",
       "focus": null,
       "text": "That is why our two-player run shows 4 ghosts: 2 controllers + 2 capsules. If you ever see 3, two clients adopted the same controller, an identity collision."
-    },
-    {
-      "id": "b20",
-      "title": "b20",
-      "focus": null,
-      "text": "Probe, count them per world: ``csharp em.Create Entity Query(Component Type.Read Only<Ghost Instance>()).Calculate Entity Count() ``"
     }
   ],
   "nodes": {}

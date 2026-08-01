@@ -1,0 +1,213 @@
+{
+  "id": "book-39-connection-topologies",
+  "title": "39 · Connection topologies",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Two capsules on one machine connect over an in-process pipe. Everything harder than that is this chapter: who runs the authoritative simulation, and what carries the bytes to it."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "📋 Honesty label, chapters 19, 23 were verified at runtime on a two-player capsule build. This chapter is not. Claims about com.unity.netcode@6.6.0 and com.unity.transport@6.7.0 are read out of the installed package source and cited by file and line. Claims about Relay, Matchmaker, Lobby and Multiplay Hosting are service-side, those are Unity Gaming Services, not code in these packages, and are marked as such, with Unity's public documentation as the source. Nothing about relays or hosting was exercised here."
+    },
+    {
+      "id": "b4",
+      "title": "b4",
+      "focus": null,
+      "text": "The layers, and which one you are actually choosing"
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "These are independent. A listen server can use a relay; a dedicated server can use Web Sockets; a client-hosted game can run in one world or two. Confusing the topology question with the reachability question is the single most common mistake in this area."
+    },
+    {
+      "id": "b6",
+      "title": "b6",
+      "focus": null,
+      "text": "Topology: three shapes and one experiment"
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Client Server Bootstrap.Play Type (Runtime/Client Server World/Client Server Bootstrap.cs:502) has exactly three values, and it decides which worlds exist:"
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "In a build the value is derived from the platform defines (Client Server Bootstrap.cs:538); in the editor it comes from the Play Mode Tools window. World creation itself is Create Default Client Server Worlds (Client Server Bootstrap.cs:221)."
+    },
+    {
+      "id": "b9",
+      "title": "b9",
+      "focus": null,
+      "text": "A listen server is Client And Server in one process: two worlds, and the local client connects to the local server over the I P C interface, so the host's own input has no wire latency. A dedicated server is Server in one process and Client in another. There is no third code path, the systems are the same, only the worlds differ."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "Netcode 6.6 also carries an experimental single-world host: one world that is both client and server, with no client-to-server connection at all, only a listening driver and a synthetic connection entity for convenience (Runtime/Net Code Config.cs:51). It is gated behind the NETCODE_EXPERIMENTAL_SINGLE_WORLD_HOST define (Client Server Bootstrap.cs:223), and the package's own comment marks it as the intended default for a future major version. Because a single world cannot run partial ticks, ghosts get an interpolation-smoothing component instead, controlled per prefab by Single World Host Interpolation Smoothing (Runtime/Authoring/Base Ghost Settings.cs:167), at a cost the source states as about half a tick of render latency."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Trap, do not read \"client-hosted\" as a separate netcode mode. It is Client And Server running on a player's machine. Everything in chapter 40 about server authority still holds, with one change that matters enormously: the authority is now running on hardware the attacker owns."
+    },
+    {
+      "id": "b13",
+      "title": "b13",
+      "focus": null,
+      "text": "Network Stream Driver is the singleton your game talks to: Listen(endpoint) (Runtime/Connection/Network Stream Driver.cs:212) and Connect(entity Manager, endpoint) (:257). Underneath it holds a Network Driver Store, which is an array of driver instances, each tagged with a Transport Type of I P C or Socket (Runtime/Connection/Network Driver Store.cs:17)."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "The server usually registers two: an I P C driver for the in-process client and a socket driver for everyone else (Runtime/Connection/Default Driver Constructor.cs:380). The client registers one, chosen by Client Use Socket Driver (Default Driver Constructor.cs:204), which prefers I P C only when a server world exists in the same process and the network simulator is off. Turning the simulator on forces sockets (Default Driver Constructor.cs:209), otherwise emulation would have nothing to emulate."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Trap, the local client only gets the I P C driver if the server world exists first. The package states it plainly: call Listen on the server world before the client tries to connect (Default Driver Constructor.cs:606). Get the order wrong and your listen server quietly routes its own player through the loopback socket."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "One static property is the entire extension point:"
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "Network Stream Receive System.Driver Constructor (Runtime/Connection/Network Stream Receive System.cs:273) lazily defaults to IPCAnd Socket Driver Constructor (Default Driver Constructor.cs:608). The interface has two methods (Network Stream Receive System.cs:51), and Default Driver Builder gives you a register helper for every combination so you rarely write driver creation by hand."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "Pipelines: the stack a packet actually traverses"
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Both client and server create three pipelines (Default Driver Constructor.cs:458:469):"
+    },
+    {
+      "id": "b21",
+      "title": "b21",
+      "focus": null,
+      "text": "In the editor or a NETCODE_DEBUG build with the simulator enabled, the client gets a fourth stage appended to all three: Simulator Pipeline Stage (Default Driver Constructor.cs:482). The server never gets it."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "Hardware analogy, a pipeline stack is a chain of bus bridges. Each stage may reorder, buffer, duplicate, or drop, and each adds header bytes that come out of your payload budget. Network Driver.Max Header Size(pipeline) is what Net Code subtracts before deciding how big a snapshot may be (Runtime/Snapshot/Ghost Send System.cs:1010), exactly like accounting for protocol overhead before sizing a D M A burst."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Transport-level settings applied by default (Default Driver Constructor.cs:43:70): reliable window size 32, fragmentation payload capacity 16 KB (Default Driver Constructor.cs:23), and in editor or debug builds max Frame Time MS = 100 (Default Driver Constructor.cs:24) so a breakpoint does not look like a timeout."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "From com.unity.transport@6.7.0, Runtime/Network Params.cs:27:"
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "Net Code overrides all of these from Net Code Config.Global when one exists (Default Driver Constructor.cs:88), and uses separate send and receive queue capacities for client and server (Default Driver Constructor.cs:96)."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "Reachability: relay, and what is not in the box"
+    },
+    {
+      "id": "b28",
+      "title": "b28",
+      "focus": null,
+      "text": "Searching the whole transport package for hole punching, STUN, or NAT traversal returns nothing. Unity Transport does not do NAT punchthrough. What it does have is a relay client: Relay Server Data (com.unity.transport/Runtime/Relay/Relay Server Data.cs:14) carrying an endpoint, an allocation ID, connection data for both ends, and an HMAC key, applied to a driver through settings.With Relay Parameters(.)."
+    },
+    {
+      "id": "b29",
+      "title": "b29",
+      "focus": null,
+      "text": "Net Code wires that in with two overloads: Register Client Driver(, ref Relay Server Data) (Default Driver Constructor.cs:554) and Register Server Driver(, ref Relay Server Data) (Default Driver Constructor.cs:585). Note what the server overload does: it registers the I P C driver without relay parameters and the U D P driver with them (Default Driver Constructor.cs:588). The host's local client still takes the fast path; only remote clients go through the relay."
+    },
+    {
+      "id": "b30",
+      "title": "b30",
+      "focus": null,
+      "text": "Everything that produces a Relay Server Data in the first place, allocating a relay, getting a join code, matchmaking tickets, lobby membership, fleet allocation, is service-side. It lives in com.unity.services.* packages talking to Unity Gaming Services over HTTPS, is documented in Unity's UGS documentation, and is not present in the packages read for this book. This chapter cannot verify any of it and does not try."
+    },
+    {
+      "id": "b31",
+      "title": "b31",
+      "focus": null,
+      "text": "Trap, a relay is a reachability fix, not a topology. Traffic through a relay is still client to authoritative server; it just takes a longer path with an extra hop of latency. If you route a listen server through a relay, the host keeps its zero-latency I P C advantage over every guest. Whether that is acceptable is a design decision, not a transport one."
+    },
+    {
+      "id": "b32",
+      "title": "b32",
+      "focus": null,
+      "text": "Web GL is the case where reachability forces topology: a browser client cannot open a U D P socket, so it uses Web Socket Network Interface. A Web GL build cannot listen at all, the default server constructor throws for Web GL and tells you to use Relay with a custom driver constructor (Default Driver Constructor.cs:640)."
+    },
+    {
+      "id": "b34",
+      "title": "b34",
+      "focus": null,
+      "text": "Netcode 6.6 ships a host migration feature behind an Enable Host Migration component (Runtime/Host Migration/Host Migration System.cs:22). The mechanism is state export and import: Host Migration Data.Get(World, ref Native List<byte>) serialises host state to a byte blob, and Host Migration Data.Set(Native Array<byte>, World) applies it to the new host (Runtime/Host Migration/Host Migration Data.cs:38:197). Entities respawned by that process are tagged Is Migrated, and a Host Migration In Progress component is present for the duration so your systems can stand down (Host Migration System.cs:27:33)."
+    },
+    {
+      "id": "b35",
+      "title": "b35",
+      "focus": null,
+      "text": "What that gives you is the transfer of authority. What it does not give you is the part that decides who becomes host, tells the other clients where to reconnect, and holds the blob in the meantime, that is a lobby or session service, and it is service-side."
+    },
+    {
+      "id": "b36",
+      "title": "b36",
+      "focus": null,
+      "text": "Distributed authority does not exist in Netcode for Entities. The only reference to the phrase in the package is a forward-looking comment (Runtime/Game Object Layer/Game Object Bridge/Ghost Behaviour.cs:145). The authority model of this package is single-authority server; if you need per-object distributed authority today, that is a different Unity netcode product, and this book does not cover it."
+    },
+    {
+      "id": "b38",
+      "title": "b38",
+      "focus": null,
+      "text": "And the three decision criteria that actually decide it:"
+    },
+    {
+      "id": "b39",
+      "title": "b39",
+      "focus": null,
+      "text": "Can you afford one server process per concurrent match? If no, the host is a player, and chapter 40's threat model changes shape. Do both ends have routable addresses? Usually no. That is a relay, not a topology change. Does the host's zero-latency advantage break your game? In a shooter, yes. In co-op Pv E, usually not. This is the honest cost of a listen server and no amount of configuration removes it."
+    },
+    {
+      "id": "b40",
+      "title": "b40",
+      "focus": null,
+      "text": "Probe, the driver store is inspectable at runtime. Network Stream Driver.Driver Store exposes each registered driver, and Get Local End Point(driver Id) (Runtime/Connection/Network Stream Driver.cs:419) tells you the address a given driver actually bound to. When a listen server's local client is mysteriously laggy, check whether its connection went to the I P C driver or the socket one."
+    }
+  ],
+  "nodes": {}
+}

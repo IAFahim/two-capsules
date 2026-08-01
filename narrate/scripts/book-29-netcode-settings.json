@@ -68,47 +68,53 @@
       "id": "b15",
       "title": "b15",
       "focus": null,
-      "text": "Importance vs relevancy is the distinction to internalise:"
+      "text": "The scheduler thinks in chunks, not entities. Max Send Entities used to be the obvious knob and no longer works, in netcode 6.6 it carries [Obsolete(\"No longer functional!…\")] and [Read Only] at Runtime/Snapshot/Ghost Send System.cs:242. Reach for Max Send Chunks and Max Iterate Chunks instead, and note that Min Send Importance gates a whole chunk, not one ghost. If your mental model is \"cap the entity count,\" you will set a field that silently does nothing. Chapter 37 covers the chunk scheduler properly."
     },
     {
       "id": "b16",
       "title": "b16",
       "focus": null,
+      "text": "Importance vs relevancy is the distinction to internalise:"
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
       "text": "Use relevancy for zones, rooms, and fog of war. Use importance for everything that is visible but not equally urgent. Relevancy is also a security boundary: a client cannot wall-hack data it was never sent."
     },
     {
-      "id": "b18",
-      "title": "b18",
+      "id": "b19",
+      "title": "b19",
       "focus": null,
       "text": "Prediction switching is the advanced move: predict only the ghosts near the local player, interpolate the rest, and reassign as they approach. It keeps rollback cost bounded in a crowded world. Budget it by predicted entity count, because rollback cost is predicted entities × replayed ticks."
-    },
-    {
-      "id": "b20",
-      "title": "b20",
-      "focus": null,
-      "text": "Runs after a rollback and blends the rendered value toward the corrected one."
     },
     {
       "id": "b21",
       "title": "b21",
       "focus": null,
+      "text": "Runs after a rollback and blends the rendered value toward the corrected one."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
       "text": "Trap, smoothing must never feed back into simulation. Presentation reads simulation; the reverse is a feedback loop that diverges."
     },
     {
-      "id": "b23",
-      "title": "b23",
+      "id": "b24",
+      "title": "b24",
       "focus": null,
       "text": "Always develop with emulation on. 80 milliseconds round trip time and 2% loss as your daily setting will surface every prediction bug while it is still cheap. A LAN-perfect connection hides exactly the class of bug that ships."
     },
     {
-      "id": "b25",
-      "title": "b25",
+      "id": "b26",
+      "title": "b26",
       "focus": null,
       "text": "Nerve wraps this in a Relevancy Settings asset, which our project registers on Server Settings.prefab."
     },
     {
-      "id": "b27",
-      "title": "b27",
+      "id": "b28",
+      "title": "b28",
       "focus": null,
       "text": "Thin clients are the cheapest scale test you will ever write: no rendering, no presentation, real connections, real commands. Give them a fake-input system and you can put 50 players on your laptop."
     }

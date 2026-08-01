@@ -32,65 +32,65 @@
       "id": "b6",
       "title": "b6",
       "focus": null,
-      "text": "Probe, see them live: ``csharp foreach (var w in World.All) Debug.Log($\"{w.Name} flags={w.Flags}\"); ``"
-    },
-    {
-      "id": "b8",
-      "title": "b8",
-      "focus": null,
-      "text": "Each world carries World Flags. Systems declare where they are allowed to exist:"
+      "text": "Chapter 42 is the definitive account: every world netcode can build, what World System Filter Flags.Default really expands to, and which world to reason about when debugging what."
     },
     {
       "id": "b9",
       "title": "b9",
       "focus": null,
-      "text": "Bovine Labs adds its own world kinds on top of Unity's, in Bovine Labs.Core/Worlds.cs:"
+      "text": "Each world carries World Flags. Systems declare where they are allowed to exist:"
     },
     {
       "id": "b10",
       "title": "b10",
       "focus": null,
-      "text": "Worlds.Server Local is doing real work: it means \"authority\", whether that authority is a netcode server or an offline single-player world. Write your authoritative rules against that and single-player comes free."
+      "text": "Bovine Labs adds its own world kinds on top of Unity's, in Bovine Labs.Core/Worlds.cs:"
     },
     {
       "id": "b11",
       "title": "b11",
       "focus": null,
-      "text": "Trap, a system with no [World System Filter] defaults to Local Simulation | Server Simulation | Client Simulation, so it lands in every game world including the server. Half of all \"why did that run twice?\" bugs are a missing filter."
+      "text": "Worlds.Server Local is doing real work: it means \"authority\", whether that authority is a netcode server or an offline single-player world. Write your authoritative rules against that and single-player comes free."
     },
     {
       "id": "b12",
       "title": "b12",
       "focus": null,
-      "text": "Groups: the ordering is a graph, not a list"
+      "text": "Trap, a system with no [World System Filter] defaults to Local Simulation | Server Simulation | Client Simulation, so it lands in every game world including the server. Half of all \"why did that run twice?\" bugs are a missing filter."
     },
     {
       "id": "b13",
       "title": "b13",
       "focus": null,
+      "text": "Groups: the ordering is a graph, not a list"
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
       "text": "Systems do not run in declaration order, alphabetical order, or file order. They run in the order of a topologically-sorted dependency graph built from attributes."
     },
     {
-      "id": "b15",
-      "title": "b15",
+      "id": "b16",
+      "title": "b16",
       "focus": null,
       "text": "Trap, [Update Before] only works between systems in the same group. Point it at a system in another group and Unity logs a warning and ignores it. You will see exactly this warning in our project's console, coming from Unity's own Companion Game Object Update Transform System. Harmless there; not harmless in your code."
     },
     {
-      "id": "b17",
-      "title": "b17",
+      "id": "b18",
+      "title": "b18",
       "focus": null,
       "text": "Our project uses ISystem everywhere except where it genuinely cannot, the same rule the packages follow. Connection Approval Server System is a System Base precisely because it awaits an HTTP call to Unity Authentication."
     },
     {
-      "id": "b19",
-      "title": "b19",
+      "id": "b20",
+      "title": "b20",
       "focus": null,
       "text": "ICustom Bootstrap lets you take over world creation. Nerve does, via Bovine Labs Bootstrap: Client Server Bootstrap. It is why our worlds are named and shaped the way they are, and why Create Client Server Worlds() is the thing the service graph calls when you press Start Game."
     },
     {
-      "id": "b20",
-      "title": "b20",
+      "id": "b21",
+      "title": "b21",
       "focus": null,
       "text": "Next: the part where all those chunks get chewed in parallel."
     }

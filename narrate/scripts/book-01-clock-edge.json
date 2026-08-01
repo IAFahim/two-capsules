@@ -104,7 +104,7 @@
       "id": "b21",
       "title": "b21",
       "focus": null,
-      "text": "Probe, in play mode, dump the live loop: ``csharp Unity Engine.Low Level.Player Loop.Get Current Player Loop() `` You will see the DOTS entries sitting in the table next to Unity's built-ins."
+      "text": "Probe, in play mode, dump the live loop: You will see the DOTS entries sitting in the table next to Unity's built-ins."
     },
     {
       "id": "b22",

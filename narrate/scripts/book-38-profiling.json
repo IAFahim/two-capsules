@@ -1,0 +1,195 @@
+{
+  "id": "book-38-profiling",
+  "title": "38 · Profiling for real",
+  "map": null,
+  "blurb": "",
+  "chapters": [
+    {
+      "id": "b2",
+      "title": "b2",
+      "focus": null,
+      "text": "Netcode has four bottlenecks and they look identical from outside: the game gets worse with more players. This chapter is the counters that tell them apart."
+    },
+    {
+      "id": "b3",
+      "title": "b3",
+      "focus": null,
+      "text": "📋 Honesty label, chapters 19, 23 were verified at runtime on a two-player capsule build. This chapter is not. Every component, counter, marker and threshold below is read out of the installed com.unity.netcode@6.6.0 source and cited by file and line. No numbers are quoted for what you will observe, because nothing here was measured on a loaded server. Where a bad value has a definition, it is the package's own definition. Where it does not, this chapter describes the shape of a bad value, not a figure."
+    },
+    {
+      "id": "b5",
+      "title": "b5",
+      "focus": null,
+      "text": "Each has its own instrument. Reaching for the CPU profiler when you have a bandwidth problem is how weeks disappear."
+    },
+    {
+      "id": "b7",
+      "title": "b7",
+      "focus": null,
+      "text": "Everything in Runtime/Stats/ is wrapped in #if UNITY_EDITOR || NETCODE_DEBUG (Runtime/Stats/Ghost Stats Metrics.cs:1). In a release player without NETCODE_DEBUG these components do not exist and these counters are not emitted. Profile a development build."
+    },
+    {
+      "id": "b8",
+      "title": "b8",
+      "focus": null,
+      "text": "The collector gates itself on Profiler.enabled (Runtime/Stats/Profiler Metrics Collector.cs:149) and creates its own singleton entity, named Metrics Monitor, with the six required component types (Profiler Metrics Collector.cs:59). If you already created a Ghost Metrics Monitor, it destroys yours and logs a warning (Profiler Metrics Collector.cs:129)."
+    },
+    {
+      "id": "b10",
+      "title": "b10",
+      "focus": null,
+      "text": "These are ordinary E C S data. Read them from your own system and put them on screen, which is usually better than alt-tabbing to a profiler window."
+    },
+    {
+      "id": "b11",
+      "title": "b11",
+      "focus": null,
+      "text": "Source: Runtime/Stats/Ghost Stats Metrics.cs:18:29:68:151:138:98:113:126."
+    },
+    {
+      "id": "b12",
+      "title": "b12",
+      "focus": null,
+      "text": "Trap, Ghost Metrics, Ghost Serialization Metrics and Ghost Names are parallel buffers joined only by index (Ghost Stats Metrics.cs:148). The metric buffer without the name buffer is numbers attached to nothing. Read both, same frame, same world."
+    },
+    {
+      "id": "b14",
+      "title": "b14",
+      "focus": null,
+      "text": "Two modules register themselves: Client World (Editor/Profiler/Common/Client World Profiler.cs:11) and Server World (Editor/Profiler/Common/Server World Profiler.cs:12), reachable through Window then Multiplayer then Network Profiler (Editor/Profiler/Common/Profiler Utils.cs:242)."
+    },
+    {
+      "id": "b15",
+      "title": "b15",
+      "focus": null,
+      "text": "Registered at Runtime/Stats/Profiler Metrics Collector.cs:106:114. Snapshot size is published as bytes by right-shifting the bit total by three (Profiler Metrics Collector.cs:243). Network Metrics.Rtt and Network Metrics.Jitter are milliseconds, they come straight from Network Snapshot Ack.Estimated RTT and Deviation RTT (Runtime/Connection/Network Snapshot Ack.cs:275:280), and the collector multiplies them by one million for the nanosecond-unit counters (Profiler Metrics Collector.cs:271). Read the singleton if you want milliseconds; read the counter if you want a graph."
+    },
+    {
+      "id": "b16",
+      "title": "b16",
+      "focus": null,
+      "text": "Trap, Window then Multiplayer then Network Debugger (Browser) still exists but is labelled Deprecated in 6.6 (Runtime/Stats/Ghost Stats System.cs:22). It launches a local HTML page over a websocket. The profiler modules are the current tool. If a tutorial tells you to use the browser debugger, it predates this package version."
+    },
+    {
+      "id": "b17",
+      "title": "b17",
+      "focus": null,
+      "text": "The snapshot breakdown, and its two defined warnings"
+    },
+    {
+      "id": "b18",
+      "title": "b18",
+      "focus": null,
+      "text": "The per-tick snapshot view breaks a snapshot into rows with these columns (Editor/Profiler/Common/Netcode Profiler Constants.cs:24): name, size, percent of snapshot size, instance count, compression efficiency, and average size per instance. Two non-ghost rows also appear: snapshot overhead (spawns, despawns, prefab lists) and ghost prefab overhead (ghost IDs, spawn ticks, baselines), Netcode Profiler Constants.cs:38."
+    },
+    {
+      "id": "b19",
+      "title": "b19",
+      "focus": null,
+      "text": "The package defines exactly two thresholds. They are the only numeric \"bad values\" this chapter gives you, because they are the package's own:"
+    },
+    {
+      "id": "b20",
+      "title": "b20",
+      "focus": null,
+      "text": "Compression efficiency is defined in the tooltip as 1 − (uncompressed / compressed), and higher is better (Netcode Profiler Constants.cs:47). A type below the threshold means one of three things: quantization too fine, a field changing every tick that should not, or a type that wants Use Single Baseline because its changes are not linear (chapter 37)."
+    },
+    {
+      "id": "b22",
+      "title": "b22",
+      "focus": null,
+      "text": "All are real Profiler Marker instances, so they appear in the Timeline and Hierarchy views by name."
+    },
+    {
+      "id": "b23",
+      "title": "b23",
+      "focus": null,
+      "text": "Ghost Send System Data.Enable Per Component Profiling (Ghost Send System.cs:335) adds a marker per component inside serialization. It costs performance, which is why it is off; use it to answer \"which component is expensive\", then turn it off. A per-ghost-name marker is also created at Ghost Collection System.cs:796."
+    },
+    {
+      "id": "b24",
+      "title": "b24",
+      "focus": null,
+      "text": "Hardware analogy, these markers are chip-select lines on a logic analyser. They do not tell you the value on the bus; they tell you which unit was driving it. You still read the value from the metric buffers."
+    },
+    {
+      "id": "b25",
+      "title": "b25",
+      "focus": null,
+      "text": "Prediction cost, and what batching actually buys"
+    },
+    {
+      "id": "b26",
+      "title": "b26",
+      "focus": null,
+      "text": "Rollback cost is predicted entities × replayed ticks. Both terms are readable."
+    },
+    {
+      "id": "b27",
+      "title": "b27",
+      "focus": null,
+      "text": "Network Time.To Fixed String() prints most of this in one line (Network Time.cs:219), including Predicted Tick Index/Num Predicted Ticks Expected, which makes it the cheapest possible prediction probe."
+    },
+    {
+      "id": "b28",
+      "title": "b28",
+      "focus": null,
+      "text": "Predicted tick batching is controlled by two Client Tick Rate fields: Max Prediction Step Batch Size First Time Tick and Max Prediction Step Batch Size Repeated Tick (Runtime/Client Server World/Client Server Tick Rate.cs:644:634). Both are clamped to [0,16], and a zero is normalised to 1 at runtime (Runtime/Prediction Ticking/Update Rate Management/Netcode Client Prediction Rate Manager.cs:189)."
+    },
+    {
+      "id": "b29",
+      "title": "b29",
+      "focus": null,
+      "text": "What batching costs is simulation accuracy, not correctness of the rollback. Batching N ticks runs one step with N times the delta, so anything non-linear, collision, thresholds, integrating acceleration, gives a different answer than N separate steps. Raise the repeated-tick batch first, because replayed ticks are the ones the player never sees directly; leave first-time ticks at 1 unless your simulation is verifiably delta-linear."
+    },
+    {
+      "id": "b30",
+      "title": "b30",
+      "focus": null,
+      "text": "Server-side batching is a different mechanism, and a warning sign rather than a knob. Warn About Batched Ticks System keeps a rolling average of Simulation Step Batch Size and warns when it exceeds Net Debug.Warn Above Average Batched Ticks Per Frame, default 1.2 over a rolling window of 4 frames (Runtime/Debug/Net Debug.cs:247; Runtime/Connection/Warn About Batched Ticks System.cs:46). The warning text is explicit that frequent batching with Burst enabled means unacceptable server performance (Warn About Batched Ticks System.cs:55)."
+    },
+    {
+      "id": "b32",
+      "title": "b32",
+      "focus": null,
+      "text": "Ingress has its own statistics block, Command Arrival Statistics, hanging off Network Snapshot Ack (Runtime/Connection/Command Arrival Statistics.cs:10):"
+    },
+    {
+      "id": "b33",
+      "title": "b33",
+      "focus": null,
+      "text": "Resend Percent near zero with Arrived Too Late Percent non-zero is the signature of under-redundant input on a lossy link: nothing arrives twice, and some things arrive after the tick that needed them."
+    },
+    {
+      "id": "b34",
+      "title": "b34",
+      "focus": null,
+      "text": "Burst, and the failure that looks like a netcode problem"
+    },
+    {
+      "id": "b35",
+      "title": "b35",
+      "focus": null,
+      "text": "A system that is not actually Burst-compiled runs roughly an order of magnitude slower and shows up as server tick batching, which reads exactly like a bandwidth or design problem. Chapter 24 lists this as silent failure 11: [Burst Compile] on methods but not the struct."
+    },
+    {
+      "id": "b36",
+      "title": "b36",
+      "focus": null,
+      "text": "The check is the Burst Inspector (Jobs then Burst then Open Inspector, a Unity editor feature, documentation-derived, not part of this package). If a job or system appears with no generated assembly, it is not compiled, and no netcode tuning will help."
+    },
+    {
+      "id": "b38",
+      "title": "b38",
+      "focus": null,
+      "text": "Read down. The first row that matches is your problem."
+    },
+    {
+      "id": "b40",
+      "title": "b40",
+      "focus": null,
+      "text": "Probe, the fastest netcode dashboard is not a window. Query Network Metrics, Snapshot Metrics and Network Time in one client-world system, log a line per second. Four numbers, round trip time, jitter, snapshot bits, predicted ticks, separate all four bottlenecks, and unlike a profiler window they survive into a headless build."
+    }
+  ],
+  "nodes": {}
+}

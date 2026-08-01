@@ -87,12 +87,6 @@
       "title": "b22",
       "focus": null,
       "text": "The client writes exactly one thing: what it wants. Everything else it receives. That single sentence is the security model."
-    },
-    {
-      "id": "b23",
-      "title": "b23",
-      "focus": null,
-      "text": "Probe, who owns what, right now: ``csharp foreach (var (owner, e) in System API.Query<Ref RO<Ghost Owner>>().With Entity Access()) Debug.Log($\"{e} owned by Network Id {owner.Value RO.Network Id}\"); ``"
     }
   ],
   "nodes": {}

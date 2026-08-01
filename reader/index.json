@@ -12,12 +12,12 @@
   {
     "slug": "02-cache-lines",
     "title": "02 \u00b7 Cache lines all the way down",
-    "blocks": 21
+    "blocks": 20
   },
   {
     "slug": "03-worlds",
     "title": "03 \u00b7 Worlds: six machines in one process",
-    "blocks": 16
+    "blocks": 15
   },
   {
     "slug": "04-burst-and-jobs",
@@ -52,7 +52,7 @@
   {
     "slug": "10-nerve",
     "title": "10 \u00b7 Nerve: the game framework",
-    "blocks": 14
+    "blocks": 13
   },
   {
     "slug": "11-anchor-ui",
@@ -62,12 +62,12 @@
   {
     "slug": "12-authoring-to-blob",
     "title": "12 \u00b7 From editor node to runtime bytes",
-    "blocks": 16
+    "blocks": 15
   },
   {
     "slug": "13-topology",
     "title": "13 \u00b7 Network topology",
-    "blocks": 16
+    "blocks": 15
   },
   {
     "slug": "14-ghosts",
@@ -77,7 +77,7 @@
   {
     "slug": "15-the-tick",
     "title": "15 \u00b7 The tick",
-    "blocks": 17
+    "blocks": 16
   },
   {
     "slug": "16-commands",
@@ -112,7 +112,7 @@
   {
     "slug": "22-ownership",
     "title": "22 \u00b7 Ownership and spawning",
-    "blocks": 15
+    "blocks": 14
   },
   {
     "slug": "23-mppm",
@@ -212,7 +212,7 @@
   {
     "slug": "42-which-world",
     "title": "42 \u00b7 Which world am I in?",
-    "blocks": 57
+    "blocks": 56
   },
   {
     "slug": "43-physics-on-the-server",
