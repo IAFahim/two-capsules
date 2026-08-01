@@ -1,0 +1,1 @@
+On the server, the very same movement system runs. Not a server version. The same system, with one world filter naming both sides. Two implementations would mean two behaviours, and two behaviours mean permanent disagreement. One rule, executed twice, is what server authoritative with client prediction actually means in code.

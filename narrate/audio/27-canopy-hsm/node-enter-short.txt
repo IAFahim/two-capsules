@@ -1,0 +1,1 @@
+Then down the new branch, shallowest first, with the stored leaf moving along.

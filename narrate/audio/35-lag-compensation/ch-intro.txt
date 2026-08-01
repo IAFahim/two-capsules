@@ -1,0 +1,1 @@
+Three different nows are on screen at once. Your own body is drawn ahead of the server. Everyone else is drawn behind it. So when a player fires, the crosshair sits over a body that, by the server's clock, is already somewhere else. If the server tests that shot against its own present it will miss shots the player saw land, and the error grows with latency.

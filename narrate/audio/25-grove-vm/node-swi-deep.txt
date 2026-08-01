@@ -1,0 +1,1 @@
+It switches on the header's integer and calls the matching static method. Generating one copy per context means every call is fully specialised, with no generic dispatch left at runtime. This is the reason grove is cheap enough to run per entity, per tick, inside a job.

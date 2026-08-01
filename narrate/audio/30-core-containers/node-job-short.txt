@@ -1,0 +1,1 @@
+Your compiled code: no managed types, no allocator, no exceptions.

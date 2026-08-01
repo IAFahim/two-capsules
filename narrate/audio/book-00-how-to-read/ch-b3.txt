@@ -1,0 +1,1 @@
+Because Unity DOTS is not a game engine feature. It is a memory-layout argument that won, wearing a game engine as a coat.

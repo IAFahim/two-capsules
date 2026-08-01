@@ -1,0 +1,1 @@
+Three passes each tick: mark controllers inactive for connections that dropped, reattach an approved connection to an existing controller with the same account, or instantiate a fresh controller and body. It also guards against two connections claiming the same account in the same frame, and kicks the duplicate.

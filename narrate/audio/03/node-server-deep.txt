@@ -1,0 +1,1 @@
+Its approval path only skips real token validation when the world is not a netcode server world. A separate server world in one process is still a server world, so turning approval on here really does mean a network call to Unity Authentication.

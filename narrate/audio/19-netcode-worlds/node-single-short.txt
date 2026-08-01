@@ -1,0 +1,1 @@
+One world carrying both flags, which is the only shape the host test accepts.

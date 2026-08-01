@@ -1,0 +1,1 @@
+Baked level geometry. No ghost, no snapshot, no prediction, no cost beyond broadphase.

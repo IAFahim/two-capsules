@@ -1,0 +1,1 @@
+There is exactly one authoritative timeline and it lives here. Everything on the right half of this map is a client's attempt to be somewhere useful relative to this tick. One side lags it deliberately, the other side runs ahead of it deliberately, and neither is ever equal to it.

@@ -1,0 +1,1 @@
+It exists because the ordinary fixed step group is outside prediction and therefore cannot be rolled back. Anything you want resimulated on a correction goes here. The two groups have nearly identical names and completely different behaviour, and putting your step in the wrong one produces a bug that looks like bad physics rather than bad ordering.

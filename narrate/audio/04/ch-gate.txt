@@ -1,0 +1,1 @@
+Connecting holds an initialize block, which drives a startup gate, which holds the go in game node. That chain looks like ceremony, but the types force it. The go in game node operates on an initialize state, only a startup gate supplies one, and only the initialize block can drive a gate from a state. It is pin compatibility, enforced at author time. You cannot wire it wrong.

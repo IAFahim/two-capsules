@@ -1,0 +1,1 @@
+THE TRAP, define Constraints is all-or-nothing at the assembly level. If one symbol is missing, Unity does not compile the assembly. Not partially. At all. It produces no DLL, logs nothing, and every type in it silently ceases to exist.

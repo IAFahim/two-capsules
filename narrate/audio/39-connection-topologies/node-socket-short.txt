@@ -1,0 +1,1 @@
+A datagram driver, or a web socket driver when targeting a browser.

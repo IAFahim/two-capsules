@@ -1,0 +1,1 @@
+Graph, then owner scope, then the local key. Built fresh on every access.

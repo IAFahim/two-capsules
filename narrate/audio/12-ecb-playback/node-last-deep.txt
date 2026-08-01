@@ -1,0 +1,1 @@
+Not a convention, a constant in the source. Since the merge takes the smallest key next, the largest key sorts to the end of everything. So a create you record on the main thread lands after every create recorded in a job, regardless of when either line of code ran. Worth knowing before you debug the ordering for an hour.

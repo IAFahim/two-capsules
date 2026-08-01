@@ -1,0 +1,1 @@
+The documentation names the chunk index within the query as the value to pass, and there is a reason. It is stable for a given world state, it is unique per chunk, and it is available for free inside the loop. Anything else you pass is either not stable, in which case playback is not repeatable, or not unique, in which case the ties are undefined.

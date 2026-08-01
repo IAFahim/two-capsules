@@ -1,0 +1,1 @@
+One unreliable packet per connection per network tick, with a hard ceiling.

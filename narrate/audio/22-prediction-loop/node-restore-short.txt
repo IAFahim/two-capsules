@@ -1,0 +1,1 @@
+Server fields written over the predicted state, every time, no comparison.

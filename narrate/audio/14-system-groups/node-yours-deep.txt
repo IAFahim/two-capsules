@@ -1,0 +1,1 @@
+Not in initialization, not in prediction, and not nowhere. The placement code adds it to the simulation group when no group attribute is present, and the classification code resolves its filter through the fallback, which names local, server and client. So the laziest possible system is also the most widely distributed one you can write.

@@ -1,0 +1,1 @@
+That single test is the entire routing mechanism. There is no registry, no lookup, no per state switching. If a set is marked to wait for load, the loader pauses the whole world until streaming finishes, which is how you get a deterministic first frame instead of a race.

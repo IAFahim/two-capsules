@@ -1,0 +1,1 @@
+Follow one key press. The only thing that will actually leave this machine is a direction: two floats, saying which way the player wants to go. Everything else on this map is a local consequence of those eight bytes. Hold on to that, because it is the whole security model in one sentence.

@@ -1,0 +1,1 @@
+The word archetype sounds like a class, and that is the wrong instinct. An archetype is a sorted array of component type numbers. That array is not a description of the archetype, it is the archetype. Two archetypes are the same thing exactly when their arrays are byte for byte identical, and there is code that literally does that memory comparison to decide.

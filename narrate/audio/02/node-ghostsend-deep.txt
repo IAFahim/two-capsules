@@ -1,0 +1,1 @@
+Every client has acknowledged a different tick, so the server remembers what each one knows and encodes against that. It then sorts by importance and fills a packet until the maximum size. A snapshot is not the world; it is as much of the world as fits, prioritised.

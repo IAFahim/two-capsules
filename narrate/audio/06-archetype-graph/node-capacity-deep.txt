@@ -1,0 +1,1 @@
+Capacity is the usable part of the block divided by the sum of every component's stride, then reduced until the per array alignment padding also fits. On top of that there is a hard ceiling of a hundred and twenty eight entities per chunk, which exists because the position inside a chunk is stored in a single byte in the entity slot table.

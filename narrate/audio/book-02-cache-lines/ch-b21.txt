@@ -1,0 +1,1 @@
+Hardware analogy, a dirty bit per cache line, except the granularity is a chunk and the write-back is a system deciding whether to bother.

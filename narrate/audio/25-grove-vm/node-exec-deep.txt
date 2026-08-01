@@ -1,0 +1,1 @@
+It takes its own data by reference, the entity context, and your context, and it holds no state of its own between calls. That is not a stylistic choice. There is exactly one copy of the method and one copy of the node data in the image, shared by every entity, so a field on it would be a field shared by everybody.

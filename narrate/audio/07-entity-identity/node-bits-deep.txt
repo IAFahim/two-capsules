@@ -1,0 +1,1 @@
+The comment in the source says the layout deliberately matches the engine's own identifier type, so a reinterpret cast between them is byte identical. That is the seam where the entity system meets the rest of the engine, and it is the reason this layout is packed rather than the two plain integers older documentation describes.

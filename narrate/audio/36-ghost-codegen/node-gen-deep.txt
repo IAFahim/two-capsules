@@ -1,0 +1,1 @@
+It registers a syntax receiver that sorts candidates into seven buckets: components, remote procedure calls, commands, inputs, variants, ghost behaviours, and remotes. If an assembly does not reference the netcode package, the generator skips it entirely, and your attributes do nothing at all, with no error, because nothing ran.

@@ -1,0 +1,1 @@
+Two floats saying which direction the player wants to go. It sits in this chunk exactly like everything else, with the same stride discipline, and the fact that it is the one component destined for the wire is invisible from the memory layout. That is the point: replication is a property of the schema, not of how the data is stored.

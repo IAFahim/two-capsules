@@ -1,0 +1,1 @@
+Because it declares nothing, a chain of group attributes that ends here falls through to the fallback expansion: local, server and client simulation. That single absence is the mechanism behind the most common ECS bug there is, an unfiltered gameplay system quietly running in three worlds. It is also the default destination for any system that names no group.

@@ -1,0 +1,1 @@
+One symbol short and the assembly is not compiled. Nothing is logged.

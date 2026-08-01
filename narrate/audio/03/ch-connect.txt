@@ -1,0 +1,1 @@
+First the socket opens and a network stream connection component appears. Then the handshake runs, and this is where a protocol version mismatch will reject you, because the ghost schemas on both sides must agree exactly. If the handshake passes, the server assigns a network id. Only now do you have an identity that anything else can reason about.

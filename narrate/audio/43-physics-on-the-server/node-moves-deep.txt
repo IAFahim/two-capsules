@@ -1,0 +1,1 @@
+This is not a design preference, it is the query the physics world build actually runs. Bodies with a velocity go into the dynamic set. Bodies with a collider and no velocity go into the static set. Everything downstream on this map follows from which side of that query a body lands on.

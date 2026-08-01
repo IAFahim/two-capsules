@@ -1,0 +1,1 @@
+One enum, read once at startup, deciding which worlds exist at all.

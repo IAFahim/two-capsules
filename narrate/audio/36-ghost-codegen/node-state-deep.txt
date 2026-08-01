@@ -1,0 +1,1 @@
+It carries three hashes used for identity and protocol versioning, the component type, the in memory size and the on the wire size, the change mask bit count, whether the enabled bit is serialized, and the routing rules taken from the component attribute. Then it carries the pointers into the generated code.

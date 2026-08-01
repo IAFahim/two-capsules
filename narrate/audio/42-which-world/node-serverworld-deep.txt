@@ -1,0 +1,1 @@
+It runs the full simulation including the physics solver, because the physics systems resolve to local, server and client simulation. It has no renderer because presentation is a different flag bit and was never requested. When two players disagree about a position, this is the world that is right.

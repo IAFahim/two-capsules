@@ -1,0 +1,1 @@
+It tests whether the world is a server, selects the matching list, and removes each named component from the prefab entity and its children. Then it drops the marker saying stripping is pending. Where a ghost can switch between predicted and interpolated at runtime the difference becomes a disable rather than a removal, because the same entity may change mode later.

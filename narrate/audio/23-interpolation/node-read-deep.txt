@@ -1,0 +1,1 @@
+It corrects a tenth of its remaining error per frame with its rate clamped between eighty five hundredths and one and a tenth. Only an error above ten ticks causes an outright snap. That is a phase locked loop with a bounded slew and a hard resync fallback, and those three numbers are the entire smoothness budget.

@@ -1,0 +1,1 @@
+The identifier alone is not unique over time, because identifiers get recycled when ghosts are destroyed. It is the pair of identifier and spawn tick that is guaranteed unique, which is a detail you only care about at exactly the moment it bites you during despawn and respawn in the same window.

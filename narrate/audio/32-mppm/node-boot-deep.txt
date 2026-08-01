@@ -1,0 +1,1 @@
+It runs independently inside every process. Whatever value it reads is the value that process acts on, and there is no coordination between instances. Additional thin clients are bootstrapped after the main worlds, and only in the editor, which is one more reason the instance count and the world count rarely match.

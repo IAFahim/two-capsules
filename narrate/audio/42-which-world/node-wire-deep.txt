@@ -1,0 +1,1 @@
+Entity references are meaningless across worlds, so replication carries numbers. The identifier is recycled when a ghost dies, so on its own it is not unique. Paired with the tick it spawned on, it is guaranteed unique, because at any moment only one ghost can hold that identifier having spawned on that tick.

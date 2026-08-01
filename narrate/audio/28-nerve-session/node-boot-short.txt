@@ -1,0 +1,1 @@
+Creates exactly one world at startup, and then gets out of the way.

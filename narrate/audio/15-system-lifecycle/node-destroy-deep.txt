@@ -1,0 +1,1 @@
+It is guaranteed in a way the running callbacks are not: those depend on edges that may never happen, this one depends only on the world being disposed. Anything allocated in the create callback belongs here. In a project where worlds are built and torn down on state transitions rather than once at startup, this stops being a shutdown detail and becomes a per session one.

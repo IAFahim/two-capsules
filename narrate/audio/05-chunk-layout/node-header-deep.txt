@@ -1,0 +1,1 @@
+It carries a globally unique sequence number, some flags, and the identity of the meta entity that holds this chunk's chunk level components. Only twenty four of those bytes are actually serialized when a chunk is written to disk; the rest is runtime bookkeeping. The buffer offset is sixty four so that the first real array starts on a cache line boundary.

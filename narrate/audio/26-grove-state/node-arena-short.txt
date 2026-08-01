@@ -1,0 +1,1 @@
+Values are bump allocated into a data region, with each size stored beside it.

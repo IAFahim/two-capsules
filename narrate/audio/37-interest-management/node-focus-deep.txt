@@ -1,0 +1,1 @@
+Without this component the send system skips importance scaling entirely and logs nothing. The packet dump is the only place it tells you, printing that ghost importance is disabled. Add the component when the player takes control of a pawn, and update it as the pawn moves.

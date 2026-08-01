@@ -1,0 +1,1 @@
+The loop gets a base address and a count. Inside it there is no polymorphism, no null check on a reference, and no cache miss that was not implied by the data you asked for. Arrays this chunk holds but the job did not request are never read, so they never displace anything you do need.

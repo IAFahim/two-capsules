@@ -1,0 +1,1 @@
+This is where the entity component system stops being a design pattern and becomes an actual memory layout you can measure. A header, then one contiguous array per component type, and an entity that is nothing but a shared subscript into all of them. If you have ever hand tuned a loop for the prefetcher, this will feel familiar in a way that surprises you.

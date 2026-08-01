@@ -1,0 +1,1 @@
+It is ordered into the serializer collection group and created before the default variant group, so that variants can override which serializer a component actually uses. Its whole job is to call add serializer once for each descriptor the generator produced in that assembly.

@@ -1,0 +1,1 @@
+It carries a small set of flags: block until imported, block until streamed, do not auto load the sections, load a fresh instance. Everything else about the load is decided by the file. Removing this component is the unload request, so the load state of the world is data, which means it can be inspected, saved and replicated like any other component.

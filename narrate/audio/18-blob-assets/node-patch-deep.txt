@@ -1,0 +1,1 @@
+The loader walks components whose type carries blob reference offsets and rewrites each handle in place. Minus one is the null sentinel and stays null. The block itself is never entered, so the cost of loading a blob is set by how many things reference it, not by how large it is. That is the property that makes mapping a blob straight off disk a reasonable thing to imagine.

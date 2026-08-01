@@ -1,0 +1,1 @@
+Immutability is the contract that lets every job read it concurrently with no synchronisation at all. The engine defends that contract with an attribute marking types that may only live in blob storage, and an analyser that refuses to compile a copy out by value. That is not style enforcement: a copied blob field is an offset separated from the address it was measured against.

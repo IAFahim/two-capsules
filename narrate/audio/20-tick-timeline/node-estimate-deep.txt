@@ -1,0 +1,1 @@
+Maintained as an exponential average of how wrong the last guess was, advanced by elapsed ticks each frame and corrected when a packet lands. It also tracks the average and deviation of the gap between snapshots, which is what lets the interpolation depth react to a worsening link without anyone touching a setting.

@@ -1,0 +1,1 @@
+Baking does not emit one prefab per world type. It emits one entity graph and four blob arrays: remove on server, remove on client, disable on predicted, disable on interpolated. A component marked as belonging to every variant short circuits the classification and appears in all of them.

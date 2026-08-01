@@ -1,0 +1,1 @@
+The budget is the transport payload capacity minus the pipeline header, unless you override it per connection. If not even one ghost fits, the size is doubled and the entire serialisation is thrown away and redone, up to eight times. That retry is expensive and it warns, and it usually means a configured packet size that is too small rather than a ghost that is too large.

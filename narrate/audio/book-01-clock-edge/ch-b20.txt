@@ -1,0 +1,1 @@
+That last one is why Player Move System in our project reads System API.Time.Delta Time without further thought and is still correct. It is standing in the prediction group, so the delta it gets is one network tick, every time, including during replay.

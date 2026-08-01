@@ -1,0 +1,1 @@
+A keyboard with a socket. Connects, sends input, simulates almost nothing.

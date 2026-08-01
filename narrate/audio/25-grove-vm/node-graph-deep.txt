@@ -1,0 +1,1 @@
+It carries node positions, wires and authored values, and nothing else in the pipeline ever reads it again after import. The file extension is what decides which graph type it is, and therefore which nodes the editor will even offer you. That is the first place a graph can quietly be wrong.

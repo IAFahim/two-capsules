@@ -1,0 +1,1 @@
+The requested delay is clamped to one less than the history size, and the raw buffer holds at most thirty two worlds. At sixty simulation steps per second that is a little over half a second. The lookup returns both the tick you asked for and the tick you got, and the package documentation tells you to compare them to find players sitting on the clamp.

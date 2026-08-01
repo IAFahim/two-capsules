@@ -1,0 +1,1 @@
+Your hit registration, running inside the prediction loop.

@@ -1,0 +1,1 @@
+The rule worth carrying: presentation reads simulation and never the reverse. If you ever feed a smoothed or interpolated visual value back into simulation, you have built a feedback loop between what is true and what is drawn, and it will diverge.

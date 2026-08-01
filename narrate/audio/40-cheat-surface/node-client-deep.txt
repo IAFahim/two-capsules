@@ -1,0 +1,1 @@
+Nothing it reports is evidence of anything. It can put any value in any input field, send at any rate, claim any tick, and report any interpolation delay. What it cannot do is write a replicated field, because those flow only from server to client, and it cannot change what the server would have simulated.

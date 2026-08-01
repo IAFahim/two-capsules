@@ -1,0 +1,1 @@
+Two sorted type arrays walked in step, one memory copy per shared type.

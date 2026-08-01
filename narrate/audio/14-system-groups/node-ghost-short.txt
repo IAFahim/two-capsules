@@ -1,0 +1,1 @@
+Applies snapshots and gathers input, before prediction and before fixed step.

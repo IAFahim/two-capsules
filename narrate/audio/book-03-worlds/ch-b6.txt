@@ -1,0 +1,1 @@
+Chapter 42 is the definitive account: every world netcode can build, what World System Filter Flags.Default really expands to, and which world to reason about when debugging what.

@@ -1,0 +1,1 @@
+For each type you read it takes only the write fence. For each type you write it takes the write fence and every registered read fence. Everything gathered goes into one combined handle. The asymmetry is the point: it is why two systems reading the same transforms run at the same time, and why a third writing them waits for both.

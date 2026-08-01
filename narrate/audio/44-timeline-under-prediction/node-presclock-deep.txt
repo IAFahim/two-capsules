@@ -1,0 +1,1 @@
+This is the shipped package doing exactly what it was designed for. Leave it there. Moving visual effects into the prediction loop would re-emit particles on every replay and cap effects at the tick rate. The one change worth making is to have it read its position from the gameplay clock instead of keeping its own sum, so it becomes a display rather than a second source of truth.

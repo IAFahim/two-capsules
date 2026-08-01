@@ -1,0 +1,1 @@
+A browser client cannot open a datagram socket, so it uses web sockets, and it cannot listen at all. The default server constructor throws for that target and tells you to build a custom constructor using relay settings instead. This is the one case where reachability dictates topology.

@@ -1,0 +1,1 @@
+Next: why any of this needs a new memory model at all.

@@ -1,0 +1,1 @@
+Most explanations of rollback tell it as a story. Something goes wrong, the client notices, drama happens, the client repairs itself. That framing is wrong and it makes the code impossible to reason about. This is a loop that runs every frame at the same cost whether the prediction was perfect or hopeless. Read it as a machine with a program counter and it becomes simple.

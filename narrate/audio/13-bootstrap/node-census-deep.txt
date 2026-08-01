@@ -1,0 +1,1 @@
+This is the only mechanism by which a system ends up in a world. There is no registration call and no configuration file. Which is also why a missing filter attribute is such a quiet failure: the system is not absent, it is present in three worlds at once, running your rule three times on three different sets of entities.

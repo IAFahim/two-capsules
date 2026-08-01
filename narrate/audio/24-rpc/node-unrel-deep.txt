@@ -1,0 +1,1 @@
+Losses are never made up, and that is deliberate. A retransmitted snapshot would arrive after a newer one carrying better truth, so resending it would deliver stale data late. Commands solve the same problem differently, by putting redundancy in the payload rather than in the protocol.

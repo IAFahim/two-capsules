@@ -1,0 +1,1 @@
+Queries are built here, and so is the declaration of what the update requires. Both are structural, and both hold for the life of the world. It also runs on systems that will never update even once, because creation is driven by the world's system list rather than by whether anything will match.

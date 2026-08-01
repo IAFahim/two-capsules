@@ -1,0 +1,1 @@
+It is handed a component and writes to an entity. It cannot run a query, and every value it reaches for outside its own component is registered as a dependency. That restriction is what makes the whole pass cacheable at the granularity of a single component, which is what makes editing a scene with thousands of objects feel instant.

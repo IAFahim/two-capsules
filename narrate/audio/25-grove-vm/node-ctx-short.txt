@@ -1,0 +1,1 @@
+The struct that carries everything a node is allowed to touch.

@@ -1,0 +1,1 @@
+Dereferencing pins the field, takes its address, and adds the stored offset to it. Nothing in the block ever refers to an absolute address, which is why copying the bytes is a complete and correct clone, and why the same bytes are valid at a different base in a different process. Zero means null, which is why an offset of zero is reserved rather than legal.

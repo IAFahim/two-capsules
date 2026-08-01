@@ -1,0 +1,1 @@
+Header, buckets, keys and values in one allocation, addressed as offsets so the structure survives being moved. Because it is entity data it serialises, copies on instantiate, participates in change filtering, and dies with its entity. There are set, multi map and perfect hash variants of the same idea.

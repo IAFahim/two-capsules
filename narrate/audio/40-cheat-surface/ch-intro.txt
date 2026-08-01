@@ -1,0 +1,1 @@
+The security model is one sentence: the client sends intent and the server computes results. Everything inside the client box belongs to the attacker, including the parts netcode fills in automatically. Everything the server derives from those fields belongs to you. The strength of the whole model is how much the server derives and how little it accepts.

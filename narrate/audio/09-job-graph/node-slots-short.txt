@@ -1,0 +1,1 @@
+One write fence and seventeen read fences, for every component type.

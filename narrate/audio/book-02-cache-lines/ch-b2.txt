@@ -1,0 +1,1 @@
+You know this graph in your bones: DRAM latency has been roughly flat for twenty years while core throughput went up two orders of magnitude. A cache miss costs you a few hundred cycles. A modern core can retire a dozen instructions in that time, times however many lanes your simmed unit has.

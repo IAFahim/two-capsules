@@ -1,0 +1,1 @@
+Probe, Jobs then Burst then Open Inspector in the editor shows the actual assembly Burst generated for any bursted method. Read it. If you were expecting vmulps and you see a call into a math library, something broke your vectorization.

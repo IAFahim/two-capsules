@@ -1,0 +1,1 @@
+It reads this tick's connection facts, latches them into durable graph state, and sends the go in game request exactly once per connection identity. Keying on identity rather than a boolean means a reconnect resends correctly while a retry does not spam.

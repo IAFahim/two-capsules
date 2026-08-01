@@ -1,0 +1,1 @@
+Two flat arrays allocated once at world creation, indexed by a compact type number. Types are only given a slot the first time somebody actually declares access to them, so most of the array stays untouched. The whole structure is cleared wholesale at every full barrier rather than being maintained incrementally.

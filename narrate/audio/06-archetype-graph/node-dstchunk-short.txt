@@ -1,0 +1,1 @@
+A different allocation, a different slot number, and every old pointer now lies.

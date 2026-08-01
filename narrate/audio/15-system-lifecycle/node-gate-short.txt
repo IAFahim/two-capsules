@@ -1,0 +1,1 @@
+The enabled bit ANDed with the requirement test, evaluated every single frame.

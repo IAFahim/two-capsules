@@ -1,0 +1,1 @@
+Four sections can be in flight at once by default, each in its own world. That world is populated only with systems carrying the process after load filter, and the code explicitly refuses to let system entities exist inside it. So your world never observes a partially built section, not because anyone is careful, but because it is not in your address space yet.

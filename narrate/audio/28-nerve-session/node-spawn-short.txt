@@ -1,0 +1,1 @@
+Turns an approved connection into a controller, or finds the one it left behind.

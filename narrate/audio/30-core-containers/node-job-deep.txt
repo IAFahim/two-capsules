@@ -1,0 +1,1 @@
+Everything on this map exists because of that constraint. Each arrow into this node is a way of getting information in past the boundary, and each arrow out is a way of getting something back past it. Once you see the layer that way, the odd looking parts stop looking odd.

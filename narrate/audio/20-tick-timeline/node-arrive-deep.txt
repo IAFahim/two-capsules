@@ -1,0 +1,1 @@
+This is the timeline the standard three clock picture omits. It is not the server's present, because that packet took half a round trip to get here. It is not either of the client's own clocks. It is the raw arrival edge, and both smooth clocks are phase estimates built from it.

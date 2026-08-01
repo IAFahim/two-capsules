@@ -1,0 +1,1 @@
+Replication in this stack has no runtime reflection cost, and the reason is that none of it happens at runtime. A Roslyn generator runs during C sharp compilation, once per assembly, sweeping every syntax tree and sorting candidates into buckets. By the time a world exists, the serialization code is already compiled machine code with a Burst function pointer attached to it.

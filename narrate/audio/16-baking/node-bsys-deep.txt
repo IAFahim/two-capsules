@@ -1,0 +1,1 @@
+This is where anything cross cutting belongs: building a lookup table from every object of a kind, resolving references between separately baked objects, computing something that needs a total. They run in the baking world with a filter flag of their own, and they are marked to never be auto created anywhere else.

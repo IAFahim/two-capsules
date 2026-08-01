@@ -1,0 +1,1 @@
+Its attributes say three things: order first, after the begin command buffer system, and before ghost simulation. So packets are pulled off the socket and into memory before any system that wants to read them has run. This is also where connection handling and command receive live on the server.

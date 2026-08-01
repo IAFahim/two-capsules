@@ -1,0 +1,1 @@
+To rewind the world to what a client saw, the server has to know how far behind that view was, and the client is the one who says. Inflate that number and the server rewinds further than your view required. The structural bound is the history buffer, which holds at most thirty two collision worlds, so your history size is literally your maximum exploitable rewind.

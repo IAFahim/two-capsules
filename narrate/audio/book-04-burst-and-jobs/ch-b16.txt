@@ -1,0 +1,1 @@
+Hardware analogy, the job system is a scoreboard. Every Native Container is a register with readers and writers tracked; the scheduler stalls dependents until hazards clear. Unity's version just yells at you at compile time instead of stalling silently.

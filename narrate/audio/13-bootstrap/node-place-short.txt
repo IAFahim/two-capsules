@@ -1,0 +1,1 @@
+Each system is handed to the group its attribute names, then everything is sorted once.

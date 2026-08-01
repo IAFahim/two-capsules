@@ -1,0 +1,1 @@
+Your capsule is drawn ahead of the server; everyone else's, behind it.

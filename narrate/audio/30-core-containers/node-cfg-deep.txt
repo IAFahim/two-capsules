@@ -1,0 +1,1 @@
+Shared statics are the vehicle because they are the only storage both worlds can see. Registration happens on code load, and command line arguments of the matching name override the stored value, which is what makes a headless server tunable without a build.

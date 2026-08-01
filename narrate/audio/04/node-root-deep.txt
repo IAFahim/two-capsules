@@ -1,0 +1,1 @@
+That is the whole reason the connection tracker lives here. Attach a watchdog to a child state and it stops watching the moment you leave that state, which for a disconnect detector is exactly the wrong time. Shared watchdogs go at the top of the hierarchy.

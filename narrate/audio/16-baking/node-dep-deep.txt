@@ -1,0 +1,1 @@
+This is the mechanism behind incremental baking, and behind its most confusing failure. Read a value through a declared dependency and edits to it trigger a re-bake of exactly that baker. Read it some other way and the record does not know it was an input, so your edit changes nothing and no error is ever printed.

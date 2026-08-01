@@ -1,0 +1,1 @@
+It implements Unity's custom bootstrap hook. The important consequence is that world creation is an explicit decision made by a graph node, not a side effect of entering play mode. That is also why a virtual player with the wrong play type will build a second server world and fail to bind the port.

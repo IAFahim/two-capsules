@@ -1,0 +1,1 @@
+A settings asset is a scriptable object that bakes into an entity.

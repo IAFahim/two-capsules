@@ -1,0 +1,1 @@
+This is what gets rendered for anything you own, and it is deliberately ahead of the truth so that your input has zero perceived latency. Everything else on screen is behind the truth instead. Nobody, on any machine, is looking at the server's actual present.

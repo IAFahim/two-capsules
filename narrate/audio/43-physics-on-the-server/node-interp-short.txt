@@ -1,0 +1,1 @@
+The server solves, the client interpolates, the client's solver is never involved.

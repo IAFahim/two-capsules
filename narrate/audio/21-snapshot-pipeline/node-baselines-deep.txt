@@ -1,0 +1,1 @@
+Thirty two slots per chunk, each holding a previously serialised snapshot. Only slots this client acknowledged can be used as baselines, and a baseline older than the maximum age is discarded. Because every connection acknowledges a different tick, every connection gets a different encoding of the same world.

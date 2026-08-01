@@ -1,0 +1,1 @@
+The key is a prefix built from the product name plus the setting name, so it is per project and not per instance. Its default is client and server. That single default is what makes a second editor try to bind a port that is already taken, and the cascade of loader and entity errors that follows is much louder than the bind failure itself.

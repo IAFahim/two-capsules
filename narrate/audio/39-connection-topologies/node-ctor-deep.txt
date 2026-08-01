@@ -1,0 +1,1 @@
+It has two methods, one for the client world and one for the server world, and it lazily defaults to a constructor that registers in process and socket drivers. Assign your own before any world is created. Relay parameters, certificates, and queue sizes are all just settings you apply before calling the register helper.

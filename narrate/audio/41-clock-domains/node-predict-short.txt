@@ -1,0 +1,1 @@
+An entity the client simulates ahead of the server, and pays for.

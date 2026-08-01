@@ -1,0 +1,1 @@
+The same systems the server runs, under one world filter naming both sides, so there is literally one implementation. Anything with an external side effect must be gated on the flag that marks the first time a tick is fully predicted, or it happens once per replay. That flag is the difference between a sound effect and a machine gun.

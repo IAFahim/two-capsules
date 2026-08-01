@@ -1,0 +1,1 @@
+An attribute on a static method, claiming one opcode for that method.

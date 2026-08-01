@@ -1,0 +1,1 @@
+It is a dead code pass. Types marked as temporary baking types exist during the compile so that one phase can hand information to the next, and they are deleted before serialization so none of it reaches the player. Which is why a component you invented purely as scaffolding is invisible to every runtime inspector, correctly.

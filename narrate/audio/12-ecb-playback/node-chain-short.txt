@@ -1,0 +1,1 @@
+One chain per worker thread, four kilobyte blocks, no synchronisation at all.

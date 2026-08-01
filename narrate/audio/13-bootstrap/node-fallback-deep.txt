@@ -1,0 +1,1 @@
+It is named, flagged as a game world, made the default injection target, and populated with the default filter expansion, which is local simulation plus presentation. That is the single player configuration. Every tutorial you have read assumes this world exists, and in a netcode project it usually does not.

@@ -1,0 +1,1 @@
+The active leaf, one history entry per remembering parent, and a transition version counter. Their keys are carved out of the top of the number space, counting downward, so they cannot collide with anything a node would ever choose. The machine has no storage of its own at all.

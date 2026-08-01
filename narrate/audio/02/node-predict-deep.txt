@@ -1,0 +1,1 @@
+It only touches entities whose simulate bit is enabled for the tick being simulated. Simulate is a clock enable line: the clock is running, and that bit decides who latches this edge. Omit it and a ten tick replay moves your capsule ten times too far.

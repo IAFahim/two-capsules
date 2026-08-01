@@ -1,0 +1,1 @@
+It takes the number, and optionally the input type for nodes that receive a value. The generator finds these purely by attribute name, collects every claim across every assembly it can see, and builds the dispatch from that set. Nothing registers at runtime and nothing is discovered by reflection while the game is running.

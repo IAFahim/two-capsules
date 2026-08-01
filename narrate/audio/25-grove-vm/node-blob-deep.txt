@@ -1,0 +1,1 @@
+It holds a root pointer, a table of every node keyed by node id, and the declared inputs and outputs of the graph. Because it contains no absolute addresses it can be memory mapped, shared read only, and handed to thousands of entities at once. Nothing per entity can possibly live here.

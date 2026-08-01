@@ -1,0 +1,1 @@
+The redundancy lives in the payload rather than the protocol, which is why input feels solid on a lossy link while positions still visibly hitch. A retransmit would arrive too late to matter, so nothing is retransmitted.

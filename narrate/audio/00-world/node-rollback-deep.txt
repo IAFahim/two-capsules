@@ -1,0 +1,1 @@
+Every frame the client rewinds its predicted entities to the last tick the server confirmed and resimulates forward to the present. What surprises people is that there is no comparison step. The server's state is written over the prediction whether or not the prediction was right, and when it was right the write simply changes nothing.

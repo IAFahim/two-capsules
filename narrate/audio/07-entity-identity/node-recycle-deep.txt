@@ -1,0 +1,1 @@
+The index is the scarce resource, so it gets reused aggressively, and the version is what keeps that reuse honest. Every reuse bumps the version, so no handle from a previous life ever compares equal. The low bit of the version doubles as the liveness flag, which means the counter effectively advances by one on death and one on rebirth.

@@ -1,0 +1,1 @@
+One contiguous allocation: a fixed thirty-two byte header, then all the data.

@@ -1,0 +1,1 @@
+This chapter refuses to tell you what a bad millisecond looks like, because that was never measured here. But the package itself defines exactly two thresholds. Compression efficiency below seventy percent is flagged as poor. A snapshot approaching ninety percent of the maximum message size is flagged as reaching the ceiling. Those are the package's numbers, not invented ones.

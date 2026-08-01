@@ -1,0 +1,1 @@
+Entities Graphics uploads matrices to the GPU and issues batched draws.

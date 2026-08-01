@@ -1,0 +1,1 @@
+At runtime the bytes are read, the references are patched, and the entities are moved in.

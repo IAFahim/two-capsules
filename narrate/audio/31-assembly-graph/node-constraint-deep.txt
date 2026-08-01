@@ -1,0 +1,1 @@
+Unity evaluates the list before compiling. All present, the assembly is built. One absent, it is skipped in its entirety and no diagnostic is emitted. There is no OR operator and no partial mode. The negation prefix exists, which makes it possible to write mutually exclusive assemblies, and that is the only escape hatch there is.

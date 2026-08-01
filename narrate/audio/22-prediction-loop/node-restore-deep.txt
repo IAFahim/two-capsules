@@ -1,0 +1,1 @@
+Only fields that are actually part of the replicated schema get written. Everything else keeps whatever the last replay left in it, which is a sharp edge: mutate an unreplicated field inside the prediction loop and that mutation is applied once per replayed tick and never undone. It looks correct until the first dropped packet.

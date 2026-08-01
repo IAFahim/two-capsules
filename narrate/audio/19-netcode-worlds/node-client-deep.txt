@@ -1,0 +1,1 @@
+It never has authority over anything. What it does have is two derived timelines, one behind the server and one ahead of it, and every replicated entity in it is assigned to one of them. That assignment is the single largest performance decision in the project, and it is made per prefab at bake time.

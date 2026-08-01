@@ -1,0 +1,1 @@
+All three appear in this stack. Client App Context uses the third to hold a System State*, because a Grove context must reach the system it is running inside. That is not sloppiness, it is the same reason you cast away volatile exactly once in a driver, in a place with a comment.

@@ -1,0 +1,1 @@
+The component that receives it is documented as the latest reported delay, which is exactly as trustworthy as it sounds. It is also never reset when the client switches which entity it is controlling, so a stale value from a previous vehicle silently applies to the next one. That is a correctness bug before it is a security one.

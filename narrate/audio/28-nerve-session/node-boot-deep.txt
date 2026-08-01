@@ -1,0 +1,1 @@
+It is the ordinary custom bootstrap hook, and when netcode is present the same class instead extends the netcode bootstrap so the world model swaps cleanly onto Unity's. What it deliberately does not do is create a game world, because deciding when a game exists is a gameplay question, not a startup question.

@@ -1,0 +1,1 @@
+Initialization goes into the engine's initialization phase, simulation into update, presentation into the phase before late update. That is the whole connection between an entity world and a running game. It also means every world in the process is walked sequentially inside one frame, on the main thread, one after another. Six worlds is six walks, not six threads.

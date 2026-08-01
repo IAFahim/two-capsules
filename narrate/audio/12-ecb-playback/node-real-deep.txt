@@ -1,0 +1,1 @@
+The identifier comes from the same global slot table every other entity uses, allocated with atomics so a worker thread can do it without a lock. What playback adds is not the identity but the storage: the entity gets a chunk and a slot. This is also why the source carries a comment worrying about atomic contention on processors where that is expensive.

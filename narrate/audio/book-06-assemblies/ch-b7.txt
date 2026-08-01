@@ -1,0 +1,1 @@
+define Constraints, "compile me only if ALL of these are defined"

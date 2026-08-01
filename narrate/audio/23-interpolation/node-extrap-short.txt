@@ -1,0 +1,1 @@
+No slot newer than the target, so the last known pair is run forward.

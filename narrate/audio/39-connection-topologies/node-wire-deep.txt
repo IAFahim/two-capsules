@@ -1,0 +1,1 @@
+Defaults worth knowing: a maximum message size of fourteen hundred bytes, a reliable window of thirty two, a fragmentation payload capacity of sixteen kilobytes, and a thirty second disconnect timeout with a half second heartbeat. In the editor a maximum frame time is set so a breakpoint does not look like a dropped connection.

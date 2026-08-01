@@ -1,0 +1,1 @@
+Frame rate evaluation, client only, for anything a human eye is the sole consumer of.

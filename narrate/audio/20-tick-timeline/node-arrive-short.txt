@@ -1,0 +1,1 @@
+The newest server tick the client actually holds. It moves in jumps.

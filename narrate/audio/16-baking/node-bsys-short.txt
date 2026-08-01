@@ -1,0 +1,1 @@
+Ordinary systems that run after every baker, with full query access to the scene.

@@ -1,0 +1,1 @@
+It is created, used and disposed inside a single call, and it carries the baking filter flag so only baking systems land in it. Anything decided here was decided before either runtime world existed, which is why a wrong baked value can never be fixed by a runtime system.

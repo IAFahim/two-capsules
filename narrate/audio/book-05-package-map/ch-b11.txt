@@ -1,0 +1,1 @@
+That table is the chapter's whole point. Four of our packages exist purely to satisfy compile-time constraints. Chapter 06 explains the mechanism, and it is the nastiest silent failure in the entire Unity toolchain.

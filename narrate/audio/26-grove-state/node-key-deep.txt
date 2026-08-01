@@ -1,0 +1,1 @@
+It is never stored, only computed, which is why it can be four words wide without costing anything in the buffer. The ordering matters more than the width: graph first means an entire graph's memory can be found and removed by matching one field.

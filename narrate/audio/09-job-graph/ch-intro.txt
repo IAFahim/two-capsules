@@ -1,0 +1,1 @@
+You have seen this structure before, in a processor. For every component type there is one slot holding the fence of the last job that wrote it, and a small array of slots holding the fences of jobs that are currently reading it. That is a reader writer scoreboard, and every dependency edge you never wrote comes out of it by the same rules you would use for register hazards.

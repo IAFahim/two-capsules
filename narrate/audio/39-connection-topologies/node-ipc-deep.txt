@@ -1,0 +1,1 @@
+It is what makes a listen server's own player feel instant, and it is also what makes editor testing dishonest, because a perfect link hides exactly the class of bug that ships. Develop with the simulator on, which forces even the local client onto a real socket.

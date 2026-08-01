@@ -1,0 +1,1 @@
+The second trap: referencing an editor-only assembly from runtime code

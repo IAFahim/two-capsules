@@ -1,0 +1,1 @@
+Not a name, not an object, not a class. A sorted array of type numbers, plus the layout that follows from it: which arrays exist, at what offsets, with what strides, and how many entities fit. Every chunk carrying that archetype has a byte identical layout, which is the whole reason one set of offsets can drive iteration over thousands of chunks.

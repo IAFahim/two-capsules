@@ -1,0 +1,1 @@
+Approved, account identity, network id, and command target must all be present. That is why the connection ladder is really just asking which of those four is missing. It then spawns two entities per player and links them.

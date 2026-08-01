@@ -1,0 +1,1 @@
+The runtime keeps a linked list of archetypes touched during this batch, walks it, and clears a flag on each of their queries. That is all it does. The actual rebuild is lazy, so the work lands on whichever system next iterates one of those queries, which is why the profile blames the wrong system.

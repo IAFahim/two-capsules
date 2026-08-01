@@ -1,0 +1,1 @@
+Not an exception in a shipping build, not a crash, not a garbage pointer. A null chunk, which every caller already has to handle. In development builds there is an extra check that throws with a message naming the destroyed entity, but the shipping behaviour is the quiet one, and it is quiet on purpose.

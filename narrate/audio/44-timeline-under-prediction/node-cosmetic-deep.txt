@@ -1,0 +1,1 @@
+A particle burst is not a component value, so replay cannot take it back. The gate is a single flag on the network time singleton that is set only when a tick is being fully predicted for the first time, and cleared on partial ticks. Four lines, and it is the only netcode aware code most clip authors will ever have to write.

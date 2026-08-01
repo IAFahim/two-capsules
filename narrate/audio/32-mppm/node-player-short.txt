@@ -1,0 +1,1 @@
+A real second editor process, with its own worlds, sockets and domain.

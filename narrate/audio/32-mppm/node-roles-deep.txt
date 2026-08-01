@@ -1,0 +1,1 @@
+Installing the dedicated server package defines the roles symbol through a version define on netcode's own assembly. With it, the preference getter asks the roles manager first and returns immediately, so the shared key becomes unreachable. Each player's role lives in the play mode system data file alongside its name and identifier.

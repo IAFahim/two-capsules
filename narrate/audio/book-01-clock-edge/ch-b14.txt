@@ -1,0 +1,1 @@
+Our project has, at peak, six live worlds in one process (Part I chapter 3 explains why). Each one registers into that same table. So a single frame looks like:

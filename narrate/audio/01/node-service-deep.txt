@@ -1,0 +1,1 @@
+It is created at startup and never destroyed. Because it survives world transitions, it is the right home for anything that must outlive a match: authentication, analytics, and the state machine that decides whether you are in the menu or in a game.

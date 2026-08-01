@@ -1,0 +1,1 @@
+One command at a time, on the main thread, with the world stopped.

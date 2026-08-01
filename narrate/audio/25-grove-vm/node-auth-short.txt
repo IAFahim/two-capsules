@@ -1,0 +1,1 @@
+One small settings object per node, each carrying its own opcode.

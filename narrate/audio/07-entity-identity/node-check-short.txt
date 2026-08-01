@@ -1,0 +1,1 @@
+Compare the version in the slot against the version in your hand.

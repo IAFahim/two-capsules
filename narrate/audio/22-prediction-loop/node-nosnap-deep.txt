@@ -1,0 +1,1 @@
+At sixty frames a second against a twenty hertz send rate, two frames out of three have nothing new to apply. The loop still runs. It restores from the client's own backup of its last fully simulated tick and keeps going, which is why prediction feels continuous rather than stepping every time a packet lands.

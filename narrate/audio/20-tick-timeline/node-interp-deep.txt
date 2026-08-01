@@ -1,0 +1,1 @@
+Its rate multiplier is clamped between eighty five hundredths and one and a tenth, and it corrects a tenth of the remaining error per frame. Only an error above ten ticks makes it snap. The depth it trails by is not a constant: it is the larger of your configured window and a jitter derived estimate, so a lossy link deepens it for you.

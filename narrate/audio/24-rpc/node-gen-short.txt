@@ -1,0 +1,1 @@
+A generated system per command type, serialising into a per-connection buffer.

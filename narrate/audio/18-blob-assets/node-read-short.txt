@@ -1,0 +1,1 @@
+Shared by every entity that references it, immutable, and never copied.

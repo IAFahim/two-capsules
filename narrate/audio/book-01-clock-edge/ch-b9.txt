@@ -1,0 +1,1 @@
+Unity's Player Loop is a tree of function pointers grouped into phases: Initialization, Early Update, Fixed Update, Pre Update, Update, Pre Late Update, Post Late Update. You can read it, modify it, and write it back at runtime.

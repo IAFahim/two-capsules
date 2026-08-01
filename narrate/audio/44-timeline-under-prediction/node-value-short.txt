@@ -1,0 +1,1 @@
+Continuous sampled output: curves, offsets, root motion, stat modifiers.

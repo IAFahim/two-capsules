@@ -1,0 +1,1 @@
+Your batched scoring function, called once per connection with every chunk.

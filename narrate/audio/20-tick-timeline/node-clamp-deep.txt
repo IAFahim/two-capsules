@@ -1,0 +1,1 @@
+With enough forced latency the predicted tick can drop below the interpolation tick, which would put the four timelines out of order. Netcode detects that and pulls the interpolation target forward to meet the predicted tick instead. The visible consequence is that the interpolation window lengthens on its own, so the two settings are coupled at the extreme.

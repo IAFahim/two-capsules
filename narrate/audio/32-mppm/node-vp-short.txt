@@ -1,0 +1,1 @@
+A directory per player, whose assets and settings are symlinks to yours.

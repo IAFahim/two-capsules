@@ -1,0 +1,1 @@
+Your data component plus a send request on one entity. The request names a target connection, or leaves it null to broadcast. There is no call, no handle, no completion. It is a structural change, so a burst of them costs entity manager work long before it costs bandwidth.

@@ -1,0 +1,1 @@
+Because it ships in the build rather than over the wire, both sides already agree on everything except the position of the play head. That is why only a short timeline identifier and a start tick ever need to travel, and why a field that never changes costs almost nothing after the first snapshot.

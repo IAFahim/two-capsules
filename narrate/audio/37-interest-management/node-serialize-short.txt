@@ -1,0 +1,1 @@
+Writes ghosts into the packet, delta compressed against this client's acknowledgement.

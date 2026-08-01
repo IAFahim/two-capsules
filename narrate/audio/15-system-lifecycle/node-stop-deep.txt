@@ -1,0 +1,1 @@
+A single stored bit remembers last frame's answer, so this callback cannot fire twice in a row and cannot fire on a system that never ran. Before it is called the engine completes the system's outstanding dependency, which means it is the one safe place to release native containers the system was still handing to jobs.

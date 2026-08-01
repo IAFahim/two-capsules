@@ -1,0 +1,1 @@
+Three separate limits can stop it early: the number of chunks it is allowed to examine, the number it is allowed to send from, and the packet filling up. Set the examine limit too low and the packet goes out half empty, because that limit is applied before relevancy is even checked.

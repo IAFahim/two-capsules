@@ -1,0 +1,1 @@
+Each component type hashes deterministically to five set bits. An archetype ors together the masks of every type it holds; a query ors together the masks of what it requires. If the query's bits are not a subset of the archetype's, no match is possible. False positives cost you an exact check you would have done anyway. False negatives cannot happen, which is what makes it safe.

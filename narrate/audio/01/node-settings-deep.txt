@@ -1,0 +1,1 @@
+It is the bridge between a designer's number in the inspector and blittable data in a chunk. The world it lands in is decided by an attribute on the class, which a utility reads to insert the asset into the right authoring prefab. Never hand edit that array.

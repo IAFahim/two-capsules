@@ -1,0 +1,1 @@
+That is exactly how the sample's Start Game button reaches E C S, and how Nerve's Client Disconnection Outcome escapes the graph. When you see Shared Static, read it as "a global that Burst and Mono agree on".

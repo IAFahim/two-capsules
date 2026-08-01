@@ -1,0 +1,1 @@
+Hardware analogy, Burst is a cross-compiler with -O3 -ffast-math -march=native aimed at a language that normally forbids all three. [Burst Compile] is you signing the waiver.

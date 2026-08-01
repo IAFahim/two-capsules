@@ -1,0 +1,1 @@
+A version compare that can skip a whole chunk without reading it.

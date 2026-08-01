@@ -1,0 +1,1 @@
+The lookup walks the ring from newest backwards, keeping the closest slot newer than the target and taking the first slot at or older than it. The factor is how far the target sits between them, plus the fractional part of the tick. With only one usable slot the factor is pinned to zero, which is why a ghost that has just appeared sits still for a moment.

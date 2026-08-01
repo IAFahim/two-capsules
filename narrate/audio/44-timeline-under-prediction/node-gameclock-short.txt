@@ -1,0 +1,1 @@
+Tick minus start tick, evaluated inside prediction, on both client and server.

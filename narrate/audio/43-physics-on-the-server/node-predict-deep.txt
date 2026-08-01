@@ -1,0 +1,1 @@
+Each predicted body costs a full broadphase, narrowphase and constraint solve per replayed tick, not a transform integration. Raising substeps or solver iterations multiplies against replay depth, which is why both are the wrong first knob under prediction. Fix the predicted body count first.

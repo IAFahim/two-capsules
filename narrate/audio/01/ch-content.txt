@@ -1,0 +1,1 @@
+This is the path people lose entities in. A settings asset sits on a settings authoring prefab. That prefab is instantiated in a scene. That scene is listed in a sub scene set carrying a world flag. Only then does baking put the entity in the world you expected. Four hops, and every one of them fails silently.

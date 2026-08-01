@@ -1,0 +1,1 @@
+This is where you want to be, and it is the default. Systems schedule work, hand each other handles through the scoreboard, and the main thread stays ahead of the workers. Nothing on this map happens at all until somebody asks to change the shape of an entity.

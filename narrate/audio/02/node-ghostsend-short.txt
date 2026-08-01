@@ -1,0 +1,1 @@
+Delta compresses truth against each connection's acknowledged baseline.

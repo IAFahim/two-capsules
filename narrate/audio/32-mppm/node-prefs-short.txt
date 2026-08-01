@@ -1,0 +1,1 @@
+One key, scoped by product name, read identically by every instance.

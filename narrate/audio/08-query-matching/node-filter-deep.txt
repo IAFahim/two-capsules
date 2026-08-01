@@ -1,0 +1,1 @@
+Two flavours: filter by a shared component value, or filter by whether a component type has been written since a given version. Both have a capacity of exactly two, which is a real ceiling rather than a soft guideline. And both operate per chunk, so change filtering is coarse: one write anywhere in a chunk makes the whole chunk look changed.

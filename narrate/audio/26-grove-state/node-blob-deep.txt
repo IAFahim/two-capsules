@@ -1,0 +1,1 @@
+It is a blob, so it is relocatable bytes with no addresses inside. That is exactly what makes it shareable, and exactly what makes it useless as storage. Anything in here is the same for the ten thousandth entity as it was for the first.

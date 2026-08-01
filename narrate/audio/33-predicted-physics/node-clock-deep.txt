@@ -1,0 +1,1 @@
+On the server it advances once per frame. On the client it can advance many times in one frame, replaying every tick since the last correction. Everything downstream inherits that behaviour, including the solver, which is why physics had to be moved into this group in the first place.

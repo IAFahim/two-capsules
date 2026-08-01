@@ -1,0 +1,1 @@
+That is what makes it a falsifiable check. Delete the old workaround, run, and read the state id. If it says gameplay, the graph sent the request, because no other code path can set it. An outcome can have many causes; a mechanism has one.

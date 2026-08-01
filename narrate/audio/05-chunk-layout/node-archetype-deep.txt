@@ -1,0 +1,1 @@
+An archetype is a set, not an object. It owns the layout: which arrays exist, in what order, at what offsets, and how many entities fit. Every chunk with the same archetype has a byte identical layout, which is what lets a query iterate many chunks with one set of type offsets computed once.

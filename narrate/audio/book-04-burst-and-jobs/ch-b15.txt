@@ -1,0 +1,1 @@
+state.Dependency is a Job Handle, a token in that graph. Schedule a job, get a handle, pass it on. The safety system tracks which Native Arrays each job reads and writes and refuses to compile or run an unsafe combination.

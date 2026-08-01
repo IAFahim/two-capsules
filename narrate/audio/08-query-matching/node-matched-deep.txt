@@ -1,0 +1,1 @@
+The query gets a record naming the archetype and the position of each requested type inside it, so iteration never has to search for a type again. The archetype gets a back pointer to the query. That back pointer is what lets a structural change find every query it just invalidated without searching, and it is the quiet reason invalidation is cheap.

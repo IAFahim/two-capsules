@@ -1,0 +1,1 @@
+Reads an index, invokes a function pointer, and checks the bits afterwards.

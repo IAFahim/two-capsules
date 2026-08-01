@@ -1,0 +1,1 @@
+A hash map whose entire storage is one dynamic buffer on an entity.

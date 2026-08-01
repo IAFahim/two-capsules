@@ -1,0 +1,1 @@
+This is the routing table. A scene listed with the client flag loads into client worlds; the server flag, server worlds. When an entity you expected is missing from a world, walk this path backwards — asset, prefab, scene, set, flag — and you will find the broken link.

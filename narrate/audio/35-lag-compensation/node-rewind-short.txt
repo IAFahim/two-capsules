@@ -1,0 +1,1 @@
+Subtracts the delay from the current tick and hands back a world.

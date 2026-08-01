@@ -1,0 +1,1 @@
+It is spliced into the engine's initialization phase, which is before the ordinary update. That placement is why a subscene section can become resident before any simulation system runs that frame, and why entities from a scene appear at the top of a frame rather than in the middle of one.

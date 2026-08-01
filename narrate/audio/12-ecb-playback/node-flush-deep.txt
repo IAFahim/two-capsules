@@ -1,0 +1,1 @@
+This is the moment the deferred work becomes a real barrier, and it is the point of the whole exercise: one barrier at a system whose position in the update order you picked, rather than one wherever the change was requested. Playback failures are caught per buffer and reported with the name of the system that recorded them, which is unusually kind.

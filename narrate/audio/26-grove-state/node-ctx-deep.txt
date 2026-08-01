@@ -1,0 +1,1 @@
+It is refreshed once per chunk rather than once per entity, and then indexed by the entity's slot inside that chunk. So getting at an entity's memory is an array index, not a lookup. This is the same trick every other system in this codebase uses, applied to a container that happens to be a hash map.

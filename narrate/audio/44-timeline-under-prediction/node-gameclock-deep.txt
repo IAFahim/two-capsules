@@ -1,0 +1,1 @@
+Stateless by construction. Replay the same tick nine times and it returns the same number nine times, because its only input is the tick, and the tick is restored for you every frame. This is the whole reason to derive rather than accumulate: you are not asking rollback to save and restore anything, you are asking it to leave you alone.

@@ -1,0 +1,1 @@
+The client keeps the same thirty two slot history the server assumes it has, which is why the two stay in step. Nothing is applied to an entity here. This stage only fills a slot and stamps it with its tick. It also builds the acknowledgement that rides back on the command stream and tells the server which baselines it may use next.

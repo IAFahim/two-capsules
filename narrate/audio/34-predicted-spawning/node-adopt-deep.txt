@@ -1,0 +1,1 @@
+This is the entire payoff. The adopted entity is the same entity the player has been watching since the trigger pull. It keeps its position, its particle trail, and every purely local component, and from this point forward it receives the server's snapshots like any other ghost.

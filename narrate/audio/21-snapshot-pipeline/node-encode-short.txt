@@ -1,0 +1,1 @@
+Change mask, then a residual against a prediction, then an entropy coder.

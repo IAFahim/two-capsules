@@ -1,0 +1,1 @@
+It advances at the simulation rate and it is the only tick that is not an estimate of something else. Every other number on this map is a client's attempt to be somewhere useful relative to it. One side lags it deliberately, one side runs ahead of it deliberately, and neither is ever equal to it.

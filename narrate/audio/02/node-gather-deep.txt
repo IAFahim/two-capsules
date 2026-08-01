@@ -1,0 +1,1 @@
+It filters on ghost owner is local, a tag NetCode adds to ghosts whose owner id matches yours. Without that filter you would write your input into every player's capsule in your world. It is also not Burst compiled, because the keyboard is managed.

@@ -1,0 +1,1 @@
+Burst is a compiler. It turns a subset of C# into machine code via LLVM. Jobs is a scheduler. It runs work on worker threads with enforced data safety.

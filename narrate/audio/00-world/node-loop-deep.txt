@@ -1,0 +1,1 @@
+This region covers where your world actually comes from: the custom bootstrap that creates it, the tree of system groups that decides what runs when, and the baking step that turns editor objects into entities. That last one is a compile step that nobody tells you is a compile step, which is why the errors from it are so surprising the first time.

@@ -1,0 +1,1 @@
+Everything the command buffer does with managed components ends up here, because none of it can exist in a native build. The playback walker keeps a flag per chain and picks the native or the managed path from it. Crossing is never automatic and never silent in the source, even though it is completely invisible in the profiler unless you know the marker to look for.

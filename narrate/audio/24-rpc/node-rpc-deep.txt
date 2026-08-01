@@ -1,0 +1,1 @@
+There is no reflection and no dispatch table lookup by name. The index selects a Burst function pointer registered at startup. After invoking it, the system compares bits read against bits declared; a mismatch disconnects the sender immediately, because a desynchronised bit stream cannot be recovered. An unknown index disconnects too.

@@ -1,0 +1,1 @@
+The baker tags it and then delegates to each asset in turn, taking a dependency on the asset so that editing it re-bakes the scene. Forget that dependency in your own settings type and you will edit values, see nothing change, and lose an afternoon.

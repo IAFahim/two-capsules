@@ -1,0 +1,1 @@
+Every metric component and every counter here is wrapped in a compile time condition. In a release player without the debug define, the types do not exist and nothing is emitted. The collector also gates itself on the profiler being enabled, and it creates its own singleton entity. If you had already made one to read metrics from your own code, it destroys yours and warns you.

@@ -1,0 +1,1 @@
+It is a real connection with a real network identifier, running the whole netcode flow, just with a transport that never drops or delays anything. Whether the host's zero latency advantage is acceptable is a design decision. In a shooter it usually is not, and no configuration removes it.

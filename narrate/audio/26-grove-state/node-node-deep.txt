@@ -1,0 +1,1 @@
+Because there is one copy of the method and one copy of its data, a field on either would be a field shared by every entity in the world. So nodes read and write the map instead. Once you see that, the slightly ceremonial look of node code stops being ceremony and starts being the only option.

@@ -1,0 +1,1 @@
+Our project uses ISystem everywhere except where it genuinely cannot, the same rule the packages follow. Connection Approval Server System is a System Base precisely because it awaits an HTTP call to Unity Authentication.

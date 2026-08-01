@@ -1,0 +1,1 @@
+So the fastest code is not the code with the fewest instructions. It is the code that streams.

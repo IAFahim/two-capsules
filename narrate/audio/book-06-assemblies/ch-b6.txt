@@ -1,0 +1,1 @@
+Note the scope: per assembly. Every assembly definition that wants UNITY_NETCODE must declare its own version Defines entry. Symbols do not inherit from referenced assemblies. This is why the same 8-entry block is copy-pasted into every assembly definition in the Bovine Labs stack, and now into ours.

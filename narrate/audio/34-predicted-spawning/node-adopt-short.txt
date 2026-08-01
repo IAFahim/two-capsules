@@ -1,0 +1,1 @@
+Returns the client's entity untouched instead of instantiating a new one.

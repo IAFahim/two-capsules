@@ -1,0 +1,1 @@
+It declares itself before both the fixed step group and the prediction group, which is the ordering that makes the whole rollback scheme work: the authoritative state has to be written over the predicted state before the replay decides where to rewind to. The input gathering group and the command send group both live inside it.

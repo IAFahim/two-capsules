@@ -1,0 +1,1 @@
+Three assemblies for ~400 lines of code looks like over-engineering. It is not; chapter 06 shows what happens when you collapse them.

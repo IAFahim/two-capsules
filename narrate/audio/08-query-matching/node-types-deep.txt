@@ -1,0 +1,1 @@
+Disabled, prefab, system instance and meta chunk archetypes are excluded unless the query explicitly asked for them, and each is a single flag test. Then the required, present and excluded sets are checked by walking the archetype's sorted type array. There is also an early exit when the archetype simply has fewer types than the query requires.

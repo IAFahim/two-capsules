@@ -1,0 +1,1 @@
+It is delta compressed against whatever this connection last acknowledged, sent unreliably, and by the time it lands the client has already simulated well past it. Nothing is retransmitted, because a retransmit would arrive too late to be worth anything. The next snapshot simply re-bases.

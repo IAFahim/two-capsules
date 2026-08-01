@@ -1,0 +1,1 @@
+And Unity Net Code is not "multiplayer". It is a distributed system with a fixed clock, a command ring buffer, and speculative execution with rollback, which is to say, it is a CPU pipeline. You have debugged this shape before. You just called the parts different names.

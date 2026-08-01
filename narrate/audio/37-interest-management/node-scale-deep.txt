@@ -1,0 +1,1 @@
+The batched form is preferred because it replaces thousands of function pointer calls with one. It may rewrite each chunk's priority, and it may also flip a whole chunk relevancy flag, which is a fast path that skips the relevancy hash map completely. After it returns, the list is sorted in descending priority order.

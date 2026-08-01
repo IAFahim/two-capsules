@@ -1,0 +1,1 @@
+It shares no memory with the main editor. No static state crosses between them, no singleton is visible from one to the other, and a domain reload hits them independently. It has no play mode tools window, which is why verification here goes through scripting rather than the interface.

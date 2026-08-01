@@ -1,0 +1,1 @@
+One word per index, holding version, chunk, and position inside the chunk together.

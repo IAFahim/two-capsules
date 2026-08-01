@@ -1,0 +1,1 @@
+A third of the packet is reserved for despawn messages by default, before ghost data gets any of it, and the package suggests raising that toward three quarters at large scale. Because relevancy churn is spawn and despawn churn, a relevancy rule with no hysteresis will spend your packet on nothing but bookkeeping.

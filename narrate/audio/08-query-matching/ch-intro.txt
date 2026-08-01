@@ -1,0 +1,1 @@
+The word query makes you picture a scan. It is not a scan. By the time your update runs, the answer is a flat array of chunk indices that was computed earlier and cached. Everything on the left of this map happens when the query is created, or when a new archetype is born, and neither of those is per frame. What is left inside your loop is two bit tricks.

@@ -1,0 +1,1 @@
+A second physics index for dynamic bodies that are not ghosts.

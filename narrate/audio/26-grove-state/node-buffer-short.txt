@@ -1,0 +1,1 @@
+A dynamic buffer on the entity, which is where all of it actually lives.

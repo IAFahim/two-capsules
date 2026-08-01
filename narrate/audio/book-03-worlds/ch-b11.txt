@@ -1,0 +1,1 @@
+Worlds.Server Local is doing real work: it means "authority", whether that authority is a netcode server or an offline single-player world. Write your authoritative rules against that and single-player comes free.

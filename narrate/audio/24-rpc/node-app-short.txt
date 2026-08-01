@@ -1,0 +1,1 @@
+You create an entity. That is the entire send side of the API.

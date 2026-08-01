@@ -1,0 +1,1 @@
+The answer is transitive, and that is the expensive part. A body the player can push must be predicted. Anything that body can hit must also be predicted, or the contact happens between two different moments. Draw the closure honestly before you count the budget, because the closure is usually larger than the intuition.

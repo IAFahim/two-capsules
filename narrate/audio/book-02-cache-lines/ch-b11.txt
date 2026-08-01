@@ -1,0 +1,1 @@
+An archetype is the set of component types. {Local Transform, Player Move Input, Ghost Owner, Simulate} is an archetype. Every chunk belongs to exactly one archetype, and every entity in a chunk has exactly that component set, no more, no less.

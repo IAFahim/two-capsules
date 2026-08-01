@@ -1,0 +1,1 @@
+This one uses the platform include list rather than a symbol, and it references both of the others plus every editor side package assembly. It is where the client state graph asset is actually constructed. Nothing in it can ever be reached from a running player, which is the point.

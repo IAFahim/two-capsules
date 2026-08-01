@@ -1,0 +1,1 @@
+The absences are the point. No collector means no write barriers and no safe point polling in your loop. No managed objects means every value has a known size and can live in a register. Declared aliasing means the vectoriser is allowed to be aggressive. You are not getting faster C sharp, you are getting a different language that costs less to execute.

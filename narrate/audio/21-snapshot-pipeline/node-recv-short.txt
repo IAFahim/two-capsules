@@ -1,0 +1,1 @@
+Decode against our copy of the baseline, then write into a ring slot.

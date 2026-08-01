@@ -1,0 +1,1 @@
+Setting a component's value is not structural, because the bytes already have a home. Changing which components an entity has is, because it changes which archetype the entity belongs to, and therefore which chunk. Creating and destroying are structural for the same reason: a slot in a chunk has to appear or disappear.

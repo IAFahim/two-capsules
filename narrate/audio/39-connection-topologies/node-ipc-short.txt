@@ -1,0 +1,1 @@
+An in process driver with no socket, no latency, and guaranteed delivery.

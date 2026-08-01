@@ -1,0 +1,1 @@
+The product is compared against a minimum send importance floor, and dropped if it is below. Then it is multiplied by one thousand, purely to give your scaling function room to divide. If the whole chunk was irrelevant last time, the priority is divided down first, so barely relevant things do not churn.

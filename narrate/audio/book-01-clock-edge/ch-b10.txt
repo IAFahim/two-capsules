@@ -1,0 +1,1 @@
+DOTS uses this. When a World is created, Entities inserts callbacks into that table so its three root system groups get ticked:

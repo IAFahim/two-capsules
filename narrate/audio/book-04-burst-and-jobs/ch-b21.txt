@@ -1,0 +1,1 @@
+The lesson generalises: parallelism is a throughput tool with a fixed setup cost. Below a few thousand entities, foreach on the main thread wins. Measure before you schedule.

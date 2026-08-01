@@ -1,0 +1,1 @@
+Trap, [Update Before] only works between systems in the same group. Point it at a system in another group and Unity logs a warning and ignores it. You will see exactly this warning in our project's console, coming from Unity's own Companion Game Object Update Transform System. Harmless there; not harmless in your code.

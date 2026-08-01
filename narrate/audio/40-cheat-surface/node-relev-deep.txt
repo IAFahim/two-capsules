@@ -1,0 +1,1 @@
+Allowlist mode sends nothing unless listed, which is the correct posture for a competitive game. Denylist mode leaks anything you forget. Marking a component as owner only removes ammunition, cooldowns, and private state from every other client's snapshot entirely. Distance driven relevancy still leaks through walls at close range, which is exactly where it matters.

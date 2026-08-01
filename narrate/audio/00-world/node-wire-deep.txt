@@ -1,0 +1,1 @@
+One direction carries a bounded statement of what the player wants. The other carries delta compressed state, prioritised, cut off at whatever fits in a packet. A snapshot is not the world; it is as much of the world as fits, sorted by importance. Once you accept that, most of the rest of the network layer stops looking arbitrary.

@@ -1,0 +1,1 @@
+The send system does not think in entities, it thinks in chunks. Each chunk carries, for each connection separately, the tick it was last sent and the snapshot history used for delta compression. That is why the cost of sending grows with player count even when the world does not change at all.

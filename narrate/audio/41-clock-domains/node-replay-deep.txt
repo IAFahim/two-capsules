@@ -1,0 +1,1 @@
+Every frame, not just on a mismatch. When a snapshot arrives, the restore point is the tick that snapshot describes. When nothing arrives, the restore point is the client's own backup of its last full tick, so the loop keeps running on its own history. One loop covers every predicted ghost, and it rewinds as far as the oldest of them requires.

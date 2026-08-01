@@ -1,0 +1,1 @@
+Every internal pointer is a signed offset from the address of the offset field itself.

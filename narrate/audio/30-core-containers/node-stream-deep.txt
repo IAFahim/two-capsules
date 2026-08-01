@@ -1,0 +1,1 @@
+The engine's own stream makes you supply the bucket count when you schedule, which means you need a length before you have one. This one asks the job system how many threads exist and lets each writer pick its own bucket. So it works from any job shape, and its size is bounded by cores rather than by entities.

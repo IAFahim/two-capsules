@@ -1,0 +1,1 @@
+The getter is the raw field; the setter is wired straight to the compare and notify helper. Because you never write the setter, you can never accidentally write the field and skip the notification, and there is no stored dirty bit anywhere for the two halves to disagree about.

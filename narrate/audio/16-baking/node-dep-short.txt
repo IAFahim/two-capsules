@@ -1,0 +1,1 @@
+Every value a baker touched, recorded as the key that decides whether it re-runs.

@@ -1,0 +1,1 @@
+It is consulted only when the faster archetype masks and the chunk level flag have not already settled the question. There is one asymmetry worth knowing: a ghost matching netcode's own internal relevancy rule can never be marked irrelevant by your code.

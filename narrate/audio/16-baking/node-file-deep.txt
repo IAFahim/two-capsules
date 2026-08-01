@@ -1,0 +1,1 @@
+It is not a scene format in any recognisable sense. It is the memory layout of the chunks themselves, written out, with entity references converted to indices and blob handles converted to offsets. Which is why loading it is closer to mapping a binary than to parsing a document.

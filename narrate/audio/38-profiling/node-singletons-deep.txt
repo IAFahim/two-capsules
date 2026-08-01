@@ -1,0 +1,1 @@
+Network metrics carries round trip time, jitter, command age, and the minimum and maximum snapshot age. Snapshot metrics carries total size in bits, total ghost count, and despawn counts. Ghost metrics is a buffer with one entry per ghost type, holding instance count, size in bits, and chunk count on the server.

@@ -1,0 +1,1 @@
+Each state's blocks are called with the exit signal, and every block is expected to check for it and bail out of its normal work. Forget that check and your block runs while its own state is being torn down, usually just after the data it depends on has gone. Jumping again from inside exit throws, deliberately.

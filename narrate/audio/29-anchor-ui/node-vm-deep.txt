@@ -1,0 +1,1 @@
+It raises change notification before and after the copy, so anything listening sees a proper transition rather than a torn read. Its base class implements the three notification interfaces at once, which is what lets both hand written properties and generated ones funnel through one place.

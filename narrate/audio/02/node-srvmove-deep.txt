@@ -1,0 +1,1 @@
+One world filter names both client and server simulation, so there is literally one implementation. Two would mean two behaviours, and two behaviours mean permanent disagreement. This is what server authoritative with client prediction means in practice.

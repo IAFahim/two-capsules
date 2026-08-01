@@ -1,0 +1,1 @@
+Nothing here is automatic. The service world never dies, and it owns the application state graph. When that graph reaches the game state, it calls a node that asks the bootstrap to create the client and server worlds. The menu world is destroyed at the same moment. World creation is a decision the graph makes, not a side effect of pressing play.

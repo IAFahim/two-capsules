@@ -1,0 +1,1 @@
+The count is five bits, and the number actually sent is the target command slack plus the additional commands setting, which is redundancy against loss rather than a rate. Late arrivals and duplicate resends are both counted in a statistics block on the connection, which is where you detect a client behaving strangely.

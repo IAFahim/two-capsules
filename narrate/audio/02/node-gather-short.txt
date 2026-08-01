@@ -1,0 +1,1 @@
+Reads the keyboard and writes a direction onto the capsule you own.

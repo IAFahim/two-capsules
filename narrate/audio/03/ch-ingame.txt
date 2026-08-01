@@ -1,0 +1,1 @@
+Now the client graph acts. It adds network stream in game to the connection and sends a go in game request. That one flag is what arms the entire snapshot system. Without it the server sends zero ghosts, not fewer. This is the second silent gap: the node that does this ships with the framework, but it only runs inside a client graph, and the sample never authored one.

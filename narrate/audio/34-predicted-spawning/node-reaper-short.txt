@@ -1,0 +1,1 @@
+Destroys client spawns that were never claimed.

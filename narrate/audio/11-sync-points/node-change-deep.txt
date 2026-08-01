@@ -1,0 +1,1 @@
+Nothing else is running, so the change itself is a plain serial walk. Entities are moved chunk by chunk where possible rather than one at a time, and a chunk whose every entity is moving can be relabelled wholesale instead of copied. That batching is the single biggest reason operating on a query beats operating on entities in a loop.

@@ -1,0 +1,1 @@
+Managed memory means Burst cannot touch it. That is why the system reading it is deliberately not Burst compiled — and that is a correct decision, not a compromise. Read devices on the managed side, write a plain struct, and let every downstream system be fast.

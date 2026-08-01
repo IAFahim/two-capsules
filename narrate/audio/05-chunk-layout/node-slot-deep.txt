@@ -1,0 +1,1 @@
+There is no object here to hold. The address of entity three's transform is the transform array base plus three times thirty two. The address of its input is a completely different base plus three times eight. Those two addresses have nothing to do with each other except that the same number three produced both of them.

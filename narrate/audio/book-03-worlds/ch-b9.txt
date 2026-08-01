@@ -1,0 +1,1 @@
+Each world carries World Flags. Systems declare where they are allowed to exist:

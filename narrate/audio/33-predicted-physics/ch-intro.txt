@@ -1,0 +1,1 @@
+Nothing about the physics solver changes when you make it predicted. What changes is the clock feeding it. It used to be driven by a wall clock accumulator that ticked once per frame. It is now driven by the prediction tick, which can issue ten edges in a single frame after a correction arrives. Everything on this map is a consequence of that one substitution.

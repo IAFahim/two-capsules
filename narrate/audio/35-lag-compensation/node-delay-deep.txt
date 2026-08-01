@@ -1,0 +1,1 @@
+It is the tick distance from the server tick to the interpolation tick, nudged by one in either direction depending on the sub tick fractions, and never allowed below zero. It travels as a plain unsigned integer in the command header, so it costs four bytes on a packet the client was sending anyway.

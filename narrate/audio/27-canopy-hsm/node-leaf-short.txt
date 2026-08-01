@@ -1,0 +1,1 @@
+One number, held in graph state. That is the entire persisted machine.

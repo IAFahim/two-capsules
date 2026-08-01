@@ -1,0 +1,1 @@
+It carries only a back pointer to its controller. The connection's command target is what routes input to it, and the ghost owner field is what tells every client which one of these is theirs. Two entities per player is what lets identity outlive a respawn without any special casing.

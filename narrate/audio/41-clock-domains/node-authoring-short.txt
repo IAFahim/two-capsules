@@ -1,0 +1,1 @@
+The prefab component where the whole decision is made, at bake time.

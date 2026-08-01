@@ -1,0 +1,1 @@
+The package restricts the graphical smoothing component to predicted prefab variants, so that interpolated clients do not have physics smoothing fighting the snapshot interpolation that is already positioning the body. Smoothing writes a render pose and must never be read back into simulation, because that is a feedback loop that diverges.

@@ -1,0 +1,1 @@
+It has two jobs. It is the floor the loop restarts from when no snapshot arrives, and it is the reference the smoothing and error reporting compare against. The copy takes the whole component but the restore touches only the replicated part, which preserves any local state you keep alongside it.

@@ -1,0 +1,1 @@
+Its snapshot layout begins with a tick, then the change mask words, then the enabled bit mask words, then the component data, all aligned. Each replicated field contributes one change bit by default, and the composite option collapses a nested struct down to a single bit for the whole struct.

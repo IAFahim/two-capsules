@@ -1,0 +1,1 @@
+The packet carries a five byte common header and then whole messages until it is full. Nothing is ever split. If a single message cannot fit, that throws, because there is no fragmentation here. When the reliable window is full the send simply does not happen and is retried on a later tick, which is expected rather than exceptional.

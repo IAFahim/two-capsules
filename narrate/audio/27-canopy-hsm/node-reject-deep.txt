@@ -1,0 +1,1 @@
+The last one is the interesting one. State names collapse to a single integer, so two different names can collide, and the validator checks every pair at author time rather than shipping a one in four billion mystery. It is the same instinct as validating a perfect hash offline: if the lookup must be constant time and correct, prove the key set is clean before you build it.

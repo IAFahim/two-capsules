@@ -1,0 +1,1 @@
+One and operation against a sixty four bit mask rejects most archetypes.

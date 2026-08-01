@@ -1,0 +1,1 @@
+It lives alongside the acknowledgement bookkeeping for that connection, and it is only refreshed when a packet carrying a newer remote timestamp arrives. This is the single per connection value from which every per entity delay is copied.

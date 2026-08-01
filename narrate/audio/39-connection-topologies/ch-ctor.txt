@@ -1,0 +1,1 @@
+A single static property holds the driver constructor, and swapping it is how you inject relay parameters, transport layer security, or unusual queue sizes. You do not write driver creation by hand: the default builder gives you a register helper for every combination, and you mutate the settings object before handing it over.

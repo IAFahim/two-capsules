@@ -1,0 +1,1 @@
+Remember this word: Simulate. It is an enableable tag component, and in Part III it becomes the single most important bit in the whole prediction system. Net Code flips it to say "this entity should tick on this tick". Forget to respect it and your capsule integrates its velocity five times per frame instead of once.

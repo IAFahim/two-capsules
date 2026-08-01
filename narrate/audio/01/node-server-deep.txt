@@ -1,0 +1,1 @@
+It is inside its own boundary on this map because it is the only world allowed to write authoritative state. It also decides relevancy, which is a security boundary as much as a bandwidth one: information you never send cannot be extracted by a modified client.

@@ -1,0 +1,1 @@
+A node names a state. There are no transition edges anywhere in the graph.

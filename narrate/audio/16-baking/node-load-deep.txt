@@ -1,0 +1,1 @@
+There is no baker in the player. Not disabled, not stripped down: absent, because bakers live in editor only assemblies. So if a value is wrong at runtime, no runtime code made it wrong, and no runtime code can fix it. The only correct place to look is upstream of the build.

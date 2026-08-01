@@ -1,0 +1,1 @@
+Fast compiled code cannot call a delegate, so the bridge packs any argument struct into a pointer and a length and calls one fixed callback signature. Three of these cover the whole surface: set a value, set a list, and notify without writing. The navigation half of the package uses the identical trick for commands.

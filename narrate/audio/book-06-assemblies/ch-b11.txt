@@ -1,0 +1,1 @@
+We had stripped the manifest to a minimum. Five of those six were unsatisfied. So Bovine Labs.Nerve.State, the assembly containing sessions, ownership, approval, and every client node, was not built. The symptom was "these types don't exist", which reads like a bad using, which sends you hunting in exactly the wrong place.

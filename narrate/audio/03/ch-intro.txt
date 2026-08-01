@@ -1,0 +1,1 @@
+There is no connection class anywhere in this system. A connection is an entity, and the set of components on it is its state machine. Each step of joining adds one more component. If you learn that chain, you can diagnose any join failure by asking a single question: which component is missing?

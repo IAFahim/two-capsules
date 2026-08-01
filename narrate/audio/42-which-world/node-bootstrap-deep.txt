@@ -1,0 +1,1 @@
+Returning true from its initialize method means the engine creates nothing on its own. Netcode's implementation branches on the requested play type. The Nerve bootstrap layers a lifecycle on top: a persistent service world that outlives everything, a menu world, and client and server worlds created and destroyed on demand. Netcode decides whether they exist. Nerve decides when.

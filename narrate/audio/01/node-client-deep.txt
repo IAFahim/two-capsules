@@ -1,0 +1,1 @@
+It runs ahead of the server by roughly half the round trip, so its commands land just in time. It draws your capsule at that predicted tick and everyone else's at an interpolated tick in the past. Two different clocks, on one screen, deliberately.

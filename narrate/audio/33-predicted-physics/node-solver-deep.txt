@@ -1,0 +1,1 @@
+Its timestep is one over the simulation tick rate, multiplied by a configurable ratio that defaults to one. It never runs on a partial tick, so a rigid body's transform advances at most once per simulation tick no matter how fast you render. Anything smoother than that has to come from graphical smoothing.

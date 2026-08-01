@@ -1,0 +1,1 @@
+It has to sit inside a partial struct, and the generator reports a compile error if it does not. The generator also recognises a few field shapes and gives them different surfaces: a plain value, a value with a consumed once flag, and a list that gets a container wrapper so a system can hand it an array, a buffer or a set.

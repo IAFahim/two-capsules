@@ -1,0 +1,1 @@
+Inside a system you fetch the logger as a singleton, so every line is stamped with which world and which frame produced it. Outside a system there is a global with the same shape. The level is checked before the string is assembled, and the verbose and debug variants are compiled away entirely in a shipped build.

@@ -1,0 +1,1 @@
+Trap, mixing a forked com.unity.entities with a registry com.unity.netcode gives you version-solver errors that read like nonsense. Both come from the fork or neither does.

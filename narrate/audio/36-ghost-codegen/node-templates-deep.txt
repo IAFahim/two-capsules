@@ -1,0 +1,1 @@
+They ship as additional files inside the package, and there are separate templates for the quantized and unquantized form of every floating point type, including the quaternion and every fixed string size. A custom sub type is how you point a field at a template of your own.

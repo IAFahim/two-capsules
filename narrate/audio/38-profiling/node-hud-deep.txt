@@ -1,0 +1,1 @@
+Four numbers are enough to separate the four bottlenecks: round trip time, jitter, snapshot bits, and predicted ticks per frame. Because these are plain components, this probe compiles into a development build and keeps reporting from a real server under real load, which no editor window can do.

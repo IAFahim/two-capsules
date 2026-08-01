@@ -1,0 +1,1 @@
+Ands the set's mask against this world's flags, and skips it if nothing matches.

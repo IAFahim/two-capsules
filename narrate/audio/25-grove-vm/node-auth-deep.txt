@@ -1,0 +1,1 @@
+The importer walks the graph and creates one of these for every node, as sub assets of the file. Each one knows its node type number and knows how to write itself into a blob builder. This is the object file stage, and it is the last point at which anything is still editable.

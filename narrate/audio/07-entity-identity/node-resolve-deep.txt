@@ -1,0 +1,1 @@
+No second load, no pointer chase. The chunk index and the position are bit fields of the same slot word as the version, so a successful lookup and a failed one cost nearly the same. From there the actual component address is the chunk buffer, plus the type's offset, plus the position times the stride.

@@ -1,0 +1,1 @@
+The only thing that makes it periodic is present blocking on the display. That is your clock, and it is a lousy one: it jitters, it drops, it changes when the user drags the window to a 60 hertz monitor from a 144 hertz one.

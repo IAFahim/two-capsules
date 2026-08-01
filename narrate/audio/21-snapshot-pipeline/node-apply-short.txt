@@ -1,0 +1,1 @@
+Reads the ring at whichever tick this ghost's timeline names.

@@ -1,0 +1,1 @@
+The three root groups are created first, unconditionally, whether or not anything will go in them. Then every system in the census is placed. A system with no group attribute is not an error and is not dropped; it lands in the simulation group. The sort is topological over the ordering attributes and it happens exactly once, at startup.

@@ -1,0 +1,1 @@
+Remove the request, and a filtered destroy takes the section out.

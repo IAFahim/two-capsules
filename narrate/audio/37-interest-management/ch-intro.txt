@@ -1,0 +1,1 @@
+The server does not send you the world. Once per network tick, per connection, it sends one packet, and that packet is about fourteen hundred bytes minus the pipeline header. Everything on this map exists to answer one question: given a budget that does not grow, which ghosts get to spend it this tick.

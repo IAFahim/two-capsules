@@ -1,0 +1,1 @@
+Emits round trip time, jitter, snapshot age, and prediction error magnitudes.

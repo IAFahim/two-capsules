@@ -1,0 +1,1 @@
+Every query that matches this archetype loses its cached chunk list.

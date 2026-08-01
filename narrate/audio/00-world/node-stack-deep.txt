@@ -1,0 +1,1 @@
+The layer between the engine and our game. The interesting one is Grove, which is a visual graph on the surface and a bytecode virtual machine underneath: nodes bake into a blob image, and generated dispatch walks it. The chapters describe the behaviour; the source is not ours to paste, so everything here is written from the outside in.

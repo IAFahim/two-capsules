@@ -1,0 +1,1 @@
+For an interpolated ghost the target is the interpolation tick and the two bracketing slots are blended. For a predicted ghost the target is the tick being predicted, the blend factor is pinned to zero, and the value becomes a rollback point rather than something to display. Same buffer, same arrival path, two completely different meanings.

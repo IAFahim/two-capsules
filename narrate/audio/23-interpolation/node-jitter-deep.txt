@@ -1,0 +1,1 @@
+Both are exponential moving averages, and the deviation reacts faster than the mean deliberately, so that a burst of loss widens the buffer quickly and a return to normal narrows it slowly. The deviation is multiplied by a jitter scale of one and a quarter before it is used, which is a safety margin you can tune.

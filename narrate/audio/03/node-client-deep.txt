@@ -1,0 +1,1 @@
+Connection, then network id, then approved and account identity, then in game, then command target. There is no connection class anywhere. The component set is the state machine, and a missing component is always the answer to why a join stopped.

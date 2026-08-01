@@ -1,0 +1,1 @@
+Service World is the one that outlives everything, it owns the state graph that says "we are in Menu" or "we are in Game", and it is what creates and destroys the others.

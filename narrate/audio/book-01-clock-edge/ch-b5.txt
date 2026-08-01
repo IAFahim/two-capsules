@@ -1,0 +1,1 @@
+Here is the first thing that trips up people from embedded: a frame is not a timer interrupt. Nothing fires it. It is a while (true) loop that runs as fast as the machine and the presentation engine allow.

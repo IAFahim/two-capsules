@@ -1,0 +1,1 @@
+There is a small routing table mapping world names to authoring objects, with a default for anything unmatched. All of this happens at asset creation time. Nothing at runtime ever looks at the attribute again, which is why the failure mode is a missing entity rather than an error message.

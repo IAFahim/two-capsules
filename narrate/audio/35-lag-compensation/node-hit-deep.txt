@@ -1,0 +1,1 @@
+Three rules apply. Query inside the prediction group so the tick you pass matches the command. Gate the damage on the first time a tick is fully predicted, because damage is a one shot side effect. And filter on the simulate tag, exactly as every other predicted system must.

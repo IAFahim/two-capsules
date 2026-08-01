@@ -1,0 +1,1 @@
+History, not a single value. The server needs several ticks to tolerate loss, and rollback needs to replay the exact input of each replayed tick. A circular buffer with a timestamp per slot, where the consumer reads by timestamp rather than position.

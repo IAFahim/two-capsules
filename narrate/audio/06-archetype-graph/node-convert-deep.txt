@@ -1,0 +1,1 @@
+Because both arrays are sorted by type number, the copy is a two pointer merge walked backwards. Types in both get copied. Types only in the destination get cleared to zero, and if they are switchable their enabled bit is set true, because a component you just added should be on. Types only in the source are noted for deallocation, which matters when one of them owned a buffer.

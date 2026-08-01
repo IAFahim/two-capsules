@@ -1,0 +1,1 @@
+The server world is inside its own boundary on this map for a reason. It is the only world allowed to write authoritative state. Every other world either asks for something, or observes the result. When you are deciding where a new rule belongs, ask who owns the outcome. If the answer is the server, the rule lives in a system that runs on both sides but is only believed on one.

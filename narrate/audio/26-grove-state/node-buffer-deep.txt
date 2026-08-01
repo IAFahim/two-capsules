@@ -1,0 +1,1 @@
+Entity data, so it moves with the entity through chunks, survives instantiate, and serialises for free. Its declared element is a single byte, because the element type is a formality: the real layout is a hash map header and everything that follows it.

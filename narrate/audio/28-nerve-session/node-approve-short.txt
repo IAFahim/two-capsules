@@ -1,0 +1,1 @@
+A token, sent before a network identifier has been granted at all.

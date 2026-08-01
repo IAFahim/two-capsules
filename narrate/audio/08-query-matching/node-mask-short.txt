@@ -1,0 +1,1 @@
+Two sixty four bit words per chunk, walked with count trailing zeros.

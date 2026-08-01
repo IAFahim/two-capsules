@@ -1,0 +1,1 @@
+It runs before the first scene loads, so there is no ordering question about whether your scripts got a chance first. They did not. Types marked as opting out are filtered away, and among what remains the most derived candidate wins. That single rule is why a package can ship a bootstrap and you can extend it without registering anything anywhere.

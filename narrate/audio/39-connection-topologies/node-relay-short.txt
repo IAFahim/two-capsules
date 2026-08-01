@@ -1,0 +1,1 @@
+An allocation from a hosted service: an endpoint, a key, a join code.

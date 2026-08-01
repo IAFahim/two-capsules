@@ -1,0 +1,1 @@
+Classic Unity Game Objects do the opposite of streaming. Every Mono Behaviour is a managed heap object with a vtable and a pointer back to a native Transform, which lives in a different allocation, which points at a parent, which is somewhere else entirely. Iterating a thousand of them is a thousand pointer chases into cold memory. It is a linked list wearing an OOP costume.

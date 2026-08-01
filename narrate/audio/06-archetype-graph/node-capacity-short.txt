@@ -1,0 +1,1 @@
+How many entities fit, recomputed for the new set of strides.

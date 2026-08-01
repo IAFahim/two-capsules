@@ -1,0 +1,1 @@
+The same socket, different stages: snapshots and commands, newest wins.

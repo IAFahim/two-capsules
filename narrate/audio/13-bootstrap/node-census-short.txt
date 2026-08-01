@@ -1,0 +1,1 @@
+Ask the type manager for every system carrying a given filter flag.

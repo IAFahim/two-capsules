@@ -1,0 +1,1 @@
+Allocates from scratch chunks as you ask, then flattens everything at the end.

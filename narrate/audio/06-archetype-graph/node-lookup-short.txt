@@ -1,0 +1,1 @@
+Hash the whole array, probe an open addressed table, confirm with a memory compare.

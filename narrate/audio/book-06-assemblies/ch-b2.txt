@@ -1,0 +1,1 @@
+This chapter is worth more than its length. It describes a failure mode that produces no error, no warning, and no output, the code simply is not there. We lost hours to it twice.

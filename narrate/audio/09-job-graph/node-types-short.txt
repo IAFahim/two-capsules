@@ -1,0 +1,1 @@
+Which component types you read, and which you write.

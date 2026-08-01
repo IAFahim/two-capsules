@@ -1,0 +1,1 @@
+A World is an Entity Manager (its own chunk allocator, its own entity IDs) plus a list of systems. Two worlds share nothing. Entity #42 in Client World and entity #42 in Server World are unrelated, the way PID 42 on two machines is unrelated.

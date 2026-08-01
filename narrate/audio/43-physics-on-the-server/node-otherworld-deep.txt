@@ -1,0 +1,1 @@
+The predicted world can only hold things that roll back, so a dynamic non ghost left in the default index is flagged as an error naming the offending entities. Configure the alternate index and the same bodies become legal client only debris. This is the only way to have ragdolls in a predicted physics game without failing validation.

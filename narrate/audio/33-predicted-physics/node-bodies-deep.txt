@@ -1,0 +1,1 @@
+A dynamic body that is not a ghost cannot be rolled back, so it would be simulated forward several times per frame and never corrected. A validation system finds them and logs an error naming the offending entities, or moves them to another physics world index if you configured one.

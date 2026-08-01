@@ -1,0 +1,1 @@
+It takes the before waypoint and the one behind it, extends that segment past the target, and inverts the interpolation factor. The clamp is twenty simulation ticks by default, after which it holds. Static ghosts never take this path. This is the part most explanations of interpolation leave out, including the interpolation chapter in this book.

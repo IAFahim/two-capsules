@@ -1,0 +1,1 @@
+It is not a client with features disabled. Systems are gathered by the thin client simulation filter, and anything that did not opt in was never added. It exists to hold a connection and fabricate input, which makes it perfect for load testing and misleading for anything else. In this project it also does not load the client subscenes, so it has no state graph.

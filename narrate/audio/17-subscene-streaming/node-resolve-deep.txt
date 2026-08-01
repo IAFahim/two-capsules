@@ -1,0 +1,1 @@
+The header is a small blob listing the sections and their bounding volumes. Resolving it costs a file read and produces a buffer of section entities on the scene entity, with no section contents in memory. From that point the sections are individually switchable, which is the granularity people usually mean when they say streaming.

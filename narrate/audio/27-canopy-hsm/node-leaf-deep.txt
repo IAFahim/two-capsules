@@ -1,0 +1,1 @@
+It identifies the deepest active state. Nothing above it is stored, because everything above it can be recovered by following parent pointers. A machine whose whole persisted form is one integer is also a machine you can inspect from a debugger in one read.

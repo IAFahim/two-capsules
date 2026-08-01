@@ -1,0 +1,1 @@
+The dispatch switch, written by a generator, once per context type.

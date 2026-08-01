@@ -1,0 +1,1 @@
+Sixteen kilobytes, one allocation, one stride. The ground floor.

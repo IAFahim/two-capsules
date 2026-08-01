@@ -1,0 +1,1 @@
+It is not restricted by platform list; it is restricted by the editor symbol in its constraints, which amounts to the same thing and is the idiom the sample uses. It references the runtime assembly, never the other way round. Anything here that leaks into runtime code is a build day failure waiting to happen.

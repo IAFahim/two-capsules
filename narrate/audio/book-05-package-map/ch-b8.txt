@@ -1,0 +1,1 @@
+Entities and Net Code are pinned to a fork in vex-studio/tertle-monorepo, at one exact commit. Bovine Labs needs behaviour the shipping packages do not expose yet. The pin is a commit SHA, not a branch, which is the only sane way to depend on a fork.

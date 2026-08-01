@@ -1,0 +1,1 @@
+Its attribute passes a second argument naming presentation, so an unfiltered system placed inside it is presentation only and will never exist on a server. Every other root leaves that argument at its default and therefore delegates the question upward. If you want a rule that only runs where there is a screen, this group is the enforcement mechanism, not a naming convention.

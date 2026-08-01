@@ -1,0 +1,1 @@
+Inside a system, System API.Time.Delta Time gives you the world's delta. Which delta depends on where the system is standing:

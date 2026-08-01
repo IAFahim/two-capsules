@@ -1,0 +1,1 @@
+Fixed capacity strings only, because that is all that can be built in place.

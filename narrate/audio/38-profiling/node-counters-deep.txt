@@ -1,0 +1,1 @@
+Snapshot size is published in bytes, converted from a bit total. Round trip time and jitter are stored in milliseconds on the component and multiplied by one million for the nanosecond unit the counter declares. If you want milliseconds, read the component rather than the counter.

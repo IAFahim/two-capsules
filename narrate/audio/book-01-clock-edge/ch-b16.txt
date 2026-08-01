@@ -1,0 +1,1 @@
+Trap, because it is one process, a stall in the server world is a stall in the client world. When you see Net Code's "Server Tick Batching has occurred" warning in the editor, it usually means the editor itself hitched, not that your server logic is slow.

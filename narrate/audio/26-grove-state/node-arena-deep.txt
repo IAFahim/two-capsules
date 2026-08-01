@@ -1,0 +1,1 @@
+That is what lets one map hold values of different types and different sizes. The price is that nothing checks your type on the way back out: read an entry as the wrong struct and you get bytes, not an exception. In practice a node always uses its own key with its own type, so the risk is theoretical until someone gets clever.

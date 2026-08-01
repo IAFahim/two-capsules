@@ -1,0 +1,1 @@
+Intent goes out, snapshots come back, and that is the whole protocol.

@@ -1,0 +1,1 @@
+Matches the query mask against the (small) list of archetypes, a handful of bitwise ops. For each matching archetype, walks its chunk list. For each chunk, takes a raw pointer to each component array. Loops 0.count.

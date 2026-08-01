@@ -1,0 +1,1 @@
+Start here and justify every promotion out of it. The export step writes back only transforms and velocities, so a static body is never written to at runtime and cannot drift. Both worlds baked it from the same subscene, so they already agree without a single byte on the wire.

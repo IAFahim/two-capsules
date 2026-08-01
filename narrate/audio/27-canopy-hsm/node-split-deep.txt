@@ -1,0 +1,1 @@
+Everything before the divergence is common to both, so those states stay active and never see an exit or an enter. This is what makes deep jumps cheap and what makes a jump to the state you are already in cost nothing. The comparison is a simple loop over two small lists.

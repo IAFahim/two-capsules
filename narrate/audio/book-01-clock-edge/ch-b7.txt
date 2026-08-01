@@ -1,0 +1,1 @@
+Hardware analogy, the frame loop is a free-running superloop, not an ISR. Everything that needs real periodicity has to build its own timebase on top. That is exactly what Net Code's tick system does, and why Part III spends a whole chapter on it.

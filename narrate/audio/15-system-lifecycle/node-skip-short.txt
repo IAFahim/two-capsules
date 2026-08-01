@@ -1,0 +1,1 @@
+The gate closed. The system is still sorted, still visited, and costs one branch.

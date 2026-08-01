@@ -1,0 +1,1 @@
+Initialises the client spawn and stamps the tick everything depends on.

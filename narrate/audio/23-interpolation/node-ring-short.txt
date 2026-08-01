@@ -1,0 +1,1 @@
+Thirty two tick-stamped slots per ghost, with an index naming the newest.

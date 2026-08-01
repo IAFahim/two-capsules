@@ -1,0 +1,1 @@
+It runs on a fixed delta with a catch up loop, and it runs once the whole prediction loop has already finished for this frame. Nothing in it is rolled back, replayed or corrected. For deterministic non networked work that is exactly what you want, and for anything a snapshot might disagree with it is exactly what you do not.

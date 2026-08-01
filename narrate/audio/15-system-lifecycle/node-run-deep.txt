@@ -1,0 +1,1 @@
+By the time it is called, the system's dependency handle already carries whatever the safety system worked out from your reads and writes. Most updates schedule rather than execute, so the interesting cost is usually not in here at all; it is in what this method hands to the job system before returning.

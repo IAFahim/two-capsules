@@ -1,0 +1,1 @@
+It is not an array of worlds. It is thirty two named fields read through a switch statement, because a collision world contains a broadphase tree that cannot simply be copied into an arbitrary slot. Holding thirty two live broadphase trees in memory, and cloning one per tick, is the real running cost of lag compensation.

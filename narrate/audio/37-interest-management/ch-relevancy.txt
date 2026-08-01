@@ -1,0 +1,1 @@
+Importance answers how often. Relevancy answers whether at all. A relevancy set is a map keyed by connection and ghost, and it runs in one of two modes: an allowlist where nothing is sent unless listed, or a denylist where listed things are excluded. For anything competitive you want the allowlist, because anything you forget to list in a denylist leaks.

@@ -1,0 +1,1 @@
+Each chain contributes one heap entry holding its next key. The loop pops the smallest, runs that chain forward until it would overtake the current second smallest, then pushes the chain back with its updated key. Chains that run out are simply popped. The whole thing is the classic merge of sorted runs, and it is why the number of threads never affects the result.

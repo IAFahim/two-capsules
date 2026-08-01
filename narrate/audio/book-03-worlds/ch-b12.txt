@@ -1,0 +1,1 @@
+Trap, a system with no [World System Filter] defaults to Local Simulation | Server Simulation | Client Simulation, so it lands in every game world including the server. Half of all "why did that run twice?" bugs are a missing filter.

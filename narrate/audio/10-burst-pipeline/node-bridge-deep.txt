@@ -1,0 +1,1 @@
+A shared static is the only sanctioned way to have a global that compiled and interpreted code both see. The managed side marshals a delegate into a raw pointer and stores it there once, at initialisation, keeping a reference alive so the collector does not eat the delegate. After that, calling across is a load and an indirect call.

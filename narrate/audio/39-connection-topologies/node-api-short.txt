@@ -1,0 +1,1 @@
+The singleton your game calls to listen or to connect.

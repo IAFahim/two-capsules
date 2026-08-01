@@ -1,0 +1,1 @@
+This comes straight out of the queries you built, plus anything you asked for by hand. You never write the graph, you write the access pattern, and the graph is derived from it. That is the whole trade: you give up the ability to hand tune the ordering, and in exchange you cannot get it wrong.

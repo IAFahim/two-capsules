@@ -1,0 +1,1 @@
+Exactly one server world across every editor instance means roles are applied. Two means they are not. From there, four ghosts for two players is the healthy reading, because each player owns a controller entity and a capsule entity. Three would be an ownership bug, not a spawn bug.

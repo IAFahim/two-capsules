@@ -1,0 +1,1 @@
+Walk the old path and the new one together until they differ.

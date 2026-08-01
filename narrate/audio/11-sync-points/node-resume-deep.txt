@@ -1,0 +1,1 @@
+That emptiness has a consequence people miss. The first system to schedule after a barrier has no fences to wait on, so it starts immediately, but it also cannot inherit any ordering from before the barrier. Everything that mattered was already completed, so the graph really can restart clean.

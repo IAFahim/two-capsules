@@ -1,0 +1,1 @@
+Nothing is removed and nothing is recomputed. This is the mechanism that makes disabling a system a per frame decision you can afford: the only cost of an off system is evaluating the condition that keeps it off. Contrast that with adding or removing a system, which changes the tree and forces a resort.

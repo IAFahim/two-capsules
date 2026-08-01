@@ -1,0 +1,1 @@
+It is disabled rather than destroyed when the connection goes, along with everything linked to it, and re-enabled when the same account returns. Ownership is re-pointed while everything is still disabled, and the enabling happens last, after every other system has had its chance to repair state.

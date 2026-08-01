@@ -1,0 +1,1 @@
+Server only decisions: score, loot, damage application, state authority.

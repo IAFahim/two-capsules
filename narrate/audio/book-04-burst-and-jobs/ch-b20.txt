@@ -1,0 +1,1 @@
+Player Move System uses System API.Query with foreach, on the main thread, bursted. Two capsules. Scheduling a parallel job for two entities would cost more in scheduling overhead than it saves.

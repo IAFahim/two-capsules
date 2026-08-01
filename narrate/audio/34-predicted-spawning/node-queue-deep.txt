@@ -1,0 +1,1 @@
+The receive system never creates ghosts itself. It appends entries describing a new ghost with its type, its identifier, and the tick the server spawned it, and leaves the decision to the classification group. The field to compare against is the server spawn tick, not the tick the snapshot arrived on.

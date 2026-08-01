@@ -1,0 +1,1 @@
+It only happens if you actually scheduled something and did not already complete it, which is a real optimisation for systems that only run work on the main thread. Just before the registration the runtime submits the batched jobs, so scheduling many small jobs in one update costs one submission rather than many.

@@ -1,0 +1,1 @@
+Machine code with no collector, no virtual dispatch, no unwind tables.

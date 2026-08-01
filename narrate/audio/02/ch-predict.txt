@@ -1,0 +1,1 @@
+In the same frame, before the server has seen anything, the client reads that tick's input back out of the ring and runs the movement rule. Your capsule has already moved. Perceived input latency is zero. The price is that you may be wrong, and the map's snapshot arrow is where being wrong gets fixed.

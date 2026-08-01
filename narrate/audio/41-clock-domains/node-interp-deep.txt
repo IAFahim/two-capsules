@@ -1,0 +1,1 @@
+No gameplay system touches it. Its transform is written by the update system from two buffered snapshots, and that is all that happens to it on this machine. It can be extrapolated forward for a short while if data is missing, but it is never predicted, because prediction means running your simulation and this entity's simulation is somebody else's job.

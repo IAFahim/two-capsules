@@ -1,0 +1,1 @@
+Entering the state calls back into the bootstrap to create; exiting it destroys. Which play type you asked for decides whether you get a client, a server, or both. This is the seam where a hierarchical state machine ends up owning process level lifetime, and it is the reason there is no separate teardown to forget.

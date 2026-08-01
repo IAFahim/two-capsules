@@ -1,0 +1,1 @@
+Because every internal reference is an offset rather than a pointer, the whole structure survives being moved when the buffer grows or when the entity changes chunk. It is the same discipline the blob uses, applied to writable memory instead of read only memory.

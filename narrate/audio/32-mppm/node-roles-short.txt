@@ -1,0 +1,1 @@
+A per-player role, consulted before the shared key ever gets read.

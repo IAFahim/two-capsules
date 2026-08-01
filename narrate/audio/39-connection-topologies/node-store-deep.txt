@@ -1,0 +1,1 @@
+The server usually holds two, the client holds one. The order matters more than people expect: the local client only gets the fast in process driver if the server world already exists, so you must start listening before you try to connect. Get that wrong and your host player quietly routes through the loopback socket.

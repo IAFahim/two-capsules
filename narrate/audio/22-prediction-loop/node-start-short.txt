@@ -1,0 +1,1 @@
+The loop head: picks the next tick and enables the simulate bit.

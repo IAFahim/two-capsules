@@ -1,0 +1,1 @@
+One bulk move, and by default one world moved per update, which serialises arrivals rather than interleaving them. That is why a section appears in a single frame and why that frame costs more than its neighbours. Everything that arrives carries a shared tag naming the section it came from, which is what makes the reverse operation cheap.

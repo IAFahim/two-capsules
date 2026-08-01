@@ -1,0 +1,1 @@
+The play type has exactly three values. Client and server creates both worlds in one process, which is a listen server. Client creates one world that must connect to something. Server creates one world that can only listen. What people call client hosting is simply client and server running on a player's machine, with every consequence that implies for who you are trusting.

@@ -1,0 +1,1 @@
+That is not a bug, it is the entire trade made explicit. You need your own capsule to answer instantly, and you need theirs to be smooth. Prediction buys the first, interpolation buys the second, and nobody renders the server's actual present.

@@ -1,0 +1,1 @@
+Stores the reported delay per connection on the server.

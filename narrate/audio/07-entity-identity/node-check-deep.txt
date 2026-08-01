@@ -1,0 +1,1 @@
+One integer comparison, on a word the lookup had to load anyway to find the chunk. That is the entire safety mechanism. It costs a compare and a predictable branch, and in exchange every stale handle in the program becomes a detected null instead of a silent read of somebody else's data.

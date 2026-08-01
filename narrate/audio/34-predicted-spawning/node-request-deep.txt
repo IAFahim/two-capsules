@@ -1,0 +1,1 @@
+It carries no fields at all. It is baked disabled, so ordinary queries do not find it, and it is enabled briefly during initialisation before removal is scheduled for the next frame. That brief enabled window exists to stop the initialisation running twice when the spawn system is invoked again inside the prediction loop.

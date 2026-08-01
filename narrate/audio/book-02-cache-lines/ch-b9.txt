@@ -1,0 +1,1 @@
+Hardware analogy, a chunk is a D M A-friendly buffer. You picked 16 kibibytes for the same reason an embedded engineer picks a buffer size: it fits comfortably in L1/L2, and it amortises the per-block bookkeeping over hundreds of elements.

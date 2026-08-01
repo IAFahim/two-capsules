@@ -1,0 +1,1 @@
+Ordinary entity components holding every metric the collector gathered.

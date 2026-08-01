@@ -1,0 +1,1 @@
+It has three modes. The default requires a predicted ghost carrying a physics velocity. A relaxed mode accepts any entity with a velocity or a collider. The third mode always runs. In every mode, when nothing matches and lag compensation is the only reason to run, physics runs only on the first time a tick is fully predicted.

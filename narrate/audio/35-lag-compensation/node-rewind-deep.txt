@@ -1,0 +1,1 @@
+It clamps in two directions. A request newer than the latest stored tick gets the live world. A request older than the ring gets the oldest slot. Both are reported through an expected tick and a returned tick, and comparing those two is the only way to learn that your history is too short for your player base.

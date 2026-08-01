@@ -1,0 +1,1 @@
+A transient world that exists only long enough to turn authored objects into entities.

@@ -1,0 +1,1 @@
+Its query is the specification for who is allowed to spawn.

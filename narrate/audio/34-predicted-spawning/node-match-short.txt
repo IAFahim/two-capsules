@@ -1,0 +1,1 @@
+Compares ghost type and spawn tick, within a window.

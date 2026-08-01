@@ -1,0 +1,1 @@
+This is a hierarchical state machine. The key idea is that a state can contain other states, and at any moment the machine has an active path from the root down to a leaf, not a single active state. Both root and the current child are running. That sounds academic until you see what it buys, which is the next chapter.

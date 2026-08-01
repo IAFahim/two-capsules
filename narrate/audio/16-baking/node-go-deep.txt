@@ -1,0 +1,1 @@
+Game objects are what a designer edits and what version control diffs. Nothing about them survives into the runtime data; they are input to a compile, in the same sense that a header file is input to one. Their only job is to be readable by a human and by a baker.

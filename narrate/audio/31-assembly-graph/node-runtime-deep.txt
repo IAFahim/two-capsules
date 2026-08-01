@@ -1,0 +1,1 @@
+It references the graph packages, netcode, transforms, collections and the input system, and it is the only one of the three that ships in a player build. Because it builds for every platform, anything it references must also build for every platform, which is exactly the constraint that forced the split.

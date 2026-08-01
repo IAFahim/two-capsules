@@ -1,0 +1,1 @@
+Because no pointer inside a block is absolute, writing one out is a copy and reading it back is a copy. The file stores each handle as a byte offset into this batch, so the entire relocation problem collapses into arithmetic on one integer per reference.

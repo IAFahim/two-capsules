@@ -1,0 +1,1 @@
+One attribute on a private field. That is the entire declaration.

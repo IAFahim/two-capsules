@@ -1,0 +1,1 @@
+Inside a bursted method you may not touch: class, string, object, try/catch (in release), Unity Engine.Debug.Log, LINQ, delegates that aren't Function Pointer. Our Player Gather Input System deliberately has no [Burst Compile] on On Update, because Keyboard.current is a managed object. That is the correct call, not a compromise.

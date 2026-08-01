@@ -1,0 +1,1 @@
+Two fields matter. The default mode says which domain a ghost lands in when it spawns. The supported modes mask says which domains it is allowed to occupy at all, and narrowing it lets the baker strip out the machinery for the other one. The mask defaults to allowing both, which is the safe choice and also the one that leaves optimization on the table.

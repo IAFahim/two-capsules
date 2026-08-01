@@ -1,0 +1,1 @@
+Two authoring stacks bake to the same runtime components. The hybrid path bakes Unity's own rigid body and collider components. The custom path adds its own body and shape behaviours plus joints, motors and material tags. Never mix them on one body hierarchy: mixing double bakes, drops colliders, or produces conflicting motion types.

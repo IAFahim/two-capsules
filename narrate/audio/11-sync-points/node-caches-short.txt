@@ -1,0 +1,1 @@
+Every query matching a changed archetype loses its chunk list.

@@ -1,0 +1,1 @@
+The input does not go straight onto the wire. It goes into a ring buffer, and every slot is stamped with the tick it belongs to. This is a circular buffer with a timestamp per slot, and the consumer reads by timestamp rather than by position. That single design choice is what makes rollback possible later.

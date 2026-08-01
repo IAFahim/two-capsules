@@ -1,0 +1,1 @@
+Creates an entity, and therefore cannot rely on rollback to clean up after it.

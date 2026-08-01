@@ -1,0 +1,1 @@
+Netcode reserves a special class of remote call that is allowed to travel before approval, and this rides it. The server validates the token asynchronously, and on success attaches the approved marker plus an account identity. Every rejection path ends the same way: a request to disconnect with an approval failure reason, which is classified as not worth retrying.

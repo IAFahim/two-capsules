@@ -1,0 +1,1 @@
+Scene sets, each carrying a mask of the world kinds it belongs to.

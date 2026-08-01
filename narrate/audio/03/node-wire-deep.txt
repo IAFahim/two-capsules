@@ -1,0 +1,1 @@
+Snapshots and commands ride unreliable channels because a retransmit would arrive after the data was already stale. Remote procedure calls ride a reliable ordered channel, because a lost go in game request would strand the player forever.

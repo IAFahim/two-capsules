@@ -1,0 +1,1 @@
+Between the client world and the server world there is exactly one channel, and only two kinds of traffic on it. Going right: commands, which are intent. Going left: snapshots, which are truth. The client never sends a position. If it could, it could teleport, and no amount of server code downstream would save you.

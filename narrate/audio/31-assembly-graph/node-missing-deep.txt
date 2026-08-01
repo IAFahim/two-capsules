@@ -1,0 +1,1 @@
+No error, no warning, no library file. Every type inside it stops existing. What you see instead is a type not found error in your own source, which sends you hunting through your imports for an hour. The only reliable check is to list the compiled assemblies folder and look for the name.

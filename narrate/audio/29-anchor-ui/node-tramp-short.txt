@@ -1,0 +1,1 @@
+A function pointer out of compiled fast code, installed once at code load.

@@ -1,0 +1,1 @@
+Single-threaded at this level. The worlds do not run concurrently with each other. They run in sequence, in one frame, which is why "the client and the server are in the same process" is a statement about determinism and not about parallelism.

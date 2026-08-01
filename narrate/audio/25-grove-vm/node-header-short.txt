@@ -1,0 +1,1 @@
+The instruction: a type number, an authored node id, and the payload right behind it.

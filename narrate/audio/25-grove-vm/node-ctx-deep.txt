@@ -1,0 +1,1 @@
+You declare the fields; the generator writes the code that creates them, refreshes them each update, and re-points them at each chunk. Because the executor copies the context by value when it builds an execution, anything you assign after that copy is what the run actually sees. That ordering detail is subtle and it has bitten people.

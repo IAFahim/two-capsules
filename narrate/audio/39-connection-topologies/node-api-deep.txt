@@ -1,0 +1,1 @@
+It also exposes the driver store itself, so you can ask which address a given driver actually bound to. When a listen server's own player feels mysteriously laggy, that query tells you whether the local connection went over the in process driver or fell back to the loopback socket.

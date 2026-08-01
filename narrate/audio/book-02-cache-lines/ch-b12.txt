@@ -1,0 +1,1 @@
+This is what makes queries fast. System API.Query<Ref RW<Local Transform>, Ref RO<Player Move Input>>() does not scan entities. It:

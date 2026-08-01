@@ -1,0 +1,1 @@
+What the C sharp compiler emits, and the only input either back end sees.

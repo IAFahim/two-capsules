@@ -1,0 +1,1 @@
+A ring of received snapshots, written at the rate the wire delivers them.

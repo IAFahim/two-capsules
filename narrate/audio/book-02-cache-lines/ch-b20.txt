@@ -1,0 +1,1 @@
+Every chunk stores a uint version per component type, bumped whenever a system takes write access. With Change Filter<T>() compares versions and skips whole chunks.

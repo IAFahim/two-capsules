@@ -1,0 +1,1 @@
+Completing the dependency instead of chaining it turns your system into a barrier for every type it declared. Sometimes that is exactly right, because you are about to do something on the main thread that cannot be expressed as a job. It is a sync point either way, and the honest version is the one you chose deliberately.

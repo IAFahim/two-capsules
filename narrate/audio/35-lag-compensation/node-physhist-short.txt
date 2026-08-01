@@ -1,0 +1,1 @@
+Clones the collision world once per fully predicted tick.

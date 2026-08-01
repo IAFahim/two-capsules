@@ -1,0 +1,1 @@
+Defined as: is a client, and is a server, on the same world. False here, twice.

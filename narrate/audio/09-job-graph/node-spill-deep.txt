@@ -1,0 +1,1 @@
+The combine writes the result back into the first read slot and resets the count to one, which frees sixteen slots immediately. Nothing breaks, but the graph loses resolution: anything that later waits on that type now waits on all seventeen as a unit. If you ever wonder why a system seems to wait longer than its declared conflicts justify, this is a candidate.

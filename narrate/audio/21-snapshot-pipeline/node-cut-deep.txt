@@ -1,0 +1,1 @@
+Their age term keeps climbing, so their priority climbs, so they rise in the next sort. This is what makes the system degrade gracefully instead of falling over: a crowded world does not fail, it just refreshes distant things less often. The visible symptom of a badly tuned priority is something important updating at the rate of scenery.

@@ -1,0 +1,1 @@
+There is only one source file and only one set of semantics you can reason about, which is the strength of the whole design. The restriction is not on what you write but on what the second compiler will accept, and the gap between those two is where every confusing Burst error comes from.

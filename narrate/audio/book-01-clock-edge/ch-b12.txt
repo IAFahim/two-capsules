@@ -1,0 +1,1 @@
+That is the whole bootstrap secret. There is no daemon, no scheduler, no magic. Three function pointers.

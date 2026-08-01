@@ -1,0 +1,1 @@
+A shape plus a motion type, authored before any world exists.

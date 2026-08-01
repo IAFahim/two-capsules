@@ -1,0 +1,1 @@
+It is populated with the thin client flag alone, which the physics systems do not carry, so a thin client has no physics at all. That is the point: it is the cheapest way to put load on a server, and it is why a bug that only reproduces with thin clients is usually a missing filter rather than a missing feature.

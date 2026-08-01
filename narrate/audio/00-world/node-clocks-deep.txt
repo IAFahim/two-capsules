@@ -1,0 +1,1 @@
+This is the single thing most worth understanding before you touch the Inspector. Some entities are played back out of a buffer from the server's past. Others are simulated ahead into the client's future and corrected. The two cannot interact correctly, which turns one innocent dropdown into an architectural commitment.

@@ -1,0 +1,1 @@
+One system per world that gathers stats and publishes them twice.

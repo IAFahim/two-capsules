@@ -1,0 +1,1 @@
+This is the change detection, in full. It is not a system, not a pass, and not a schedule. The cost of a value that did not change is one equality test on a struct, which the compiler will usually reduce to a couple of instructions. The cost of a value that did change is everything to the right of this node.

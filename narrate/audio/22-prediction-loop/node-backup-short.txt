@@ -1,0 +1,1 @@
+A memory copy of the predicted state after the last full tick.

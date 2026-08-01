@@ -1,0 +1,1 @@
+An ordinary settings object, marked with a world attribute.

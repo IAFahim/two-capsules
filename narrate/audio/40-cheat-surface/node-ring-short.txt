@@ -1,0 +1,1 @@
+Sixty four slots keyed by tick, read once per tick by the prediction loop.

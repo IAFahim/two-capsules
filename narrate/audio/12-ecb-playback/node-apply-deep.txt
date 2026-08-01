@@ -1,0 +1,1 @@
+Every structural change here is a real structural change with everything the barrier implies, they are just all happening in one place. Chains that recorded nothing managed are walked by compiled code; chains that touched a managed component fall back to the interpreted walker, chosen from a flag stored on the chain itself.

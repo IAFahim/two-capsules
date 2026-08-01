@@ -1,0 +1,1 @@
+Netcode has four bottlenecks: serialization work on the server, bandwidth on the wire, prediction replay on the client, and the quality of the link itself. From the outside they all look the same, because the game gets worse when there are more players. Reaching for a central processing unit profiler when you have a bandwidth problem is how weeks disappear.

@@ -1,0 +1,1 @@
+One condition, in one place, for both managed and unmanaged systems. The enabled half is a single bit inside the system's flag word, so reading and writing it is free. The requirement half walks the required queries and asks each whether it is empty, short circuiting on the first empty one. Declare no requirements and it returns true without looking at anything.

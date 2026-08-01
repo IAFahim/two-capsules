@@ -1,0 +1,1 @@
+One entity, expressed as the same index into several unrelated arrays.

@@ -1,0 +1,1 @@
+It has three values: client and server, client only, server only. The bootstrap reads it once and builds accordingly. Everything downstream, including whether your player can even spawn, is a consequence of this one read. In the editor it comes from a preference, and that preference is shared between editor instances, which is its own chapter.

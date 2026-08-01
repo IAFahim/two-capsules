@@ -1,0 +1,1 @@
+Next the connection must be approved. Approval adds two components: connection approved, and an account identity. The spawn path requires both. Here is the first silent gap. Approval is off by default, and when it is off both approval systems disable themselves in their own on create. So nothing ever adds those components, no player ever spawns, and absolutely nothing is logged.

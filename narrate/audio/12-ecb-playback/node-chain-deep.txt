@@ -1,0 +1,1 @@
+A parallel writer resolves its chain purely from the thread index, so two threads recording at the same instant are writing into different allocations. Each block records the smallest key it contains, which is what lets playback seed the heap without scanning. When a block fills, another is linked on.

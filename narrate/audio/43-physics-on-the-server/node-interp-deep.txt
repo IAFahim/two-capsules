@@ -1,0 +1,1 @@
+This is the cheapest replicated option and it is under used. Anything dynamic the local player cannot touch belongs here: distant props, vehicles you only watch, machinery. Netcode strips physics graphical smoothing from the interpolated variant precisely so smoothing does not fight the snapshot interpolation.

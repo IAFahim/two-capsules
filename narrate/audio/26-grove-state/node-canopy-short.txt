@@ -1,0 +1,1 @@
+The state machine's cursor and history, kept as ordinary entries in the same map.

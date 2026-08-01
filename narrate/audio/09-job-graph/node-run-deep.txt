@@ -1,0 +1,1 @@
+The handle in and the handle out are both yours to manage. Schedule several jobs and you can chain them by hand or fan them out and combine. Assign the dependency yourself and the automatic fetch is skipped entirely, which is both the escape hatch and the way to break your own ordering if you are careless.

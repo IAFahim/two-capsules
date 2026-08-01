@@ -1,0 +1,1 @@
+Priority is a base importance multiplied by how many ticks it has been since this connection last saw that chunk, then adjusted by whatever scaling function you supplied. Sorting first is what makes the packet a meaningful prefix rather than a random sample, and the age term is what stops a low priority chunk from starving forever.

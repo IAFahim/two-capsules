@@ -1,0 +1,1 @@
+The fastest netcode instrument is not a window. Query the network metrics, the snapshot metrics, and the network time in one client system, and log one line per second. Four numbers separate all four bottlenecks, and unlike a profiler window they keep working in a headless build on a real server.

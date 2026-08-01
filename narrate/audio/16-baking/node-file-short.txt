@@ -1,0 +1,1 @@
+A serialized chunk image, one file per section. This is the object file.

@@ -1,0 +1,1 @@
+It is not indexed. Entries are searched by a key pair, the ghost type and the spawn tick, and a hit removes the entry with a swap back. It behaves like a small store buffer holding writes that retire when a matching authoritative write arrives.

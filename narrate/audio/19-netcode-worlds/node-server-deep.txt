@@ -1,0 +1,1 @@
+It carries the game server flag and nothing else. Systems land in it because they declared the server simulation filter. It owns the truth, it owns the port, and it is the only place where a decision is final. Everything you see on any screen is some client's approximation of what happened here, at a tick that has already passed.

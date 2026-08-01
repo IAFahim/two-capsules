@@ -1,0 +1,1 @@
+The easiest kind to migrate, because everything downstream of local time in the package is already pure. Clip local time, the active bit and the weight curve are all functions of the timer position. Change what feeds the timer and the rest becomes rollback safe without being touched. A kinematic move authored this way needs no transform replication at all.

@@ -1,0 +1,1 @@
+Hardware analogy, the Player Loop is a vector table you can patch. DOTS installs three entries. Everything DOTS ever does is downstream of those three function pointers being called once per frame per world.

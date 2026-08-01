@@ -1,0 +1,1 @@
+The chunk is the whole idea. Inside one chunk, memory is laid out as parallel arrays:

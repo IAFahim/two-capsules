@@ -1,0 +1,1 @@
+The gap between arrivals is measured every time, in both wall clock milliseconds and in simulation ticks. Those two measurements feed different things: the tick delta feeds the depth calculation, the wall clock delta feeds the perceived send rate. Neither is the number the server thinks it is sending at.

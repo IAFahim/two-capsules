@@ -1,0 +1,1 @@
+The source generator emits a serializer and a request system for each type you declare. It writes an index, a payload bit length and the packed payload into an outgoing byte buffer on the connection entity, then destroys the request entity. Nothing has touched the network yet; the buffer is drained at the end of the frame.

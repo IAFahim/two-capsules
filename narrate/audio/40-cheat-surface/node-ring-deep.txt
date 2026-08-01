@@ -1,0 +1,1 @@
+This is what makes flooding pointless. Inserting into an occupied slot replaces its contents and counts as a redundant resend. Commands for future ticks simply wait until the server reaches them, which is normal because clients deliberately run ahead. The only way this becomes a hazard is if your own code reads the buffer directly instead of by tick.

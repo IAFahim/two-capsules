@@ -1,0 +1,1 @@
+Intermediate form to machine code, ahead of time rather than just in time.

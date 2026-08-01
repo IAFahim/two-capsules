@@ -1,0 +1,1 @@
+This component is not baked by default. You get it by enabling track interpolation delay on the ghost authoring component, and only when the ghost also has an owner. It is refreshed only when a command arrives for that entity, so if the player switches command target, the old entity keeps its last reported delay forever.

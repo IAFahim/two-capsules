@@ -1,0 +1,1 @@
+Computes the interpolation delay and writes it into every command packet.

@@ -1,0 +1,1 @@
+It is far enough ahead that a command stamped now arrives before the server simulates that tick. Its rate is scaled by a tenth of the current command age error, clamped between nine tenths and one and a tenth of normal, so it drifts into alignment rather than jumping. A jump of more than ten ticks logs an error, because that usually means a stall rather than a network event.

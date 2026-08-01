@@ -1,0 +1,1 @@
+Position, rotation and a uniform scale, packed. It is the array almost every system touches, which is why its stride matters more than most. A run of these is the best case the memory system ever sees: sequential, aligned, predictable, and completely free of anything the loop does not need.

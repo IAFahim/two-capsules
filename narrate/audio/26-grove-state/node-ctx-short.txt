@@ -1,0 +1,1 @@
+The context's handle on the buffers for the chunk being processed.

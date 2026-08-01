@@ -1,0 +1,1 @@
+Everything you are looking at runs inside a single Unity process, in a single frame, one world after another. A world is an entity manager plus a list of systems. Two worlds share nothing. Same silicon, same frame, zero shared memory. Think separate address spaces, not threads.

@@ -1,0 +1,1 @@
+You build this in create, not in update, and the system caches it. The four sets are not symmetric: required and present affect matching in different ways, and the excluded set is the one that quietly makes an archetype invisible to you forever. Options on top of it decide whether disabled entities, prefabs, system instances and meta chunks are even considered.

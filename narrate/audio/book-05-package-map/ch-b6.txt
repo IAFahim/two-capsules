@@ -1,0 +1,1 @@
+The dependency direction matters: Grove knows nothing about games. It is a generic graph executor. Canopy adds "states". Nerve adds "multiplayer app". Read them in that order and each one is small.

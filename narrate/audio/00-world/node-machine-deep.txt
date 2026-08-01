@@ -1,0 +1,1 @@
+A world is a complete isolated instance: its own entities, its own systems, its own memory. A client world and a server world can sit in the same process, tick one after the other in the same frame, and share absolutely nothing. That isolation is what makes the security model possible and what makes debugging confusing.

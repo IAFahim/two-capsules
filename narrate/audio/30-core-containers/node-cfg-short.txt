@@ -1,0 +1,1 @@
+A static shared field with an attribute, readable from compiled fast code.

@@ -1,0 +1,1 @@
+A node's method: static, and holding nothing at all between calls.

@@ -1,0 +1,1 @@
+This is also where the named profiler markers live. Prioritize chunks covers gathering and sorting per connection, relevancy covers per entity evaluation, and there is a marker for the static optimization check. There is an option to add a marker per component inside serialization, which costs performance and is meant to be turned on, read, and turned off.

@@ -1,0 +1,1 @@
+Missing it on the type raises a warning that names the type, names the method, and tells you exactly what to add. But the analyzer skips anything implementing the system interface on purpose, so the most common instance of this mistake is the one it will never tell you about. That is worth remembering the next time a system is mysteriously slow.

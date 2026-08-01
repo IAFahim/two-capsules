@@ -1,0 +1,1 @@
+The whole handbook is built around the smallest project that is genuinely a networked game rather than a demo. Two players, two capsules, a real client and server split, and a real connection lifecycle. Small enough to hold entirely in your head, complete enough that nothing important has been faked.

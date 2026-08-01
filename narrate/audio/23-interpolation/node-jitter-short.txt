@@ -1,0 +1,1 @@
+The measured gap between arrivals: a mean and an approximate deviation.

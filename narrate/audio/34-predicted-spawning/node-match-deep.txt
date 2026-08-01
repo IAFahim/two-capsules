@@ -1,0 +1,1 @@
+The window defaults to plus or minus five ticks. Widen it and misses turn into mismatches. Narrow it and mismatches turn back into misses. The moment two ghosts of one type can spawn within that window, the default matcher is no longer safe and you want your own, keyed on a replicated sequence number.

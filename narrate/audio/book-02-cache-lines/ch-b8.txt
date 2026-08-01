@@ -1,0 +1,1 @@
+Walking Local Transform for every entity in that chunk is a linear scan of contiguous memory. The prefetcher sees it coming from the second element onward. There is no indirection, no vtable, no null check.

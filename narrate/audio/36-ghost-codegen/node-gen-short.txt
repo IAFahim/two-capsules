@@ -1,0 +1,1 @@
+A Roslyn generator running once per assembly during compilation.

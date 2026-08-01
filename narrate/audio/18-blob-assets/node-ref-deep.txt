@@ -1,0 +1,1 @@
+It is the boundary between the two worlds: outside it, ordinary pointers and ordinary lifetimes; inside it, nothing but offsets. That is also why it is the only thing that needs fixing up on load, and why it is the only field the serializer has to know about in a component that carries a blob.

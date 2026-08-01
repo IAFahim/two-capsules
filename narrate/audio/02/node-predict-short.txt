@@ -1,0 +1,1 @@
+The client's copy of the movement rule, running inside prediction.

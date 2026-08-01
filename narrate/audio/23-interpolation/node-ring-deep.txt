@@ -1,0 +1,1 @@
+It is a circular buffer where the consumer reads by timestamp rather than by position. The default of thirty two is sized for about half a second of round trip at sixty hertz. Two smaller sizes exist behind compile symbols, and shrinking it trades memory against the server's ability to delta compress, because unacknowledged slots stop being usable as baselines.

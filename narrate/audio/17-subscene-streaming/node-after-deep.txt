@@ -1,0 +1,1 @@
+This is the hook for anything that must happen to a section's data before the rest of the game can see it: fixing up references, building runtime caches, converting a baked representation into a live one. Write one and it will never appear in your game world, because the flag it carries is only ever asked for when a streaming world is being populated.

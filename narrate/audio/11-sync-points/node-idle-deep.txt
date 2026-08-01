@@ -1,0 +1,1 @@
+This is the visible cost and it is the one people mean when they say sync point. But the shape matters: it is not a fixed price, it is however long the longest outstanding job chain still had to run. A barrier right after you scheduled a deep graph is expensive. The same barrier in a frame where nothing was scheduled is free.

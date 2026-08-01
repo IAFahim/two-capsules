@@ -1,0 +1,1 @@
+The server world. It holds the truth and decides what each client may know.

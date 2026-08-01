@@ -1,0 +1,1 @@
+Prediction errors are reported as a buffer of magnitudes paired with a buffer of names, joined only by index. Read one without the other and you have numbers attached to nothing. The client is also where you count predicted ticks per frame, which is the client side cost term.

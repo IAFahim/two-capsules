@@ -1,0 +1,1 @@
+It sets the ghost identifier to zero, the real ghost type, and a spawn tick. It sizes the snapshot ring, writes the entity's current state into slot zero with the same generated serializers the server uses, and applies the prediction start tick so rollback has a valid origin from the very first tick.

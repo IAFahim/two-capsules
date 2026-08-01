@@ -1,0 +1,1 @@
+Prose and diagrams here: MIT. The packages remain their authors'.

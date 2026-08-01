@@ -1,0 +1,1 @@
+The scaling function needs a focal point per connection, and that lives in a component you put on the connection entity yourself. If you forget it, the scaling function is never called at all, no error appears, and every ghost simply falls back to plain aging. This is the single most common silent failure in interest management.

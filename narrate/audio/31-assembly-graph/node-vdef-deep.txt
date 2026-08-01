@@ -1,0 +1,1 @@
+Ours declare seven, one per package the project depends on, each with an empty version expression meaning any version will do. The scope is the trap: symbols do not inherit through assembly references, so every assembly definition must declare its own copy of the block, and forgetting one gives you an inactive conditional block that compiles cleanly.

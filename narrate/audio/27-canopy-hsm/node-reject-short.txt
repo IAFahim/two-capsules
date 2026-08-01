@@ -1,0 +1,1 @@
+Two roots, a missing default child, a cycle, or two names that hash alike.

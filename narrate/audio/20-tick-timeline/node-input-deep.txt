@@ -1,0 +1,1 @@
+This is the fourth timeline, and it is the tick your command data is stamped with. Because the default latency is zero it normally equals the predicted tick exactly, which is why almost every diagram shows three clocks. It separates when forced latency is configured, when ping exceeds the maximum predict ahead time, or on an off frame in single world host mode.

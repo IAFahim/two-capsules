@@ -1,0 +1,1 @@
+You can override the size globally, or per connection, which is how you hit a specific bandwidth target for a specific player. Ask for more than the message size and the snapshot quietly moves onto the fragmenting pipeline, which costs you reassembly and makes loss hurt more.

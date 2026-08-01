@@ -1,0 +1,1 @@
+The connection tracker is attached to root, and blocks on root run every tick in every child state. Attach it to connecting instead and you would stop detecting disconnects the moment you successfully entered the game, which is the worst possible time to find that bug. Put shared watchdogs at the top of the hierarchy, always.

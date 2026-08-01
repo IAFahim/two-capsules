@@ -1,0 +1,1 @@
+A composite that has been entered chooses its next child either from history, if it remembers, or from its single default child. That is the ordinary shallow history of a classic state chart, and it costs one extra entry in graph state per remembering parent.

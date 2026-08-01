@@ -1,0 +1,1 @@
+It runs last inside the physics group, after the world has been built, so collider blob references are valid and copyable. It requires a lag compensation configuration singleton to exist at all, and it refuses to run on a re-simulated tick so replay can never overwrite history that was already recorded.

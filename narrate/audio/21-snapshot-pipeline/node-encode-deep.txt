@@ -1,0 +1,1 @@
+Up to three baselines are found per entity and used to extrapolate what the value probably is now. Only the difference from that extrapolation is written. Fields are quantised to integers first, so a float that jitters in its last decimal place compares equal and costs zero bits. Constant motion is therefore nearly free on the wire.

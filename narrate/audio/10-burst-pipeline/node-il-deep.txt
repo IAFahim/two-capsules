@@ -1,0 +1,1 @@
+This matters more than it sounds. Burst does not parse your source, it consumes the intermediate language, which is why source generators and the compiler's own transformations are already applied by the time it looks. It is also why an attribute is the only signal available: there is no other way to mark a method at that level.

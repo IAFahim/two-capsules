@@ -1,0 +1,1 @@
+Alongside the chunk indices there are two parallel arrays: which matching archetype each chunk belongs to, and its position within that archetype's own list. A valid flag guards the whole thing, and the rebuild simply clears and refills, skipping archetypes with no entities. The rebuild itself is compiled to native code, because it runs often enough to matter.

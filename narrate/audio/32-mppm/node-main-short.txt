@@ -1,0 +1,1 @@
+The one full editor. It owns the scenario and launches everything else.

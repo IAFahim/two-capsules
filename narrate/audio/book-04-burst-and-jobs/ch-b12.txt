@@ -1,0 +1,1 @@
+Burst compiles a separate copy of static fields. A static int written from managed code is invisible to bursted code. The supported bridge is Shared Static<T>:

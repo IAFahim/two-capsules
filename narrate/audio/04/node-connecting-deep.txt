@@ -1,0 +1,1 @@
+Every composite state must declare exactly one default child, and the validator proves that at author time rather than letting you find it at runtime. It also proves your state ids do not collide after hashing, which is a lovely thing to catch offline.

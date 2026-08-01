@@ -1,0 +1,1 @@
+Copy the sorted array, slide one element in, keep it sorted.

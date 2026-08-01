@@ -1,0 +1,1 @@
+Every fence of every registered type, combined and waited on.

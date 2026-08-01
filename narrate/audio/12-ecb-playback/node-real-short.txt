@@ -1,0 +1,1 @@
+Recording a create mints a real entity identifier, right then, inside the job.

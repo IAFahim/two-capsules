@@ -1,0 +1,1 @@
+Netcode applies it as driver settings on the socket driver only. On a server the in process driver is deliberately registered without relay parameters, so the host's own player keeps the fast path while remote clients take the longer route. A relay is a reachability fix, not a topology, and it costs an extra hop of latency.

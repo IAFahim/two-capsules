@@ -1,0 +1,1 @@
+The batch base plus the stored offset. One word per handle, and nothing else.

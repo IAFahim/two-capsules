@@ -1,0 +1,1 @@
+It exists so prediction can continue when no new server data has arrived, and it doubles as the reference for prediction error reporting and for smoothing the correction. The copy is of the whole component, but the restore touches only the replicated portion, which preserves any local state you keep beside it.

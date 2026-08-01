@@ -1,0 +1,1 @@
+It is also the only instance with the play mode tools window, which is why it looks like the place to fix everything and is not. It is a player in the scenario in its own right, with its own role entry, so it is not privileged at runtime, only in the user interface.

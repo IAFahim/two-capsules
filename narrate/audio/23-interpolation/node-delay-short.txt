@@ -1,0 +1,1 @@
+The larger of your configured window and the jitter derived estimate.

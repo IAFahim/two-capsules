@@ -1,0 +1,1 @@
+The struct sits on a tiny managed box purely so it can be pinned, because you cannot pin a field of an arbitrary object graph. The pinned address then keys a dictionary of view models. Unpinning on teardown is done in nested try and finally blocks, so a throw mid teardown still releases the handle.

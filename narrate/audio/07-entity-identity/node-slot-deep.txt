@@ -1,0 +1,1 @@
+It lives on the engine side now rather than inside the entity package, and the package reads it through a static that both compiled and interpreted code agree on. Reads use a volatile load, because entity ids can be allocated from worker threads without a lock, which is what makes recording a create inside a job possible at all.

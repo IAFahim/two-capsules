@@ -1,0 +1,1 @@
+Single threaded, by definition, one memory copy per moved entity.

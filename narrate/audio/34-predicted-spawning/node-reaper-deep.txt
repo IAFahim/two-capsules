@@ -1,0 +1,1 @@
+The deadline is the interpolation tick, optionally pushed back by a configurable number of extra ticks that defaults to zero. Raising that number gives late-arriving server ghosts more chances to classify, but it also keeps mispredicted spawns visible for longer, so raise it in single digits.

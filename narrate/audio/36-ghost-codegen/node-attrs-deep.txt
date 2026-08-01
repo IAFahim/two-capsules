@@ -1,0 +1,1 @@
+Quantization defaults to negative one, meaning unset. Composite change tracking is off, so every inner field of a nested struct gets its own change bit. Smoothing defaults to clamp. Send data defaults to true, and the maximum smoothing distance defaults to zero, which disables the snap check entirely.

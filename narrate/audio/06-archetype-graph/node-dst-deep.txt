@@ -1,0 +1,1 @@
+Creating one is more work than it sounds. It computes memory ordering for the types, offsets, strides, a stable hash for serialisation, a bloom filter mask for query matching, and two derived archetypes: one for instantiating, which strips prefab and cleanup components, and one for copying, which strips only cleanup. All of that is done once, at creation, and never again.

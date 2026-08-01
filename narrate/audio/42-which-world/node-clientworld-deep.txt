@@ -1,0 +1,1 @@
+It is the world to reason about when the local capsule feels laggy, when a remote capsule stutters, or when nothing appears on screen. Its physics is a guess corrected by snapshots. A raycast here queries a predicted collision world, not authority, and that difference is invisible until it matters.

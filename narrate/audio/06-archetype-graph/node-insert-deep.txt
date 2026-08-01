@@ -1,0 +1,1 @@
+This happens on the stack, so there is no allocation and no garbage. The insertion point is found by walking the array until the existing type is no longer smaller than the new one. If the type is already there the function returns nothing at all, which is how adding a component you already have becomes free rather than an error.

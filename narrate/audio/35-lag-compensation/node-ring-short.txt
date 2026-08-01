@@ -1,0 +1,1 @@
+Thirty two stored collision worlds, indexed by tick.

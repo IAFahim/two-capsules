@@ -1,0 +1,1 @@
+It compares quantized integers rather than floats when building the change mask, which is the real reason quantization saves bandwidth: quantized values compare equal far more often, and an unchanged field costs only its mask bit. Set quantization too coarse, though, and prediction can never agree with the dequantized server value, so you roll back every single tick.

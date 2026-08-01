@@ -1,0 +1,1 @@
+The rebuild walks up the parent chain into a small pooled list and then reverses it, so the root runs first and the leaf runs last. Every state on the path gets its blocks executed, which is the definition of a state being active. It is cheap enough to redo every tick because the depth of a real graph is three or four.

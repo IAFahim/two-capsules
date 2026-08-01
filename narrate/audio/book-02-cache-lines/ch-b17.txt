@@ -1,0 +1,1 @@
+Moving chunks for a boolean is absurd, so Entities added enableable components. The chunk header carries a 128-bit mask per enableable type. Disabling one flips a bit; the entity stays put. Queries respect the mask via Chunk Entity Enumerator.

@@ -1,0 +1,1 @@
+It runs once per iteration, not once per frame. Each time round it advances the tick being predicted, asks every predicted entity whether it should run for that tick, and sets the enable bit accordingly. Think of it as the clock generator plus the enable decoder for the whole predicted set.

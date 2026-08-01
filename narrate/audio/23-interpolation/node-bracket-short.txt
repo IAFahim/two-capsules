@@ -1,0 +1,1 @@
+The two slots straddling the read pointer, and a factor between zero and one.

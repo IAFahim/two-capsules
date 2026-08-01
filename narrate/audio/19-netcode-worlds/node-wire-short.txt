@@ -1,0 +1,1 @@
+One listening port, two transports: shared memory in-process, a real socket outside.

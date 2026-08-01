@@ -1,0 +1,1 @@
+You already know how a machine works. You know that a cache line is 64 bytes, that a branch mispredict costs you ~15 cycles, that D M A exists so the CPU can stop babysitting the bus. That knowledge is not a handicap here. It is the whole advantage.

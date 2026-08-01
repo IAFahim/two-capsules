@@ -1,0 +1,1 @@
+A client can render anything it received, so quantization, obfuscation, and encryption do not stop a wall hack. The only defence is not sending the data. Relevancy in allowlist mode, and marking private state as owner only, are the structural answers. An aimbot that cannot see you cannot aim at you, and that is the netcode contribution to a problem netcode cannot otherwise solve.

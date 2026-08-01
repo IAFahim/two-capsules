@@ -1,0 +1,1 @@
+It only runs while the profiler is enabled, and it cleans up when the profiler is switched off. It creates a singleton entity named metrics monitor carrying six required component types. Server worlds get instance count and snapshot size counters; client worlds get those plus jitter and round trip time.

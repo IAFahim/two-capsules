@@ -1,0 +1,1 @@
+The exact set of component types, shared by every chunk that matches it.

@@ -1,0 +1,1 @@
+Power rail comes up. The reset line releases. The core fetches its first instruction from the reset vector. Some tens of millions of instructions later, firmware, bootloader, kernel, init, display server, a process called Unity gets a PID and a main thread.

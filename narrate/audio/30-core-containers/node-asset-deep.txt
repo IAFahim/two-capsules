@@ -1,0 +1,1 @@
+The marker interface is what makes it discoverable by the settings window and the creation path; the world attribute is what makes it land somewhere specific. A separate base class exists for the kind that bakes components onto an entity, which is how a settings asset can push arbitrary data into a world without owning a behaviour of its own.

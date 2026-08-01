@@ -1,0 +1,1 @@
+It writes only the fields that carry a ghost field attribute. For a physics body that means the transform and the linear and angular velocity, the latter quantized to one thousandth of a unit per second. Correcting position without correcting velocity would leave the client re-diverging immediately from the same wrong momentum.

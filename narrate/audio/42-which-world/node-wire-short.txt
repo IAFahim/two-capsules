@@ -1,0 +1,1 @@
+A ghost identifier and a prefab index. No entity reference ever crosses.

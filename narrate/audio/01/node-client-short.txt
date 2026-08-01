@@ -1,0 +1,1 @@
+The client world. It predicts your capsule, renders everything, and owns nothing.

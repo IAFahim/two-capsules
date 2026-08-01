@@ -1,0 +1,1 @@
+One per authoring component, and structurally unable to see its neighbours.

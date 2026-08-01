@@ -1,0 +1,1 @@
+It is a dynamic buffer, which means it is entity data like any other. It travels in the chunk, it gets copied when the entity is instantiated, it saves and loads, and it is deleted when the entity is. Nothing had to be written to make any of that work. Choosing entity storage instead of a side table is the whole reason this design has no lifetime problems.

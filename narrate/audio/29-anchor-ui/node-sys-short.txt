@@ -1,0 +1,1 @@
+A system assigns a field on an unmanaged struct it holds a pointer to.

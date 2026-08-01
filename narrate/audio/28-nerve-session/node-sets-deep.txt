@@ -1,0 +1,1 @@
+One baked controller entity is created per set, and only for sets whose mask could ever match, so a set that is irrelevant to a world does not even produce an entity there. The flag with the required marker also forces the wait for load behaviour on, regardless of what you asked for.

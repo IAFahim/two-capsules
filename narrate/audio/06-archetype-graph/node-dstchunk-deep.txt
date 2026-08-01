@@ -1,0 +1,1 @@
+This is why a structural change is not something you can do while jobs are running. Anything holding a raw pointer into the old chunk is now pointing at memory that has been reused or moved. The handle you hold is still valid, because a handle is an index plus a version rather than an address, but every array pointer derived from it is stale.

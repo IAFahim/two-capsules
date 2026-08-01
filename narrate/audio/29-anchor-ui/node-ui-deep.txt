@@ -1,0 +1,1 @@
+Nothing here knows about entities. The markup names a data source type and a path, and the binding resolves it at import time, which is the origin of a famous trap: if the assembly holding that type has not been compiled yet, the reference is dropped silently and never retried.

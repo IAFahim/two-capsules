@@ -1,0 +1,1 @@
+This is where your input domains have to be enforced, in the shared predicted system so both sides agree. Directions get normalised, non finite values get zeroed, angles get wrapped. Outcomes that decide anything, such as damage, loot, or score, belong in a server only system that the client never runs at all.

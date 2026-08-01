@@ -1,0 +1,1 @@
+This does not make the barrier free, it makes it countable. Instead of a barrier wherever the change was requested, you get one barrier in one system whose position in the update order you chose. That is the difference between a stall you can find in a profile and a hundred you cannot.

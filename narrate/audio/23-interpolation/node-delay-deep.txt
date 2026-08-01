@@ -1,0 +1,1 @@
+Your setting is a floor expressed in network ticks, converted into simulation ticks by the ratio between the two rates. The competing estimate is the measured arrival gap plus jitter, clamped at six network intervals. Whichever is larger wins, and it moves toward its target no faster than a tenth of the frame's ticks, so the depth itself is rate limited.

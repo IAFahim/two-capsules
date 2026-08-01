@@ -1,0 +1,1 @@
+The struct is declared with an explicit size of eight bytes and holds exactly one raw field. Everything you think of as a field is a property that masks and shifts. That is what lets the equality operator compare the two words directly, and it is why passing entities around by value costs the same as passing a long integer.

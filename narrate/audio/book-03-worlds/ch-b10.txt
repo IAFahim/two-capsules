@@ -1,0 +1,1 @@
+Bovine Labs adds its own world kinds on top of Unity's, in Bovine Labs.Core/Worlds.cs:

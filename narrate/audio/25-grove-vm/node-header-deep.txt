@@ -1,0 +1,1 @@
+Every execution node in the image starts with this header, and its own data struct sits immediately after it in memory. Reading a node's data is pointer arithmetic on a known offset, not a lookup. The node id is kept so that state, debugging and history can all key off the authored identity rather than a position.

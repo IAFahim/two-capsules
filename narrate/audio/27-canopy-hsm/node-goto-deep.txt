@@ -1,0 +1,1 @@
+This is a deliberate trade. Edges in a visual graph become unreadable spaghetti at about fifteen nodes, so canopy makes the jump a named one and is honest that it is a goto. The target name is hashed to an integer at author time and resolved back to a node by scanning the graph at runtime, which is why the uniqueness check matters so much.

@@ -1,0 +1,1 @@
+If this package is installed, define this symbol — for this one assembly only.

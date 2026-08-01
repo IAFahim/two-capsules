@@ -1,0 +1,1 @@
+A command packet carries at most thirty two commands. The buffer they land in is a ring of sixty four slots keyed by tick, and the prediction loop reads exactly one command per tick. Commands older than the current server tick are rewritten to it. So flooding does not multiply your actions; it wastes your own bandwidth and costs the server a little work.

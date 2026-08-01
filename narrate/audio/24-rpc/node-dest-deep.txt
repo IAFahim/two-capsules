@@ -1,0 +1,1 @@
+That connection entity is your only sender identity, and it is the trustworthy one, because it is attached by the receiver and cannot be forged in the payload. Consume it and destroy the entity when you have handled it. If you never do, it just sits there, and an age warning is the only thing that will tell you.
