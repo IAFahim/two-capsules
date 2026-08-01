@@ -1,0 +1,1 @@
+Trap, do not cache node state in a static or in a system field. It will not be per entity, it will not be checkpointed, and under prediction rollback it will silently desync. Grove State exists precisely to make the right thing easy.

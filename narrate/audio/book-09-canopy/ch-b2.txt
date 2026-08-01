@@ -1,0 +1,1 @@
+Canopy is one idea: a state is a node that can contain other states. Everything else follows.

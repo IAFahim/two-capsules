@@ -1,0 +1,1 @@
+Note L D library path outranks run path. That ordering is exactly what makes the wrapper work.

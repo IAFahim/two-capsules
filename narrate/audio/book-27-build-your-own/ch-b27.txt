@@ -1,0 +1,1 @@
+A chunk is a D M A buffer and an archetype is its type. A blob is position-independent code; Grove State is its RAM. Simulate is a clock-enable line. Send intent, never results. Nobody on screen is seeing "now", and your job is to make that invisible.

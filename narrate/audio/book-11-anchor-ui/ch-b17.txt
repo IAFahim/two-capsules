@@ -1,0 +1,1 @@
+Two Shared Statics, and that is the entire API surface:

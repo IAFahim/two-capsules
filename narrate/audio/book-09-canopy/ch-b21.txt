@@ -1,0 +1,1 @@
+Remember History on a composite state makes re-entry resume the child you left, instead of the default child. Classic UML shallow history. Free, and occasionally exactly what a pause menu wants.

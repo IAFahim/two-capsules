@@ -1,0 +1,1 @@
+Connection Events For Tick is a Native Array<Net Code Connection Event>.Read Only valid for this tick only. Connection State.State walks Unknown then Connecting then Handshake then Approval then Connected then Disconnected.

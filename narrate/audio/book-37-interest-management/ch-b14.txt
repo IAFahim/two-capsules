@@ -1,0 +1,1 @@
+The multiplier exists because that product is a small integer and your scaling function needs headroom to divide. It defaults to 1000 (Ghost Send System.cs:416).

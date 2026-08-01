@@ -1,0 +1,1 @@
+Every predicted ghost carries Predicted Ghost { Applied Tick, Prediction Start Tick }. It tells you which server tick the current state was last corrected from. Useful for debugging: if Applied Tick is far behind Server Tick, this ghost has not been corrected in a while.

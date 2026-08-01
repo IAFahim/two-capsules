@@ -1,0 +1,1 @@
+The instinct is to write this table into a wiki page and ask designers to respect it. That fails in the worst possible way: silently, on one machine, under load, months later.

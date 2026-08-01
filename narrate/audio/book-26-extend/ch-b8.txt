@@ -1,0 +1,1 @@
+Checklist: both world flags · prediction group · Simulate · no branch on Is Server · no one-shot side effects (or gate on Is First Time Fully Predicting Tick).

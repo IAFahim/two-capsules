@@ -1,0 +1,1 @@
+Hardware analogy, the controller is a stable device handle; the pawn is the currently mapped buffer. You re-point the handle; you do not tear down the session.

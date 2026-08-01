@@ -1,0 +1,1 @@
+Trap, pick an opcode range that cannot collide with Grove's, Canopy's, or Nerve's. Nerve uses -Nerve Id.Offset - n. Give yourself your own offset and document it.

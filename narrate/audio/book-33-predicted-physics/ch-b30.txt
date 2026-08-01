@@ -1,0 +1,1 @@
+The predicted physics world can only contain things that roll back. A dynamic body that is not a ghost cannot be rolled back, so it would be simulated forward several times per frame and never corrected.

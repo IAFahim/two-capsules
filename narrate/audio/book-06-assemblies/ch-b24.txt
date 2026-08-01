@@ -1,0 +1,1 @@
+Is the DLL in Library/Script Assemblies/? Does your assembly definition reference the assembly? Does your assembly definition declare the version Defines for symbols you use in #if? Do your define Constraints match the constraints of everything you reference? Is anything you reference UNITY_EDITOR-only while you are not?

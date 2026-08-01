@@ -1,0 +1,1 @@
+Hardware analogy, Node then Auth then Data is compile then link then flash. Execute is the instruction decoder. [Execute Node((int)Nerve Execution Types.Client Go In Game, …)] is an opcode assignment.

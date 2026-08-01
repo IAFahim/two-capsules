@@ -1,0 +1,1 @@
+When a graph does nothing, walk down this list; the first no is your bug.

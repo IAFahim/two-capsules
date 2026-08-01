@@ -1,0 +1,1 @@
+Ghosts marked Optimization Mode.Static that have not changed are skipped entirely. Every ghost you can mark static is bandwidth handed back to the ghosts that need it.

@@ -1,0 +1,1 @@
+Creates the asset, reads [Settings World("server")], and inserts it into Server Settings.prefab. Never hand-edit that array.

@@ -1,0 +1,1 @@
+You do not control ticks_behind, that is round-trip time. You control the set size. That is the only honest lever, and the contagion rule is exactly what makes it leak.

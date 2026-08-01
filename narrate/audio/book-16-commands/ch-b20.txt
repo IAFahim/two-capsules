@@ -1,0 +1,1 @@
+Each command packet contains the last few ticks of input, not just one. Lose a packet and the next one still carries the missing tick. This is why unreliable transport is acceptable for input: the redundancy is in the payload, not the protocol.

@@ -1,0 +1,1 @@
+That last point is the one we exploited today: the sample shipped a service graph and a menu graph, and we added a client graph without touching a single package file.

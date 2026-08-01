@@ -1,0 +1,1 @@
+Track Interpolation Delay on the ghost is what makes the server able to reconstruct "what did this client see". The trade is real and famous: behind cover and still shot. Every shooter picks a point on that spectrum; none escape it.

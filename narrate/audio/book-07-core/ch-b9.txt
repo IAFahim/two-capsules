@@ -1,0 +1,1 @@
+That one call is how our Client State Settings got wired. Read it as the supported API and never hand-edit those prefab arrays.

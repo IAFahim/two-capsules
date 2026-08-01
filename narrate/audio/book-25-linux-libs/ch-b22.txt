@@ -1,0 +1,1 @@
+Trap, an editor upgrade replaces Unity and silently removes the wrapper. Re-apply after every upgrade, or script it.

@@ -1,0 +1,1 @@
+So the correlation is an integer plus a shared agreement about what that integer names. Both worlds baked the same authored prefab from the same asset, so both already know what ghost type 7 means. The wire carries the number, not the thing.

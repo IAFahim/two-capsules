@@ -1,0 +1,1 @@
+Both are resolved at bake time, so the runtime image is already specialised. There is no runtime branch and no lookup cost. It is template instantiation, done by the baker.

@@ -1,0 +1,1 @@
+That last row is the performance secret and the compile-time cost. Every context type gets its own monomorphised dispatch, no generic virtual calls, everything inlinable, Burst sees concrete types all the way down.

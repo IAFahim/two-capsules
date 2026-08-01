@@ -1,0 +1,1 @@
+Optimization Mode.Static lets a chunk be skipped completely. Can Use Static Optimization (Ghost Chunk Serializer.cs:1865) returns true only when all of these hold:

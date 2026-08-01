@@ -1,0 +1,1 @@
+The package ships two default serialization variants for physics, and they carry the whole replication contract.

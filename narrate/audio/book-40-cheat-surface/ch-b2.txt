@@ -1,0 +1,1 @@
+The security model of this stack is one sentence: the client sends intent, the server computes results. This chapter is what that sentence buys, what it does not, and which holes are closed by structure versus only ever detected.

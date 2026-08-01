@@ -1,0 +1,1 @@
+Burst compiles that switch into a jump table. No virtual dispatch, no function pointer indirection, fully inlinable. This is why Grove is fast enough to run per-entity.

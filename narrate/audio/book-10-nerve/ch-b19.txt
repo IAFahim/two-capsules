@@ -1,0 +1,1 @@
+That is why our two-player run shows 4 ghosts: 2 controllers + 2 capsules. If you ever see 3, two clients adopted the same controller, an identity collision.

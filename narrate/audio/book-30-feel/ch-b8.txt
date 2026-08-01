@@ -1,0 +1,1 @@
+Rendering other players in the past, between two known snapshots, converts irregular arrival into regular motion. It is a jitter buffer, and it is why a 20 hertz snapshot rate can look like 144 hertz motion.

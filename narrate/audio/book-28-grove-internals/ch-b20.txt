@@ -1,0 +1,1 @@
+Set Chunk(chunk, index) refreshes them once per chunk; nodes then index by grove Context.Entity Index In Chunk. That is why per-entity access inside a node is an array index, not a lookup, the expensive part happened once per chunk.

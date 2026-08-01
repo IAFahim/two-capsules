@@ -1,0 +1,1 @@
+1. Settings, a Scriptable Object that becomes an entity

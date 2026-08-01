@@ -1,0 +1,1 @@
+Graph Options.Supports Subgraphs is on for all three Nerve graph types. A subgraph is a whole.cnerve/.snerve referenced as one node, with its own scope in Grove Node State (see Push Subgraph Scope). Scoping means node ids inside a subgraph do not collide with the parent, so the same subgraph can appear twice in one graph with independent state.

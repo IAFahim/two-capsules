@@ -1,0 +1,1 @@
+These three are really two clock domains with ownership as the selector, and choosing between them has a consequence that spreads, see 41 · Clock domains.

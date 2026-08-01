@@ -1,0 +1,1 @@
+Probe, Ghost Snapshot Inspector shows arrival timing per ghost. Irregular arrival with regular sends means the problem is the wire, not your code.

@@ -1,0 +1,1 @@
+Grove has more than "nodes". It has kinds, and the kind decides what the blob holds and how dispatch reaches it.

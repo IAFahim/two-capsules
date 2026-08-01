@@ -1,0 +1,1 @@
+All four live on Ghost Authoring Component, which is a thin authoring wrapper over Base Ghost Settings. These are the real defaults, from the field initialisers:

@@ -1,0 +1,1 @@
+Running sudo ldconfig cleared the stale entry, and turned "working by accident" into a clean, honest exit 127.

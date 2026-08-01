@@ -1,0 +1,1 @@
+5 · Snapshot delta compression, buys bandwidth, which buys rate

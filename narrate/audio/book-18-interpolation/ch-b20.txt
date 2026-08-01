@@ -1,0 +1,1 @@
+When a rollback moves your predicted capsule, snapping is visible. Net Code can blend the visual position toward the corrected one over a few frames (Ghost Prediction Smoothing / Smoothing Action).

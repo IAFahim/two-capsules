@@ -1,0 +1,1 @@
+Key contact closes. Keyboard controller debounces, sends a HID report over USB. Host controller raises an interrupt. Kernel HID driver decodes, queues an evdev event. Display server delivers it to the focused window. Unity's message pump drains it.

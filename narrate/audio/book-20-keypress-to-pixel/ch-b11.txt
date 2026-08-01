@@ -1,0 +1,1 @@
+Copy Input To Command Buffer System Group (Order Last) copies the component into Input Buffer Data<Player Move Input>[current Tick], a ring slot stamped with the tick. Command Send System serialises the last few ticks (built-in redundancy) and sends unreliably.

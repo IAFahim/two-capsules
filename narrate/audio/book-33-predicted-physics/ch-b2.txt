@@ -1,0 +1,1 @@
+Chapter 17 built a rollback loop out of your own systems. This chapter puts a third-party rigid body solver inside that loop and explains exactly what survives the trip.

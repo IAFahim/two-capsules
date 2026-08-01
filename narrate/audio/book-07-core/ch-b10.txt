@@ -1,0 +1,1 @@
+Probe, after creating a settings asset, confirm the link:

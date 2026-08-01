@@ -1,0 +1,1 @@
+4. Object Definition, a handle registry for prefabs

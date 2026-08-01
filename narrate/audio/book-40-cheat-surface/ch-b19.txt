@@ -1,0 +1,1 @@
+Aim direction arrives as an input field, already bounded, a unit vector is a unit vector, so hole 1's clamping does not help. An aimbot's aim is perfectly legal.

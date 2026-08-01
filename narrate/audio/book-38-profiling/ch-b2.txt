@@ -1,0 +1,1 @@
+Netcode has four bottlenecks and they look identical from outside: the game gets worse with more players. This chapter is the counters that tell them apart.

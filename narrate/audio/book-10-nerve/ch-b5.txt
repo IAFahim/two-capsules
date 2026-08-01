@@ -1,0 +1,1 @@
+Bovine Labs Bootstrap implements ICustom Bootstrap. It creates Service World at startup and exposes Create Client Server Worlds(), which the service graph's Create World node calls when you press Start Game.

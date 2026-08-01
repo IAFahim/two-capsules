@@ -1,0 +1,1 @@
+The generator writes its output to disk when you enable it, and the switch is a Roslyn global config file rather than a project setting.

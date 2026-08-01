@@ -1,0 +1,1 @@
+Always develop with emulation on. 80 milliseconds round trip time and 2% loss as your daily setting will surface every prediction bug while it is still cheap. A LAN-perfect connection hides exactly the class of bug that ships.

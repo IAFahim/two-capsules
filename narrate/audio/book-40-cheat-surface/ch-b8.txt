@@ -1,0 +1,1 @@
+The middle column is the value of server authority. Note what is not in it: nothing about the plausibility of the values on the left. That is your job.

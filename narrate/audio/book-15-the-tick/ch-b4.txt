@@ -1,0 +1,1 @@
+Simulation Tick Rate is authored in Client Server Tick Rate. Everything on the wire is stamped with a Network Tick, a wrapping uint, so never compare with <. Use tick.Is Newer Than(other), which handles wraparound the way a sequence-number comparison must.

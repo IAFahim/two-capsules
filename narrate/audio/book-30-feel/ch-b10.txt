@@ -1,0 +1,1 @@
+Simulate at 60, render at 144, and 60% of frames have nothing new. Partial ticks run a fraction of a tick purely for presentation, then throw it away.

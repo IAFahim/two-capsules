@@ -1,0 +1,1 @@
+Hardware analogy, Network Tick is a wrapping counter with a comparator that understands modular distance. Exactly like TCP sequence numbers. Comparing raw values works for hours and then breaks once, catastrophically.

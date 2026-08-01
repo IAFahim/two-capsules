@@ -1,0 +1,1 @@
+The client continuously measures round trip time and jitter, then adjusts:

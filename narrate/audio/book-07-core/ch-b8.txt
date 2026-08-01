@@ -1,0 +1,1 @@
+Editor Settings Utility.Get Settings<T>() does the whole dance in one call: finds or creates the asset in Assets/Settings/Settings/, reads [Settings World], and inserts it into the right prefab's array (sorted, deduped, null-pruned).

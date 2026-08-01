@@ -1,0 +1,1 @@
+Ghost Authoring Component on the prefab produces a serialization schema: which components, which fields, at what precision, with what change-detection. Baking generates serializer code per ghost type, no reflection at runtime.

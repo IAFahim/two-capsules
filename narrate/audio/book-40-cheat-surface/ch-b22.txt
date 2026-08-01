@@ -1,0 +1,1 @@
+A client can render anything it received. Send the position of an enemy behind a wall because that enemy is merely far away but relevant, and the client has a wallhack no client-side code prevents. Four mechanisms narrow the read port:

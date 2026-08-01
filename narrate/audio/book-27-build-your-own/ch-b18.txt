@@ -1,0 +1,1 @@
+Milestone: 50 entities, 20 hertz, 5% simulated packet loss, no visible corruption.

@@ -1,0 +1,1 @@
+So on a stock project nothing ever adds Connection Approved, and Player Connection System requires it. No player ever spawns, and nothing is logged.

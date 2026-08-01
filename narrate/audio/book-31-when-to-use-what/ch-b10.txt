@@ -1,0 +1,1 @@
+Raise sim rate for simulation fidelity. Raise send rate for visual freshness. They are different problems.

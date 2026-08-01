@@ -1,0 +1,1 @@
+Each prefab gets an Object Definition asset carrying a stable numeric ID. A settings asset registers them all. At bake time that becomes a lookup table; at runtime you spawn by ID.

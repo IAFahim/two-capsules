@@ -1,0 +1,1 @@
+The problem: designers want to tune numbers in the Inspector. E C S wants blittable data in chunks. Settings is the bridge.

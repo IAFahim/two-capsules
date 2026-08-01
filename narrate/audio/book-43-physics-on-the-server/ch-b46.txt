@@ -1,0 +1,1 @@
+Two authoring stacks bake to the same runtime components.

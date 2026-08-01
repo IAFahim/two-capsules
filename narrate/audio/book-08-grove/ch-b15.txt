@@ -1,0 +1,1 @@
+A blob cannot hold a delegate. So Grove's source generator scans for [Execute Node], collects every opcode, and generates a switch:

@@ -1,0 +1,1 @@
+Cost check: rollback cost is predicted entities × replayed ticks. Every entity you add to the predicted set multiplies every correction.

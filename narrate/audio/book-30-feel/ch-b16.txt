@@ -1,0 +1,1 @@
+Quantization amplifies this: quantized values compare equal more often, so more fields are "unchanged".

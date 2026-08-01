@@ -1,0 +1,1 @@
+Probe, this one command answers "where did it stop": conns=1 in Game=0 then step 5 or 6. in Game=1 ghosts=0 then step 7.

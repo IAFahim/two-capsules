@@ -1,0 +1,1 @@
+So the client does not wait. It applies your input immediately, assuming the server will agree. Usually it does.

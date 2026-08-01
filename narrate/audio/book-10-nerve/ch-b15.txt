@@ -1,0 +1,1 @@
+Turning approval on is not free either: our topology is a separate Client World + Server World, and World.Is Server() is true for that Server World, so it takes the real J W T branch and calls out to player-auth.services.api.unity.com.

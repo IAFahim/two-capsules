@@ -1,0 +1,1 @@
+Snapshots are deliberately unreliable: a lost snapshot is not worth retransmitting, because the next one (20 milliseconds later) already contains newer truth. Commands are the same. Only remote procedure calls and ghost spawn/despawn need reliability.

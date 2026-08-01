@@ -1,0 +1,1 @@
+Every step of that replay runs your systems, with the input from the command ring buffer for that exact tick. Which is why chapter 16's stage 5 exists.

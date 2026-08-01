@@ -1,0 +1,1 @@
+Runs on every graph change and at bake. Our setup script re-checks explicitly and throws, so a broken graph fails at build time rather than as a silent no-op at runtime.

@@ -1,0 +1,1 @@
+Trap, adding a [Ghost Field] changes the ghost schema, which changes the protocol version. Old clients get a handshake mismatch. Rebuild both sides together.

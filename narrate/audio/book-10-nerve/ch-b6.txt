@@ -1,0 +1,1 @@
+Trap, Requested Play Type defaults to Client And Server. In a Multiplayer Play Mode virtual player that means it builds a second Server World, which tries to bind 127.0.0.1:7979, which is already taken. Chapter 23 is entirely about this.

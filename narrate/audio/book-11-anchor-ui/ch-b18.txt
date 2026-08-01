@@ -1,0 +1,1 @@
+Hardware analogy, a doorbell register. The managed side writes a bit; the fast side polls and clears it. No allocation, no callback across the Burst boundary, no ownership question.

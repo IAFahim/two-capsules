@@ -1,0 +1,1 @@
+Higher tick rate = lower input latency, more CPU on the server, more bandwidth, and more rollback work per correction. It multiplies through everything.

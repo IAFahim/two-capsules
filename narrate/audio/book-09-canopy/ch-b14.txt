@@ -1,0 +1,1 @@
+Trap, forget that check and your block does its work while the state is being torn down, typically after the data it depends on is gone.

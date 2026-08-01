@@ -1,0 +1,1 @@
+Ghost Owner Is Local is the one you filter input on (chapter 16). Ghost Owner is the one you filter rules on, our Player Move System uses With All<Simulate, Ghost Owner>() so it moves player-owned things on both client and server.

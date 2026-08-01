@@ -1,0 +1,1 @@
+Nerve ships the nodes. It does not ship a context or a driver, those are per-project, exactly like the sample's Menu and Service ones.

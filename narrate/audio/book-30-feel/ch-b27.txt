@@ -1,0 +1,1 @@
+It does this by nudging the rate of local time, not by jumping. Slow drift is invisible; a jump is not.

@@ -1,0 +1,1 @@
+Something must add Network Stream In Game to the client's connection and send a Go In Game Request remote procedure call. Without it, zero snapshots flow (chapter 13).

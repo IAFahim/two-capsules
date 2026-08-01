@@ -1,0 +1,1 @@
+For each replicated component the generator instantiates the component serializer template and produces a struct containing a private Snapshot layout plus these methods:

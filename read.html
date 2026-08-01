@@ -90,19 +90,46 @@
   <span class="hint"><kbd>Space</kbd> play · <kbd>J</kbd>/<kbd>K</kbd> move · <kbd>M</kbd> mute</span>
 </div>
 
-<audio id="au" preload="none"></audio>
 <script src="assets/mermaid.min.js"></script>
+<script src="assets/gapless.js"></script>
 <script>
 (function(){
   const $ = (id) => document.getElementById(id);
-  const au = $("au"), doc = $("doc"), wrap = $("wrap");
+  const doc = $("doc"), wrap = $("wrap");
   let index = [], man = null, ch = null, clips = [], at = -1, playing = false, unlocked = false;
   const SPEEDS = [1, 1.25, 1.5, 0.85]; let si = 0;
   const muted = () => $("mute").getAttribute("aria-pressed") === "true";
 
+  // Web Audio gapless: decode whole chapter, then schedule sample-accurate joins
+  const gap = Gapless.create({
+    rate: () => SPEEDS[si],
+    onLoading: (on) => {
+      if (on) $("state").textContent = "buffering…";
+    },
+    onIndex: (i) => {
+      at = i;
+      paint();
+      const c = clips[i];
+      // instant scroll only if the block is off-screen — smooth scroll steals main-thread
+      // time and was a real source of audio hiccups under load
+      if (c) {
+        const r = c.el.getBoundingClientRect();
+        const view = wrap.getBoundingClientRect();
+        if (r.top < view.top + 40 || r.bottom > view.bottom - 40) {
+          c.el.scrollIntoView({ behavior: "auto", block: "center" });
+        }
+      }
+      const nAud = clips.filter(x => x.audio).length;
+      $("state").textContent = clips.length
+        ? (i + 1) + "/" + clips.length + " · " + nAud + " narrated"
+        : "no narration";
+    },
+    onDone: () => stop(),
+  });
+
   ["pointerdown","keydown"].forEach(e => document.addEventListener(e, () => {
     if (unlocked) return; unlocked = true;
-    au.muted = true; au.play().then(() => { au.pause(); au.muted = false; }).catch(() => { au.muted = false; });
+    gap.unlock();
   }, true));
 
   const dark = () => matchMedia("(prefers-color-scheme: dark)").matches;
@@ -123,7 +150,12 @@
       el.addEventListener("click", () => { const i = clips.findIndex(x => x.el === el); if (i >= 0) go(i, false); });
       clips.push({ el, audio: c.audio, text: c.text });
     });
-    $("state").textContent = clips.length ? clips.length + " sections · " + (l && l.chapters.some(c => c.audio) ? "narrated" : "text only") : "no narration for this chapter";
+    // feed the gapless deck: null url = skip with ZERO dead air
+    gap.setUrls(clips.map(c => c.audio ? ("narrate/" + c.audio) : null));
+    const nAud = clips.filter(c => c.audio).length;
+    $("state").textContent = clips.length
+      ? clips.length + " sections · " + (nAud ? nAud + " narrated · gapless" : "text only")
+      : "no narration for this chapter";
   }
 
   function paint(){
@@ -134,18 +166,41 @@
   function go(i, keepPlaying){
     if (!clips.length) return;
     at = Math.max(0, Math.min(clips.length - 1, i));
-    const c = clips[at];
     paint();
-    c.el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
-    au.pause();
-    if (!c.audio || muted()) { if (keepPlaying) setTimeout(() => { if (playing) go(at + 1, true); }, 900); return; }
-    au.src = "narrate/" + c.audio; au.playbackRate = SPEEDS[si];
-    au.play().catch(() => {});
+    if (muted()) {
+      gap.stop();
+      if (keepPlaying && playing && at < clips.length - 1)
+        setTimeout(() => { if (playing) go(at + 1, true); }, 200);
+      return;
+    }
+    if (keepPlaying || playing) {
+      playing = true;
+      $("play").textContent = "❚❚ Pause";
+      gap.seek(at);
+    } else {
+      // scrub without autoplay: just highlight
+      gap.stop();
+    }
   }
 
-  au.addEventListener("ended", () => { if (playing && at < clips.length - 1) go(at + 1, true); else if (playing) stop(); });
-  function play(){ playing = true; $("play").textContent = "❚❚ Pause"; go(at < 0 ? 0 : at, true); }
-  function stop(){ playing = false; $("play").textContent = "▶ Read to me"; au.pause(); }
+  function play(){
+    if (muted()) return;
+    unlocked = true;
+    gap.unlock();
+    playing = true;
+    $("play").textContent = "❚❚ Pause";
+    $("state").textContent = "buffering…";
+    gap.play(at < 0 ? 0 : at).catch((e) => {
+      console.error(e);
+      $("state").textContent = "audio failed";
+      stop();
+    });
+  }
+  function stop(){
+    playing = false;
+    $("play").textContent = "▶ Read to me";
+    gap.stop();
+  }
 
   // ---------- chapter loading ----------
   async function load(slug){
@@ -175,15 +230,16 @@
   $("nextCh").addEventListener("click", () => hop(1));
   $("chapters").addEventListener("change", (e) => load(e.target.value));
   $("mute").addEventListener("click", (e) => {
-    const on = e.currentTarget.getAttribute("aria-pressed") === "true";
-    e.currentTarget.setAttribute("aria-pressed", on ? "false" : "true");
-    e.currentTarget.textContent = on ? "🔊 Voice" : "🔇 Muted";
-    if (!on) au.pause();
+    const wasMuted = e.currentTarget.getAttribute("aria-pressed") === "true";
+    const nowMuted = !wasMuted;
+    e.currentTarget.setAttribute("aria-pressed", nowMuted ? "true" : "false");
+    e.currentTarget.textContent = nowMuted ? "🔇 Muted" : "🔊 Voice";
+    if (nowMuted) stop();
   });
   $("speed").addEventListener("click", () => {
     si = (si + 1) % SPEEDS.length;
     $("speed").textContent = SPEEDS[si].toFixed(2).replace(/0$/, "") + "×";
-    au.playbackRate = SPEEDS[si];
+    gap.setRate(SPEEDS[si]);
   });
   document.addEventListener("keydown", (e) => {
     if (e.target.tagName === "SELECT" || e.target.tagName === "INPUT") return;

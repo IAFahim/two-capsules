@@ -1,0 +1,1 @@
+Blob Ptr<T> is a relative offset. The image is position-independent, so it can be memcpy'd, cached, and shared read-only by every entity. The image is immutable at runtime. No node may write to it. All mutable state goes in Grove State. Graph Id disambiguates. Two entities running different graphs keep separate state because the key includes the graph id.

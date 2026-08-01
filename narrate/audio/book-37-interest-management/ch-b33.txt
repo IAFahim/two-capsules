@@ -1,0 +1,1 @@
+When a relevant ghost turns irrelevant, the server clears its snapshot history and enqueues a pending despawn (Ghost Chunk Serializer.cs:1823); on the client the entity is destroyed. Relevancy churn is spawn/despawn churn, which is why hysteresis matters.

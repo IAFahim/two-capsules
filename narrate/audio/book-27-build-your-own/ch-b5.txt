@@ -1,0 +1,1 @@
+The hard part is not the layout. It is the structural change: adding a component means computing the new archetype, finding or creating a chunk, memcpy-ing every component, patching the entity lookup, and invalidating outstanding pointers. Get that right and the rest is bookkeeping.

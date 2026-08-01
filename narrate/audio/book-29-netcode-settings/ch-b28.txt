@@ -1,0 +1,1 @@
+Thin clients are the cheapest scale test you will ever write: no rendering, no presentation, real connections, real commands. Give them a fake-input system and you can put 50 players on your laptop.

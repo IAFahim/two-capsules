@@ -1,0 +1,1 @@
+Each Settings Base implements Bake(Baker<Settings Authoring>) and adds whatever components it wants onto one entity.

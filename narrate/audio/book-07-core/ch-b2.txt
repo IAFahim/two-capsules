@@ -1,0 +1,1 @@
+Bovine Labs.Core is the base plate. Four subsystems matter to us.

@@ -1,0 +1,1 @@
+This is the mechanism that puts our Client State Settings in the client world: it is on Client Settings.prefab, instantiated in Client.unity, which Required Client loads into anything flagged Client. Trace it backwards from a missing entity and you will land here.

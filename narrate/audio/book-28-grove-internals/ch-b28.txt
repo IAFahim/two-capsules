@@ -1,0 +1,1 @@
+Without this flag, Graph Toolkit would offer every node in the assembly in every graph. With it, a node appears only where [Use With Graph(.)] says. That is why a.snerve cannot contain Client Go In Game Node, and why adding a node to the wrong graph type is impossible rather than merely wrong.

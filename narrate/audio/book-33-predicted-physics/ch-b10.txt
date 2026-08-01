@@ -1,0 +1,1 @@
+Netcode Physics Rate Manager.Should Group Update decides, once per frame per tick, whether physics runs at all (Runtime/Physics/Predicted Physics System Group.cs:79). It keeps a m_Did Update flag so the group runs exactly once per invocation rather than looping.

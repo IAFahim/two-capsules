@@ -1,0 +1,1 @@
+That single design decision is why Net Code tolerates packet loss gracefully and why you must never assume a specific tick's data arrived.

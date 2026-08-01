@@ -1,0 +1,1 @@
+The package defines exactly two thresholds. They are the only numeric "bad values" this chapter gives you, because they are the package's own:

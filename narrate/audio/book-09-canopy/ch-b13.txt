@@ -1,0 +1,1 @@
+Every block must check for Exit and bail. Look at any Nerve node and the first three lines are the same:

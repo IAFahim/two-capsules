@@ -1,0 +1,1 @@
+Hardware analogy, importance scheduling is a weighted round-robin arbiter on a fixed-width bus. You do not get more bandwidth; you get to choose who wastes it.

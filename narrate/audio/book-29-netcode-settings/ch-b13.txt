@@ -1,0 +1,1 @@
+Too coarse and the client's prediction disagrees with the dequantized server value every tick, producing constant micro-rollbacks that read as jitter. Too fine and you pay bits for precision no one can see. Match it to your world scale, not to a habit.

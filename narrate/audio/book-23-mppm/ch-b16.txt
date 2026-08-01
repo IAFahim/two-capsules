@@ -1,0 +1,1 @@
+4 ghosts = 2 players × (controller + capsule). Chapter 22 explains why two per player, and why 3 would be an ownership bug.

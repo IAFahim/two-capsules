@@ -1,0 +1,1 @@
+Simulate is an enableable tag component. Before each tick of the prediction loop, Net Code enables it on exactly the ghosts that should simulate that tick and disables it on the rest.

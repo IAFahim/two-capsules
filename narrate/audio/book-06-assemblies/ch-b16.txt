@@ -1,0 +1,1 @@
+Our Daggertooth assembly definition referenced it. In the editor: fine, everything compiles, everything works, ship it. In a player build, UNITY_EDITOR is undefined, that assembly is not built, and the reference silently drops, taking every type we used from it.

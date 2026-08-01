@@ -1,0 +1,1 @@
+Milestone: 100k entities, one component write each, faster than the array-of-structs version.

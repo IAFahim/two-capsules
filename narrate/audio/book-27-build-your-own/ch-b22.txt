@@ -1,0 +1,1 @@
+That last bullet is the one that bites. A cached value in a system field is invisible to the checkpoint and will corrupt every replay.

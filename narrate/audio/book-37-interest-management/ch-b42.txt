@@ -1,0 +1,1 @@
+Choose in that order. Relevancy first, because a ghost you never send costs nothing. Static optimization second, because an unchanged ghost costs nothing. Importance last, because it only decides who spends a budget you have already minimised.

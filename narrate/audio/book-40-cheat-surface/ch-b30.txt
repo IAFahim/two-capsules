@@ -1,0 +1,1 @@
+Trap, the reported delay is never reset when the client changes command target (Command Data Interpolation Delay.cs:26), so a stale delay from a previous vehicle silently applies to the new one.

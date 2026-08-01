@@ -1,0 +1,1 @@
+When a rollback moves your capsule, snapping is visible. Blending the rendered position over a few frames hides small corrections entirely. Above Max Smoothing Distance it snaps instead, because sliding a long way looks worse than a clean cut.

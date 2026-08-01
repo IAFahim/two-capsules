@@ -1,0 +1,1 @@
+The generic <T> on every Execute is the context type. The generator instantiates the switch once per context type, so Client App Context gets its own specialised copy with everything monomorphised.

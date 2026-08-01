@@ -1,0 +1,1 @@
+The whole match hinges on two ticks agreeing, and the client cannot know the server's tick. Predicted Ghost Spawn System picks one of two values (Runtime/Snapshot/Predicted Ghost Spawn System.cs:301):

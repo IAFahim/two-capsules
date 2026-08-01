@@ -134,12 +134,11 @@
   </div>
 </div>
 
-<audio id="au" preload="none"></audio>
-
+<script src="assets/gapless.js"></script>
 <script>
 (function(){
   const $ = (id) => document.getElementById(id);
-  const au = $("au"), frame = $("map");
+  const frame = $("map");
   let man = null, lesson = null, curNode = null, tourIdx = -1, tourOn = false;
   let boundDoc = null, hoverT = null, lastSpoken = null;
   const SPEEDS = [1, 1.25, 1.5, 0.85];
@@ -152,18 +151,50 @@
   };
   const muted = () => $("mute").getAttribute("aria-pressed") === "true";
 
+  // Gapless Web Audio: warm full playlist, then one-shot sample-accurate schedule
+  const gap = Gapless.create({
+    rate: () => SPEEDS[speedIdx],
+    onLoading: (on) => {
+      if (on && tourOn) {
+        $("who").textContent = "tour";
+        $("say").textContent = "Buffering the whole tour so joins stay seamless…";
+      }
+    },
+    onIndex: (i) => {
+      if (!tourOn || !lesson) return;
+      tourIdx = i;
+      const c = lesson.chapters[i];
+      if (!c) return;
+      if (c.focus) focusNode(c.focus);
+      $("who").textContent = c.title;
+      $("say").textContent = c.text;
+      $("lvl").classList.add("on");
+      $("stop").hidden = false;
+    },
+    onDone: () => {
+      $("lvl").classList.remove("on");
+      $("stop").hidden = true;
+      if (tourOn) {
+        tourOn = false;
+        showCaption("tour complete",
+          "That is the whole map. Now hover the boxes you have not lit up yet on the right — the tour gives you the story, hovering gives you the detail.",
+          {});
+      }
+    },
+  });
+
   // Browsers block audio until the page has seen a real user gesture. Hovering is not
   // one. So we unlock on the first click or key press and say so until then.
   let unlocked = false;
   function unlock(){
     if (unlocked) return; unlocked = true;
-    au.muted = true; au.play().then(() => { au.pause(); au.muted = false; }).catch(() => { au.muted = false; });
+    gap.unlock();
     const b = $("unlockNote"); if (b) b.hidden = true;
   }
   ["pointerdown", "keydown"].forEach((e) => document.addEventListener(e, unlock, { once: false, capture: true }));
 
   // ---------- speaking ----------
-  function say(who, text, opts = {}) {
+  function showCaption(who, text, opts = {}) {
     $("who").textContent = who;
     $("say").innerHTML = "";
     $("say").append(document.createTextNode(text));
@@ -172,18 +203,23 @@
     travel(opts.goto, opts.gotoLabel);
     $("deeper").hidden = !opts.deep;
     lastSpoken = { who, text, opts };
-
-    au.pause();
-    if (!opts.audio || muted()) { $("lvl").classList.remove("on"); $("stop").hidden = true; return; }
-    au.src = "narrate/" + opts.audio;
-    au.playbackRate = SPEEDS[speedIdx];
-    au.play().then(() => { $("lvl").classList.add("on"); $("stop").hidden = false; })
-             .catch(() => { const b = $("unlockNote"); if (b && !unlocked) b.hidden = false; });
   }
-  au.addEventListener("ended", () => {
-    $("lvl").classList.remove("on"); $("stop").hidden = true;
-    if (tourOn) setTimeout(nextTourStep, 450);
-  });
+
+  function say(who, text, opts = {}) {
+    // one-shot (hover / deeper): cancel any tour playlist
+    tourOn = false;
+    showCaption(who, text, opts);
+    gap.stop();
+    if (!opts.audio || muted()) { $("lvl").classList.remove("on"); $("stop").hidden = true; return; }
+    unlock();
+    gap.setUrls(["narrate/" + opts.audio]);
+    gap.play(0).then(() => {
+      $("lvl").classList.add("on");
+      $("stop").hidden = false;
+    }).catch(() => {
+      const b = $("unlockNote"); if (b && !unlocked) b.hidden = false;
+    });
+  }
 
   // ---------- the real API behind a box ----------
   // Narration is spoken, so it never says a type name out loud. But the moment you
@@ -335,20 +371,38 @@
 
   frame.addEventListener("load", startBinding);
 
-  // ---------- guided tour ----------
-  function nextTourStep(){
-    if (!tourOn) return;
-    tourIdx++;
-    if (tourIdx >= lesson.chapters.length) {
-      tourOn = false;
-      say("tour complete", "That is the whole map. Now hover the boxes you have not lit up yet on the right — the tour gives you the story, hovering gives you the detail.", {});
+  // ---------- guided tour (gapless: whole chapter list scheduled on the audio clock) ----------
+  function startTour(){
+    if (!lesson || !lesson.chapters.length) return;
+    unlock();
+    tourOn = true; tourIdx = 0; curNode = null;
+    const urls = lesson.chapters.map(c => c.audio ? ("narrate/" + c.audio) : null);
+    const first = lesson.chapters[0];
+    showCaption(first.title, first.text, {});
+    if (first.focus) focusNode(first.focus);
+    if (muted() || urls.every(u => !u)) {
+      let i = 0;
+      const tick = () => {
+        if (!tourOn) return;
+        if (i >= lesson.chapters.length) { tourOn = false; return; }
+        const c = lesson.chapters[i++];
+        showCaption(c.title, c.text, {});
+        if (c.focus) focusNode(c.focus);
+        setTimeout(tick, 3500);
+      };
+      tick();
       return;
     }
-    const c = lesson.chapters[tourIdx];
-    if (c.focus) focusNode(c.focus);
-    say(c.title, c.text, { audio: c.audio });
+    gap.setUrls(urls);
+    $("lvl").classList.add("on");
+    $("stop").hidden = false;
+    showCaption("tour", "Buffering the whole tour so joins stay seamless…", {});
+    gap.play(0).catch(() => {
+      tourOn = false;
+      showCaption("tour", "Could not start the tour audio.", {});
+    });
   }
-  $("tour").addEventListener("click", () => { tourOn = true; tourIdx = -1; curNode = null; nextTourStep(); });
+  $("tour").addEventListener("click", startTour);
 
   // ---------- map catalogue ----------
   // Book chapters share the narration manifest (for read.html) but have map:null —
@@ -434,18 +488,22 @@
 
   // ---------- controls ----------
   $("mute").addEventListener("click", (e) => {
-    const on = e.currentTarget.getAttribute("aria-pressed") === "true";
-    e.currentTarget.setAttribute("aria-pressed", on ? "false" : "true");
-    e.currentTarget.textContent = on ? "🔊 Voice" : "🔇 Muted";
-    if (!on) { au.pause(); $("lvl").classList.remove("on"); }
+    const was = e.currentTarget.getAttribute("aria-pressed") === "true";
+    const now = !was;
+    e.currentTarget.setAttribute("aria-pressed", now ? "true" : "false");
+    e.currentTarget.textContent = now ? "🔇 Muted" : "🔊 Voice";
+    if (now) { tourOn = false; gap.stop(); $("lvl").classList.remove("on"); $("stop").hidden = true; }
   });
   $("speed").addEventListener("click", () => {
     speedIdx = (speedIdx + 1) % SPEEDS.length;
     $("speed").textContent = SPEEDS[speedIdx].toFixed(2).replace(/0$/, "") + "×";
-    au.playbackRate = SPEEDS[speedIdx];
+    gap.setRate(SPEEDS[speedIdx]);
   });
   $("reset").addEventListener("click", () => { store.clear(); renderNodes(); });
-  $("stop").addEventListener("click", () => { tourOn = false; au.pause(); $("lvl").classList.remove("on"); $("stop").hidden = true; clearFocus(); });
+  $("stop").addEventListener("click", () => {
+    tourOn = false; gap.stop();
+    $("lvl").classList.remove("on"); $("stop").hidden = true; clearFocus();
+  });
   $("deeper").addEventListener("click", () => { if (curNode) speakNode(curNode, true); });
   $("maps").addEventListener("change", (e) => loadLesson(e.target.value));
   $("prevMap").addEventListener("click", () => stepMap(-1));

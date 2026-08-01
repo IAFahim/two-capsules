@@ -1,0 +1,1 @@
+Ghost Importance (Runtime/Snapshot/Ghost Importance.cs:82) is a server singleton you create yourself. It carries a function pointer and three Component Type declarations:

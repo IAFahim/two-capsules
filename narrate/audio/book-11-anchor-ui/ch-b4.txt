@@ -1,0 +1,1 @@
+App UI gives you the widget set and a navigation stack (Anchor Settings.Start Destination is "splash" in our sample).

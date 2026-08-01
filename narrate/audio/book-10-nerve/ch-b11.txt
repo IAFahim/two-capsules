@@ -1,0 +1,1 @@
+Each world gets a Nerve Graph Settings subclass carrying a graph asset:

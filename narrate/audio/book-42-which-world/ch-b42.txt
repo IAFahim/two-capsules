@@ -1,0 +1,1 @@
+You set it through Ghost Component Attribute.Prefab Type, which defaults to Ghost Prefab Type.All (Runtime/Authoring/Ghost Component Attribute.cs:17), so a component you say nothing about exists everywhere.

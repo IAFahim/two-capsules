@@ -1,0 +1,1 @@
+Hardware analogy, position-independent code with PC-relative addressing. Same trick, same reason: you do not know where it will be loaded.

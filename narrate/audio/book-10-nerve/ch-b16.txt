@@ -1,0 +1,1 @@
+Our Local Approve Connection System fills the gap, trivially approving with Account Identity = "local-{network Id}". It is labelled a hack in its own doc comment because it is one, and the comment says exactly when to delete it.

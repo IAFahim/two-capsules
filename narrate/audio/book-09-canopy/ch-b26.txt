@@ -1,0 +1,1 @@
+Because "app flow" is a hierarchical state machine, and once it is data:

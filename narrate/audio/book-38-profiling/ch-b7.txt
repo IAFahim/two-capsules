@@ -1,0 +1,1 @@
+Everything in Runtime/Stats/ is wrapped in #if UNITY_EDITOR || NETCODE_DEBUG (Runtime/Stats/Ghost Stats Metrics.cs:1). In a release player without NETCODE_DEBUG these components do not exist and these counters are not emitted. Profile a development build.

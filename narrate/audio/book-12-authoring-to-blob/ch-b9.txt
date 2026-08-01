@@ -1,0 +1,1 @@
+[Use With Graph(typeof(Client Nerve Graph))] on a node is the gate. Put a Client Go In Game Node in a.snerve and the toolkit will not offer it.

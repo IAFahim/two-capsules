@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "voice": "ReadAloud Inflect",
   "lessons": [
     {
@@ -7099,49 +7099,49 @@
           "title": "b16",
           "focus": null,
           "text": "Our Daggertooth assembly definition referenced it. In the editor: fine, everything compiles, everything works, ship it. In a player build, UNITY_EDITOR is undefined, that assembly is not built, and the reference silently drops, taking every type we used from it.",
-          "audio": null
+          "audio": "audio/book-06-assemblies/ch-b16.opus"
         },
         {
           "id": "b17",
           "title": "b17",
           "focus": null,
           "text": "This is a bug that cannot reproduce until the day you make your first build, at which point it looks like a catastrophic regression.",
-          "audio": null
+          "audio": "audio/book-06-assemblies/ch-b17.opus"
         },
         {
           "id": "b19",
           "title": "b19",
           "focus": null,
           "text": "Rule of thumb, and it is the same rule the sample follows:",
-          "audio": null
+          "audio": "audio/book-06-assemblies/ch-b19.opus"
         },
         {
           "id": "b21",
           "title": "b21",
           "focus": null,
           "text": "Most Bovine Labs assemblies set auto Referenced: false. That means they are not automatically visible to Assembly-CSharp, you must reference them explicitly. It is deliberate: it prevents accidental coupling and it keeps compile times down. It also means \"I can't see the type\" often just means \"add the reference\".",
-          "audio": null
+          "audio": "audio/book-06-assemblies/ch-b21.opus"
         },
         {
           "id": "b24",
           "title": "b24",
           "focus": null,
           "text": "Is the DLL in Library/Script Assemblies/? Does your assembly definition reference the assembly? Does your assembly definition declare the version Defines for symbols you use in #if? Do your define Constraints match the constraints of everything you reference? Is anything you reference UNITY_EDITOR-only while you are not?",
-          "audio": null
+          "audio": "audio/book-06-assemblies/ch-b24.opus"
         },
         {
           "id": "b25",
           "title": "b25",
           "focus": null,
           "text": "Five questions. They would have saved us both incidents.",
-          "audio": null
+          "audio": "audio/book-06-assemblies/ch-b25.opus"
         },
         {
           "id": "b26",
           "title": "b26",
           "focus": null,
           "text": "then 07 \u00b7 Core: settings, logging, and the registry",
-          "audio": null
+          "audio": "audio/book-06-assemblies/ch-b26.opus"
         }
       ],
       "nodes": {}

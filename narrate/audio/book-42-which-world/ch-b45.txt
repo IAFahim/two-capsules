@@ -1,0 +1,1 @@
+That is the whole trick. One authored asset, one baked entity graph, and a per-world subtraction applied before the first instance exists.

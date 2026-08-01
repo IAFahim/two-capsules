@@ -1,0 +1,1 @@
+All are real Profiler Marker instances, so they appear in the Timeline and Hierarchy views by name.

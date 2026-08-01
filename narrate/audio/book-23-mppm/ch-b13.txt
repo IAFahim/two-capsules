@@ -1,0 +1,1 @@
+Hardware analogy, you were trying to configure two boards by editing one shared EEPROM. Roles give each board its own strapping pins.

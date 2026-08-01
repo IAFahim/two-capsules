@@ -1,0 +1,1 @@
+Respawn then new pawn, same controller, score and identity intact. Enter a vehicle then controller re-points at the vehicle; input follows. Spectate then controller with no pawn. Reconnect then match by Account Identity, re-attach to the existing controller.

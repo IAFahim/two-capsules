@@ -1,0 +1,1 @@
+Probe, from a script, confirm what a given instance actually built: One Server World total across all instances. If you see two, roles are not applied.

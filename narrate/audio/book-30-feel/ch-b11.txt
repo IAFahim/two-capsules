@@ -1,0 +1,1 @@
+Trap, one-shot effects must be gated on Is First Time Fully Predicting Tick, or they fire on every partial tick too.

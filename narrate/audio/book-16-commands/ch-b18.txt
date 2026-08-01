@@ -1,0 +1,1 @@
+Trap, if input reaches the client's own capsule but the server never moves, suspect routing first. The client is happily predicting with input the server has no reason to associate with that entity.

@@ -1,0 +1,1 @@
+Every node receives ref T context. Nodes are pure functions over (their data, the context). The context is how a node reaches the world.

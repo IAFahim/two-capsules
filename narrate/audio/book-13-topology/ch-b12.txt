@@ -1,0 +1,1 @@
+Hardware analogy, a protocol stack assembled from composable shift registers. Each stage owns a slice of per-connection state and hands a buffer to the next.

@@ -1,0 +1,1 @@
+The quantized float template does exactly two arithmetic operations. On the way out it rounds value * scale to an int; on the way in it multiplies the int by 1 / scale.

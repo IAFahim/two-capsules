@@ -1,0 +1,1 @@
+Our component is four bytes and it is the whole protocol:

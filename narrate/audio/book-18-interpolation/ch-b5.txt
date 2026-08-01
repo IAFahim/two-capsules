@@ -1,0 +1,1 @@
+So the client renders in the past, between two snapshots it already has:

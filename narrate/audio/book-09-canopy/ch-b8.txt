@@ -1,0 +1,1 @@
+At any moment the machine has an active path from root to a leaf, not a single state. In our client graph the active path is root then gameplay. Both are active. root's blocks run every tick, which is exactly why the connection tracker lives there and keeps working no matter which child is current.

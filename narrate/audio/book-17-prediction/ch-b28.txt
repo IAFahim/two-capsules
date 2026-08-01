@@ -1,0 +1,1 @@
+Probe, Play Mode Tools then prediction stats shows ticks-per-frame. Sustained values above 1 mean you are replaying constantly.

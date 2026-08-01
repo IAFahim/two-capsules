@@ -1,0 +1,1 @@
+Each replicated field contributes one bit by default. Composite = true collapses a nested struct to a single bit for the whole struct. Enabled bits are counted separately from change bits and get their own mask array.

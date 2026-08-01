@@ -1,0 +1,1 @@
+The feature: a dash. Tap Shift, the capsule lunges forward, then a cooldown before you can dash again. It must feel instant, be cheat-proof, and be visible to the other player.

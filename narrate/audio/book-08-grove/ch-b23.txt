@@ -1,0 +1,1 @@
+That is exactly how Client Go In Game remembers "I already sent the remote procedure call for this connection" across ticks, and how Client Connection Tracker publishes the snapshot the gate reads.

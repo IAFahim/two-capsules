@@ -1,0 +1,1 @@
+Our host's own client uses I P C; the second Play Mode player uses U D P to loopback. That is why the Play Mode Tools window shows both endpoints on the server row.

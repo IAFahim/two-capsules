@@ -1,0 +1,1 @@
+Read a generated serializer for a component you already understand. Serialize will show you one if per field guarding one packed-delta write; that is the entire wire format for that component, in plain C#.

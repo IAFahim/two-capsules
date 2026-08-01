@@ -1,0 +1,1 @@
+IDs are assigned by an editor post-processor, Auto Ref Processor. It batches work through Editor Application.delay Call and keeps an Already Processed Assets set marked [No Auto Statics Cleanup], so the set survives domain reload.

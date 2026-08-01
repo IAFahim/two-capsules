@@ -1,0 +1,1 @@
+Trap, smoothing operates on the rendered transform, not the simulated one. Never read a smoothed value back into simulation, or you have built a feedback loop between presentation and truth. Presentation reads from simulation. Never the reverse.

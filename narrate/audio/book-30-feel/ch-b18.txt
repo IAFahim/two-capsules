@@ -1,0 +1,1 @@
+The server cannot send everything. It sends the most important things this tick and defers the rest. Nearby, moving, dangerous things update at a high rate; distant scenery updates occasionally. The player perceives a fully live world because the parts they are looking at are live.

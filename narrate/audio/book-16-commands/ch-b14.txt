@@ -1,0 +1,1 @@
+With All<Ghost Owner Is Local>(), without it you would write input into every player's capsule in your world. Net Code adds this tag to ghosts whose Ghost Owner.Network Id matches yours. No [Burst Compile], Keyboard.current is managed. Correct, not a compromise. Client Simulation only, the server must never invent input.

@@ -1,0 +1,1 @@
+That last row is why we drove verification through the editor CLI instead of the GUI, eval into the running instance, dump World.All, read the counts. When the GUI cannot reach a process, script the process.

@@ -1,0 +1,1 @@
+Hardware analogy, these markers are chip-select lines on a logic analyser. They do not tell you the value on the bus; they tell you which unit was driving it. You still read the value from the metric buffers.

@@ -1,0 +1,1 @@
+Inside the prediction loop, the tick you are simulating is Network Time.Server Tick. The rewind tick is that minus the delay, and Get Collision World From Tick does the subtraction for you, you pass the current tick and the delay separately.

@@ -1,0 +1,1 @@
+Mitigation is structural and yours to write. Clamp on read, in the shared movement system:

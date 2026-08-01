@@ -1,0 +1,1 @@
+Values are blittable structs stored inline. No allocation, Burst-safe, per entity, and it survives across ticks and across rollbacks (it lives on the entity, so it is checkpointed with everything else).

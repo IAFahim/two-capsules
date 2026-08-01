@@ -1,0 +1,1 @@
+THE TRAP, the contagion is transitive. Predicting A forces B; B touching C forces C. Draw the interaction graph before you set the dropdown, and treat the predicted set as a connected component of that graph, not as a list of individual choices.

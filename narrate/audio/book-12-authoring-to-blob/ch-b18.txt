@@ -1,0 +1,1 @@
+Failure signature: graph edits have no runtime effect then missing Depends On, or the subscene did not re-import.

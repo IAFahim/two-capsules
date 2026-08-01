@@ -1,0 +1,1 @@
+Lag compensation is not free of consequences, and the consequence has a precise mechanism.

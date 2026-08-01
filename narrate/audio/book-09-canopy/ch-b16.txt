@@ -1,0 +1,1 @@
+There are no transition edges in the graph. A node just calls:

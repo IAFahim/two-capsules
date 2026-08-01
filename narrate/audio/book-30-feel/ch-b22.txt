@@ -1,0 +1,1 @@
+The advanced one. The client shoots at what it sees, which is the past. Naively, the server checks against the present and the shot misses.

@@ -1,0 +1,1 @@
+Pre-spawned is free and badly under-used. If it exists at level load and the server does not create it, bake it.

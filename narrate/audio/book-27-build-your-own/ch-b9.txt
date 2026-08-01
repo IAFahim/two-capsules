@@ -1,0 +1,1 @@
+The hard part is relative addressing. Every pointer inside the image must be an offset from its own location, so the whole thing is memcpy-able and shareable. That is Blob Ptr<T>, and it is the same discipline as writing position-independent code.

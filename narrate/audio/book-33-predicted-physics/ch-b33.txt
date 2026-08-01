@@ -1,0 +1,1 @@
+Between two simulation ticks the body does not move. Unity Physics fills that gap with Smooth Rigid Bodies Graphical Motion, and Net Code orders its own prediction-switch smoothing after it so that the switch smoothing wins when a ghost changes between predicted and interpolated (Runtime/Physics/Predicted Physics System Group.cs:304).

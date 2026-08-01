@@ -1,0 +1,1 @@
+This is why our two-player run shows 4 ghosts: 2 controllers + 2 capsules. Seeing 3 would mean two connections adopted the same controller, an identity collision, which is exactly the risk Account Identity = "local-{network Id}" carries and which the 4-ghost reading disproves.

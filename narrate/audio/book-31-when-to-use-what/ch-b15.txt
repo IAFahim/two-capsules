@@ -1,0 +1,1 @@
+Our project uses both, correctly: Player Move System is a plain system (one rule, no states); the connection flow is a graph (states, gates, transitions, recovery).

@@ -1,0 +1,1 @@
+Each has its own instrument. Reaching for the CPU profiler when you have a bandwidth problem is how weeks disappear.

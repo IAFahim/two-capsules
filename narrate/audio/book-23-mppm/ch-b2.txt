@@ -1,0 +1,1 @@
+Multiplayer Play Mode (multiplayer play mode) runs extra editor instances, virtual players, that share your project folder and attach to the same play session. It is how you test two clients without building.

@@ -1,0 +1,1 @@
+The wrapper also fixes multiplayer play mode, because virtual players are child processes and inherit the environment. One export, every process.

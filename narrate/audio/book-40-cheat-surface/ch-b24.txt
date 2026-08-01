@@ -1,0 +1,1 @@
+Trap, quantization, obfuscation and encryption do not close this hole. The client must decode the snapshot to render the game, so whatever it renders it can read. The only defence is not sending it.

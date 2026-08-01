@@ -1,0 +1,1 @@
+Both approval systems disable themselves when network.require-connection-approval is false, which is the default:

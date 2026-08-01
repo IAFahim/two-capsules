@@ -1,0 +1,1 @@
+Installing com.unity.dedicated-server defines UNITY_USE_MULTIPLAYER_ROLES as a version Define. That flips Multiplayer Play Mode Preferences from the shared-Editor Prefs path to the per-player-role path, and each virtual player gets its own dropdown.

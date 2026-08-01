@@ -1,0 +1,1 @@
+Entities.Graphics uploads Local To World matrices to G P U buffers, issues batched draws. U R P renders. Present blocks on vsync. Photons.

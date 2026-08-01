@@ -1,0 +1,1 @@
+Perceived input latency: zero. The price is a replay whenever the server disagrees, and a hard requirement that your simulation is replayable (chapter 17).

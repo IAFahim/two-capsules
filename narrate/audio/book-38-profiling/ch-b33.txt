@@ -1,0 +1,1 @@
+Resend Percent near zero with Arrived Too Late Percent non-zero is the signature of under-redundant input on a lossy link: nothing arrives twice, and some things arrive after the tick that needed them.

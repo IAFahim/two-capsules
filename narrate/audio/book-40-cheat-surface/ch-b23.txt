@@ -1,0 +1,1 @@
+Modes: Runtime/Snapshot/Ghost Relevancy.cs:11. Send To Owner Type has four values, None, Send To Owner, Send To Non Owner, All, at Runtime/Authoring/Ghost Modifiers.cs:78. All four rows are structural: the bytes never leave the server.

@@ -1,0 +1,1 @@
+The entity now carries Nerve State Machine { Graph, State Id } and a Dynamic Buffer<Grove State>. The executor's query is With All RW<Grove State>().With All RW<Nerve State Machine>(), if either is missing, the system finds nothing and does nothing, quietly.

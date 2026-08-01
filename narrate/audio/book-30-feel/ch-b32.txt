@@ -1,0 +1,1 @@
+Six independent mechanisms, each hiding one consequence of the same physical fact. None of them removes latency. They relocate it to places players do not look.

@@ -1,0 +1,1 @@
+Hardware analogy, this is a UART with a D M A ring buffer. The fast path writes into a circular buffer with no formatting; a slow consumer drains and formats. Same pattern, same reason.

@@ -1,0 +1,1 @@
+Same snapshot arrives. Their copy of your capsule is interpolated, drawn between two received snapshots, roughly 100 milliseconds behind the server. Smooth, slightly stale, never wrong.

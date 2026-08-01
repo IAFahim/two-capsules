@@ -1,0 +1,1 @@
+Two dispatch verbs, not one: Execute (side effects, returns nothing) and Calculate (pure, returns T). That split is why data ports can be evaluated lazily and why a data node can be shared by several execution nodes without ordering problems.

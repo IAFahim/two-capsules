@@ -1,0 +1,1 @@
+Hardware analogy, this is type-level pin compatibility. You cannot plug a 3.3 V part into a 5 V header because the connector will not accept it. The graph editor enforces the same thing, at author time.

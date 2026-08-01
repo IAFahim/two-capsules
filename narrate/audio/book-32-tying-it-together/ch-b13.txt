@@ -1,0 +1,1 @@
+Without that gate the effect fires on every partial tick and on every replayed tick of every rollback. This is the single most common "why does my gun fire three times" bug.

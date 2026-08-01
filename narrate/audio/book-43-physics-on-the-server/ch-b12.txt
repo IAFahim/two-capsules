@@ -1,0 +1,1 @@
+On its first and only update it does three things (Runtime/Physics/Predicted Physics System Group.cs:181:187): move the physics systems, install Netcode Physics Rate Manager on the physics group, and remove itself from the update list.

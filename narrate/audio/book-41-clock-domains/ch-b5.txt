@@ -1,0 +1,1 @@
+There is exactly one authoritative timeline, and it is on the server. A client is never on it. A client runs two clocks, both offset from the server, in opposite directions.

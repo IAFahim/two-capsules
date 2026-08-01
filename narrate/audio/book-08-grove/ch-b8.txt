@@ -1,0 +1,1 @@
+Literally an opcode table. The negative offset namespaces Nerve's opcodes away from Grove's built-ins so two packages can extend the same VM without colliding.

@@ -1,0 +1,1 @@
+[Ghost Component] goes on the type and controls the component as a whole (Runtime/Authoring/Ghost Component Attribute.cs:12):

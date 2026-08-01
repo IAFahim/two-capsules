@@ -1,0 +1,1 @@
+ghost Id alone is not a unique identifier, the server recycles it when a ghost dies. The pair (ghost Id, spawn Tick) is the guaranteed-unique key (Runtime/Snapshot/Ghost Component.cs:73:76).

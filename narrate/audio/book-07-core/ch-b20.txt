@@ -1,0 +1,1 @@
+Our two definitions: Player Capsule = 2, Player Controller = 3. Server Settings points player Controller and player Character at them, which is how Nerve's spawn code knows what to instantiate for a joining player.

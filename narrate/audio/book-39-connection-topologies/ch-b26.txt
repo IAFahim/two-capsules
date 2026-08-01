@@ -1,0 +1,1 @@
+Net Code overrides all of these from Net Code Config.Global when one exists (Default Driver Constructor.cs:88), and uses separate send and receive queue capacities for client and server (Default Driver Constructor.cs:96).

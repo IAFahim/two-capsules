@@ -1,0 +1,1 @@
+Network Time.To Fixed String() prints most of this in one line (Network Time.cs:219), including Predicted Tick Index/Num Predicted Ticks Expected, which makes it the cheapest possible prediction probe.

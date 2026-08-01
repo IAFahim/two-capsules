@@ -1,0 +1,1 @@
+Each command packet contains the last several ticks of input, not just one. A dropped packet costs nothing because the next one carries the gap. This is why input feels solid on a lossy connection while positions still visibly hitch.

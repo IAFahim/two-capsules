@@ -1,0 +1,1 @@
+Which world does a settings asset land in? [Settings World("client")] says. The lookup lives in Editor Settings:

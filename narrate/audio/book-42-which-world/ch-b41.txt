@@ -1,0 +1,1 @@
+Ghost Prefab Type is the flag enum that drives it (Runtime/Authoring/Ghost Modifiers.cs:15).

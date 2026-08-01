@@ -1,0 +1,1 @@
+In our game both are on screen at once. Your capsule is drawn ~25 milliseconds ahead of the server; the other player's is drawn ~100 milliseconds behind. Neither of you sees "now". Nobody ever does.

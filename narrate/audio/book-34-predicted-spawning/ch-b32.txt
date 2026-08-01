@@ -1,0 +1,1 @@
+Defaults are from Network Time System.Default Client Tick Rate (Runtime/Prediction Ticking/Network Time System.cs:212) unless stated otherwise.

@@ -1,0 +1,1 @@
+In a build the value is derived from the platform defines (Client Server Bootstrap.cs:538); in the editor it comes from the Play Mode Tools window. World creation itself is Create Default Client Server Worlds (Client Server Bootstrap.cs:221).

@@ -1,0 +1,1 @@
+Ghost Receive System does not create ghosts. It appends Ghost Spawn Buffer entries to the Ghost Spawn Queue singleton with Spawn Type left as Unknown, and leaves the decision to a classification group (Runtime/Snapshot/Ghost Spawn Classification System.cs:36).

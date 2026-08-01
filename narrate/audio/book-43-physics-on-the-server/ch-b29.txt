@@ -1,0 +1,1 @@
+Both are registered by Physics Default Variant System, which uses Try Set Default Variant and therefore never overrides a rule you set yourself (Runtime/Physics/Physics Velocity Variant.cs:56:57).

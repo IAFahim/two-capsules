@@ -1,0 +1,1 @@
+UNITY_INCLUDE_INSTRUMENTATION compiles a debug pass that walks every node after execution and calls Debug(.) on it, plus a Selected Entity singleton so the graph window can show live values for one entity. It is off in players and costs nothing there.

@@ -1,0 +1,1 @@
+com.unity.pipeline puts an HTTP control plane in the running editor. This is how we verified everything in this book without touching the mouse:

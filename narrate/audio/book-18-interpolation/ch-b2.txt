@@ -1,0 +1,1 @@
+Prediction is for the entity you control. Interpolation is for everything else, and it is the cheaper, calmer half of the system.

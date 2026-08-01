@@ -1,0 +1,1 @@
+Every extension in this stack is: declare data then declare the code that consumes it then declare how it is authored then declare where it lives. Four declarations, four places, always the same four. Once you see it, the stack stops feeling large.

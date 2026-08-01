@@ -1,0 +1,1 @@
+A managed system drains the buffer each frame and forwards to Unity's console. Grove's Graph Impl grabs it into Grove Context.Logger so any node, anywhere, can log without breaking Burst.

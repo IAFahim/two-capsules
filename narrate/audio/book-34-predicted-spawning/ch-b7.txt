@@ -1,0 +1,1 @@
+The fix is to let the client create the entity itself, immediately, and then arrange for the server's authoritative ghost to take over that same entity rather than creating a second one. Everything below is the machinery for that handover.

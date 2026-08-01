@@ -1,0 +1,1 @@
+They are two entities in two address spaces, and nothing points from one to the other. Entity references cannot cross a world boundary. What crosses is an integer.

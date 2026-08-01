@@ -1,0 +1,1 @@
+Server-spawned is the default and it is correct for almost everything. The client presses fire, a command goes up, the server spawns a rocket, a snapshot comes down, the client instantiates it. The rocket appears one round trip after the trigger.

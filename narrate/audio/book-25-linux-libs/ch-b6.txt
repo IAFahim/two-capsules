@@ -1,0 +1,1 @@
+A soname bump (.so.2 then.so.16) is an ABI break declaration. That is the whole point of sonames. So ln -s libxml2.so.16 libxml2.so.2 is not a fix, it is a promise you cannot keep, and it will pay out months later somewhere unrelated.

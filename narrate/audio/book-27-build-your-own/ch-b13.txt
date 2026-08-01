@@ -1,0 +1,1 @@
+states form a tree; the active path is root then leaf Enter / Update / Exit signals propagate along the path transitions are named jumps, resolved by hash validate at author time: one root, one default child per composite, no id collisions

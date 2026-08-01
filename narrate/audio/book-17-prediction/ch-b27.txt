@@ -1,0 +1,1 @@
+Hardware analogy, deeper pipeline, more expensive flush. Same engineering answer: keep the predicted set small, keep predicted systems cheap, and do not predict what does not need to feel instant.

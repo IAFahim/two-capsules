@@ -1,0 +1,1 @@
+Our capsule uses Auto Command Target. Nerve also sets Command Target on the connection via Player Connection System, because Nerve supports controlling different pawns over time.

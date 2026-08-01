@@ -1,0 +1,1 @@
+Idempotent by identity, not by boolean. Keying on the connection identity means a reconnect with a new entity re-sends correctly, while a retry on the same connection does not spam. State lives in Grove State, not in a static. Works per entity, survives, costs nothing. The gate is the retry loop. No timers, no coroutines.

@@ -1,0 +1,1 @@
+Commands for future ticks simply sit in the ring until the server reaches them, the normal mechanism, since clients run ahead by Target Command Slack. It only becomes a concern if your gameplay code reads the buffer directly instead of by tick.

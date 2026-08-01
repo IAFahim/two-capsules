@@ -1,0 +1,1 @@
+The practical rule that falls out: netcode decides whether client and server worlds exist, Nerve decides when.

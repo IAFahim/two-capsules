@@ -1,0 +1,1 @@
+Milestone: 200 milliseconds artificial latency, capsule feels instant, no visible correction.

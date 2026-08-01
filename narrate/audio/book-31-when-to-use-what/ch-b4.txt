@@ -1,0 +1,1 @@
+Rule, if you are about to send an remote procedure call every tick, you wanted a ghost field. If you are about to put a one-shot event in a ghost field, you wanted an remote procedure call.

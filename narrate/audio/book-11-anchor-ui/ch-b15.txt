@@ -1,0 +1,1 @@
+The lesson generalises past UI: a null read is only evidence if you know the read is authoritative. In a stack with inheritance, resolution order, or lazy binding, it usually is not.

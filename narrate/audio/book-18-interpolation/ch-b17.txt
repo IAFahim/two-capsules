@@ -1,0 +1,1 @@
+Owner Predicted says: pay that price for exactly the one entity where latency is unacceptable, and take the cheap smooth path for everything else. For a capsule game it is free correctness.

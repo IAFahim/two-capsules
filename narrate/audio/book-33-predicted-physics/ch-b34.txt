@@ -1,0 +1,1 @@
+Trap, smoothing writes a render pose. It must never be read back into simulation. The moment a smoothed value feeds a force, you have a feedback loop that diverges under exactly the conditions that produce corrections.

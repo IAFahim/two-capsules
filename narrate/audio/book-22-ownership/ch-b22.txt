@@ -1,0 +1,1 @@
+The client writes exactly one thing: what it wants. Everything else it receives. That single sentence is the security model.

@@ -1,0 +1,1 @@
+Batching is a real accuracy loss. A batched step integrates a larger delta through the solver, so contacts resolve differently. It is the correct emergency valve and the wrong default.

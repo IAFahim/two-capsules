@@ -1,0 +1,1 @@
+Question 6 is the one people skip. For our client graph the answer was state = gameplay, a value unreachable unless the mechanism worked.

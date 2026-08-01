@@ -1,0 +1,1 @@
+[Ghost Field] goes on fields and properties, and every option has a default worth knowing (Runtime/Authoring/Ghost Field Attribute.cs:14):

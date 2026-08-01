@@ -1,0 +1,1 @@
+Inspector data then entity via a baker on a prefab in a world-targeted scene. Managed identity then runtime identity via a numeric handle and a table. Slow, managed work then ring buffer drained by a managed consumer. Editor-time wiring then a utility that owns the whole dance, not hand-edited assets.

@@ -1,0 +1,1 @@
+Hardware analogy, this is a clock domain crossing. The same combinational block is unchanged; only the clock feeding it is swapped. It used to be driven by a free-running wall clock at one edge per frame. It is now driven by the prediction tick clock, which can issue ten edges in a single frame after a correction.

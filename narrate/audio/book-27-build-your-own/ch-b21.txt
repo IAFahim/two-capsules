@@ -1,0 +1,1 @@
+no reads of frame-varying data (frame delta, Time.time, Random without a seeded state) no side effects that are not idempotent per tick all predicted state must be in the checkpoint, anything stored outside it silently survives the rollback and desyncs

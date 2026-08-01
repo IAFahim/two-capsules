@@ -1,0 +1,1 @@
+Hardware analogy, a branch predictor with speculative execution and a pipeline flush. The client speculates forward on predicted input. The server is the branch resolution unit. On a mispredict, you flush and replay from the checkpoint. Same structure, same costs, same failure modes.

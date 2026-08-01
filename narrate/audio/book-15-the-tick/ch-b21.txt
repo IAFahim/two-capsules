@@ -1,0 +1,1 @@
+If it used frame delta, a rollback replaying 10 ticks in one frame would move the capsule 10 frames' worth of distance. Determinism dies, and it dies only under packet loss, which is the worst kind of bug to reproduce.

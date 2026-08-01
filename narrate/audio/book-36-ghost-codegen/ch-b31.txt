@@ -1,0 +1,1 @@
+Serialization does not delta against the previous value. It deltas against a prediction of the current value derived from three baselines.

@@ -1,0 +1,1 @@
+Point 3 is the one people miss: static optimization does nothing until the client has acked a snapshot containing the chunk. Prespawned chunks get it free, loading the subscene counts as an implicit ack (Ghost Chunk Serializer.cs:1896).

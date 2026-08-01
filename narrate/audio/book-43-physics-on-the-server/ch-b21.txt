@@ -1,0 +1,1 @@
+If those forces are emitted by authored timeline clips rather than by hand-written systems, chapter 44 covers what has to change for the clip to survive rollback.

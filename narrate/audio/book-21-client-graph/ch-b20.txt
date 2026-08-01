@@ -1,0 +1,1 @@
+A single world carrying both flags. Our separate Client World + Server World in one process is not a host, Is Host() is false for both. That is correct here: it makes Go In Game add Network Stream In Game on the client side, which is exactly what a real client needs.

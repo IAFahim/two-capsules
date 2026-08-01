@@ -1,0 +1,1 @@
+Trap, Get Execution returns a copy of the context. Assign before it and your values are overwritten by Update(); assign after and they land. Get this backwards and the graph runs with a zeroed connection forever, silently.

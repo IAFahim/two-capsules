@@ -1,0 +1,1 @@
+For the full decision, real defaults, the cost table, and the contagion rule that decides how big your predicted set really is, see 41 · Clock domains.

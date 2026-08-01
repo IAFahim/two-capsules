@@ -1,0 +1,1 @@
+The hard part is exit/enter ordering. Exit bottom-up, enter top-down, and never let a block observe a half-torn-down path. That is why every Canopy node opens with the Exit check.

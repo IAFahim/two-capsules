@@ -1,0 +1,1 @@
+Stage 5 is the magic. During a rollback replaying ticks 100, 110, this group re-materialises the exact input from tick 100, then 101, and so on. Your movement system reads Player Move Input and never knows it is in a replay.

@@ -1,0 +1,1 @@
+Every block AND-s into Is Completed. The gate jumps only when all report done. It is a barrier with a target, and it is reusable for any "wait for N things, then advance".

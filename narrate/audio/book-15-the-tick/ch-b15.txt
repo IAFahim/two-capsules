@@ -1,0 +1,1 @@
+Trap, spawn a particle, play a sound, or increment a counter in the prediction group without checking Is First Time Fully Predicting Tick and it happens several times per tick. Every "my gun fires 3 bullets per trigger pull" bug is this.

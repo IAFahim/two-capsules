@@ -1,0 +1,1 @@
+If dashing should be blocked in a menu, or should trigger a state change, add a Grove node. If it is just a rule, leave it as a system. Chapter 31, table H.

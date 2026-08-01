@@ -1,0 +1,1 @@
+Quantization error is 0.5 / Quantization in world units.

@@ -1,0 +1,1 @@
+Trap, always pass --project-path. Auto-detection picked the wrong editor instance for us once, and the results were confusingly plausible.  Trap, eval scripts run in a REPL context that already has implicit usings. A leading using System.Linq; is parsed as a using statement, not a directive, and the file fails to compile with baffling errors. Use fully-qualified names.

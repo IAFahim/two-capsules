@@ -1,0 +1,1 @@
+If you can describe all five, you can read any networked engine, Unreal's replication, Photon Quantum, Overwatch's E C S talk, Rocket League's rollback. They are the same five layers with different names and different trade-offs.

@@ -1,0 +1,1 @@
+A custom classification system is a small IJob Entity over the Ghost Spawn Queue singleton's buffer, placed in the group:

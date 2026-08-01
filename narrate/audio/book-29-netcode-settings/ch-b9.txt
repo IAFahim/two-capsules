@@ -1,0 +1,1 @@
+[Ghost Component(.)] controls the component as a whole:

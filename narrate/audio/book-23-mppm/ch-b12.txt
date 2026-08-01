@@ -1,0 +1,1 @@
+A visible confirmation that the switch took effect: Play Mode Type in Play Mode Tools goes grey. Roles now override it, so the old control is disabled. If it is still editable, the define is not active.

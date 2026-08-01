@@ -1,0 +1,1 @@
+THE TRAP, data-source-type in U X M L is resolved when the asset is imported, not when the panel is built. If the assembly containing that type has not been compiled yet, the reference is silently dropped and never retried.

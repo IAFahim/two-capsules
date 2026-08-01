@@ -1,0 +1,1 @@
+A virtual player is a real second editor process with its own World.All, its own sockets, and its own domain. It shares your Editor Prefs, and Client Server Bootstrap.Requested Play Type is stored there.

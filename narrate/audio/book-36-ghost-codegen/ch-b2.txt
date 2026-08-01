@@ -1,0 +1,1 @@
+Chapter 14 said the prefab is the schema and that baking generates serializer code per ghost type. This chapter opens that box: what the generator reads, what it writes, where the written code goes, and how the runtime dispatches into it.

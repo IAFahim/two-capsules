@@ -1,0 +1,1 @@
+Bits 4 and 5 are absent from the enum. Do not reuse them; Bovine Labs adds its own kinds much higher up, at bits 21 and 22 (Bovine Labs.Core/Worlds.cs:12 and:13).

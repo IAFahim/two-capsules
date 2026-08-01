@@ -1,0 +1,1 @@
+I inspected button.data Source at runtime, found null, and declared that the proof. It was not: data Source inherits down the visual tree, and reading it on a leaf does not report the inherited value. The real evidence was clickable.command == null.

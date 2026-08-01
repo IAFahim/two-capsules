@@ -1,0 +1,1 @@
+Force-reimport the.uxml after scripts compile. Any time you add U X M L and C# in the same operation, you owe yourself this.

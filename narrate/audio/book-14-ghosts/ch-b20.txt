@@ -1,0 +1,1 @@
+Ghost Relevancy lets the server decide a ghost simply does not exist for a given connection, interest management, fog of war, zoning. Nerve wraps this in a Relevancy Settings asset, which our project has registered on Server Settings.prefab.

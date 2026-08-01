@@ -1,0 +1,1 @@
+If we sent Position instead, a modified client could write any position it liked and the server would obey. That is client authority, and it is the hole every cheat engine walks through. Unity's own prediction docs open by warning about it.

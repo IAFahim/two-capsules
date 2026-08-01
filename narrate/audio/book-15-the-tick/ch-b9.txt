@@ -1,0 +1,1 @@
+Three different "nows" on one screen simultaneously. Your capsule is drawn at the predicted tick; the other player's capsule is drawn at the interpolated tick. That is not a bug, that is the entire trade, made explicit.

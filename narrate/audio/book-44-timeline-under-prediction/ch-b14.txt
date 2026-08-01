@@ -1,0 +1,1 @@
+This is not a metaphor stretched to fit. It is the same distinction a hardware engineer draws between a counter that needs a reset line and a decoder that does not. The state you do not keep is the state you cannot corrupt.

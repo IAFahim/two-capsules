@@ -1,0 +1,1 @@
+Anchor gives you View Model objects that a U X M L binding can read and an E C S system can write, plus the UXMLService that resolves types at import.

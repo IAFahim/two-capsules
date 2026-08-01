@@ -1,0 +1,1 @@
+Then one editor call does the whole wiring:

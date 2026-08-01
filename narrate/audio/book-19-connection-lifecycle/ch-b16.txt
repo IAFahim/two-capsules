@@ -1,0 +1,1 @@
+Disconnect Reason tells you which: Timeout, Closed By Remote, Connection Close, Max Connection Attempts, Approval Failure, Protocol Error.

@@ -1,0 +1,1 @@
+Hardware analogy, a CAM with collision detection at programming time. Same reason you validate a hash table's key set offline when lookups must be O(1) and correct.

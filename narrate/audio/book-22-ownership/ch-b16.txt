@@ -1,0 +1,1 @@
+Controller Ownership Initialize System then propagates ownership down linked entity groups, so a pawn with child entities has them all owned consistently.

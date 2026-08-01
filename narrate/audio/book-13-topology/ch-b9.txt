@@ -1,0 +1,1 @@
+Trap, no ghosts are sent until Network Stream In Game exists on the connection. Not "fewer". None. It is the single flag that arms the whole snapshot system, and it is why chapter 21's client graph matters so much.

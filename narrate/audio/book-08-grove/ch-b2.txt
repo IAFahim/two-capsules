@@ -1,0 +1,1 @@
+This is the chapter where your background pays the biggest dividend, because Grove is not a "visual scripting tool". Grove is a bytecode VM with an ahead-of-time linker, a flat instruction image, and a switch-dispatch interpreter generated at compile time.

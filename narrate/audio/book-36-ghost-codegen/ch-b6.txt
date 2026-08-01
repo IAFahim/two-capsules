@@ -1,0 +1,1 @@
+This is why replication has no runtime reflection cost. By the time the world exists, the serialization code is already compiled machine code with a Burst function pointer attached to it.

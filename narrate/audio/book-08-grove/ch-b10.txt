@@ -1,0 +1,1 @@
+At bake time the whole graph is flattened into one Blob Asset Reference<Graph Data>, a single contiguous allocation, relocatable, with internal offsets instead of pointers.

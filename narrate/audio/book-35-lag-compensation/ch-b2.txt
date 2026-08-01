@@ -1,0 +1,1 @@
+Chapter 15 established that three different "nows" are on screen at once. This chapter is what the server does about it when a client claims to have hit something.

@@ -1,0 +1,1 @@
+Derive, never accumulate, inside prediction. elapsed = tick − start costs a subtraction and buys correctness under replay. elapsed += dt costs nothing today and a save/restore path forever after.

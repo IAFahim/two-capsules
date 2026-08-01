@@ -1,0 +1,1 @@
+The hash lookups are the only non-trivial per-entity cost. If a graph is hot, the first optimisation is fewer keyed state values, not fewer nodes.

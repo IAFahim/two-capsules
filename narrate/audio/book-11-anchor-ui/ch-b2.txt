@@ -1,0 +1,1 @@
+UI is where a DOTS project gets awkward: UI Toolkit is managed, event-driven, and allocation-happy; E C S is none of those. Anchor is the negotiated peace treaty.

@@ -1,0 +1,1 @@
+Input Event exists precisely because a bool sampled per frame and consumed per tick loses presses. It carries a counter so the consumer can tell "pressed once" from "still held" even across a rollback.

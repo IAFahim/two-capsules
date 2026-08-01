@@ -1,0 +1,1 @@
+All defaults below are the field initialisers in Runtime/Physics/Hybrid/Net Code Physics Config.cs.

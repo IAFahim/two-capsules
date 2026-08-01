@@ -1,0 +1,1 @@
+Use relevancy for zones, rooms, and fog of war. Use importance for everything that is visible but not equally urgent. Relevancy is also a security boundary: a client cannot wall-hack data it was never sent.

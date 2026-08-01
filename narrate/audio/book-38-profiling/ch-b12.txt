@@ -1,0 +1,1 @@
+Trap, Ghost Metrics, Ghost Serialization Metrics and Ghost Names are parallel buffers joined only by index (Ghost Stats Metrics.cs:148). The metric buffer without the name buffer is numbers attached to nothing. Read both, same frame, same world.

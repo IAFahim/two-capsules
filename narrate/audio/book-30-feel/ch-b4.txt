@@ -1,0 +1,1 @@
+A 60 milliseconds round trip time with no prediction puts you at "sluggish" on every single input. That is the problem the entire stack is arranged around.

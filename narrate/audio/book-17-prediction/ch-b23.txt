@@ -1,0 +1,1 @@
+Quantization. The server's float, quantized and dequantized, is not bit-identical. Input timing. A command arriving one tick late changes the server's simulation. Other players. You cannot predict what someone else pressed. Their capsule affects yours; your prediction of the shared world was wrong. Server-only events. A pickup despawning, a door opening.

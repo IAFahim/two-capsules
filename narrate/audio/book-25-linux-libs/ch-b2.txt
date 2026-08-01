@@ -1,0 +1,1 @@
+The most you-shaped chapter in the book. No E C S, no networking, just the dynamic linker, sonames, and a search-path rule that is not transitive.

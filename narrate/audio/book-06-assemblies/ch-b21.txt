@@ -1,0 +1,1 @@
+Most Bovine Labs assemblies set auto Referenced: false. That means they are not automatically visible to Assembly-CSharp, you must reference them explicitly. It is deliberate: it prevents accidental coupling and it keeps compile times down. It also means "I can't see the type" often just means "add the reference".

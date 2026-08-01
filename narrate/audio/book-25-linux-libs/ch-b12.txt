@@ -1,0 +1,1 @@
+Step one: put the right library, with the right soname, next to the editor.

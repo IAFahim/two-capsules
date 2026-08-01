@@ -1,0 +1,1 @@
+Use a predicted evaluator for anything that decides an outcome: hitboxes, i-frames, root motion, force emission, stat changes, spawns. If a server-side check would ever disagree with a client-side one, it belongs on the tick clock.

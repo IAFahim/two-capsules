@@ -1,0 +1,1 @@
+Fewer bits on the wire, and, crucially, quantized values compare equal more often, so delta compression finds more unchanged fields. Choose per field: position often 1000, rotation 1000, a health value maybe 1.

@@ -1,0 +1,1 @@
+Think of Simulate as the clock-enable line on a register. The clock is running; the enable decides who latches this edge.

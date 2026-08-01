@@ -1,0 +1,1 @@
+Two capsules on one machine connect over an in-process pipe. Everything harder than that is this chapter: who runs the authoritative simulation, and what carries the bytes to it.

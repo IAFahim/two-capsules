@@ -1,0 +1,1 @@
+Netcode ships two default serialization variants for physics, and they are the entire contract.

@@ -1,0 +1,1 @@
+Trap, put the connection tracker on connecting instead of root and you stop detecting disconnects the moment you enter gameplay. The bug appears only after a successful connection, which is the worst possible time to find it.

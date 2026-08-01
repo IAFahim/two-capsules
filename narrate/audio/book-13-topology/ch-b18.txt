@@ -1,0 +1,1 @@
+Hardware analogy, the event array is a status register you must read before the next clock edge. The snapshot is the latch you copy it into.

@@ -1,0 +1,1 @@
+So: narrowing the mask, or choosing Owner Predicted, lets the server stop sending predicted-only components (velocity, for instance) to clients that are only interpolating. All pays full bandwidth for flexibility you probably never use.

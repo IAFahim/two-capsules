@@ -1,0 +1,1 @@
+In the editor or a NETCODE_DEBUG build with the simulator enabled, the client gets a fourth stage appended to all three: Simulator Pipeline Stage (Default Driver Constructor.cs:482). The server never gets it.

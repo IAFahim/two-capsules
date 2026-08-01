@@ -1,0 +1,1 @@
+The detection hook comes with it: Get Collision World From Tick returns expected Tick and returned Tick, and the doc comment says to compare them to find players hitting the clamp (Runtime/Physics/Physics World History.cs:34).

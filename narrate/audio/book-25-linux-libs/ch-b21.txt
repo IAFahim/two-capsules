@@ -1,0 +1,1 @@
+Because a soname is a contract. Two generations of the same library in the global namespace will resolve fine for months and then break something unrelated, at the worst time, with no trail. Scoping to Editor/ means only Unity sees the old ABI, which is precisely what 6000.7.0a2 was doing before the regression.

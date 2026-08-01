@@ -1,0 +1,1 @@
+Eight steps from "socket" to "I can move my capsule". Learn this chain and you can diagnose any join failure in about ninety seconds.

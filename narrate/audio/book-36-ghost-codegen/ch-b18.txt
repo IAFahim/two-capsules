@@ -1,0 +1,1 @@
+Ghost Component Serializer.State is the descriptor the registration system hands over (Runtime/Snapshot/Ghost Component Serializer.cs:222). It ends up as a dynamic buffer on the Ghost Collection singleton entity.

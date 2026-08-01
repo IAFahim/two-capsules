@@ -1,0 +1,1 @@
+Trap, smoothing must never feed back into simulation. Presentation reads simulation; the reverse is a feedback loop that diverges.

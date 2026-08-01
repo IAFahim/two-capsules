@@ -1,0 +1,1 @@
+The runtime gate itself is four lines, and it is the only netcode-aware code most clip authors will ever see:

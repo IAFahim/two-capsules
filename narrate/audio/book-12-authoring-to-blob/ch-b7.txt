@@ -1,0 +1,1 @@
+Failure signature: Try Set Value returns false then you used the wrong option name. Our helper throws and prints every available option, which turns a 20-minute hunt into a one-line message.

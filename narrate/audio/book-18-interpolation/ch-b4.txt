@@ -1,0 +1,1 @@
+Snapshots arrive every ~50 milliseconds (20 hertz send rate is common) while you render every ~7 milliseconds. You cannot show the newest snapshot the instant it arrives; you would get a slideshow with teleports.

@@ -1,0 +1,1 @@
+Our capsules are server-spawned: Player Connection System instantiates on the server, and the client materialises them when the snapshot arrives. That is why ghosts=2 appears in the client world without the client ever calling Instantiate.

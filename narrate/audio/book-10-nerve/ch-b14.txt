@@ -1,0 +1,1 @@
+With approval off (the default) both systems call state.Enabled = false in On Create. Nothing ever adds Connection Approved. And Player Connection System only spawns for connections that have it. So on a default project, no player ever spawns, silently.

@@ -1,0 +1,1 @@
+Rollback cost is predicted entities times replayed ticks, and physics multiplies both terms. A solver step is not a transform integration; it is broadphase, narrowphase, and a constraint solve over every body in the predicted world, repeated once per replayed tick.

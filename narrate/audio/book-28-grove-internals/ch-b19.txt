@@ -1,0 +1,1 @@
+Containers: how a node reaches component data

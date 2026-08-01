@@ -1,0 +1,1 @@
+The console error is a port-bind exception followed by a cascade, Mod Loading Scene found 2 instances, entity assertion failures. The cascade is louder than the cause, which is why it misleads.

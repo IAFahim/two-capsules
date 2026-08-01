@@ -1,0 +1,1 @@
+There is no client version and no server version. One rule, executed twice. That is what "server-authoritative with client prediction" actually means in code.

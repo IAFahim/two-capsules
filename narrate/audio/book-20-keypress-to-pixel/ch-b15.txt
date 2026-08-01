@@ -1,0 +1,1 @@
+Packet crosses I P C or loopback U D P. Command Receive System writes into the server's own Input Buffer Data ring for that ghost.

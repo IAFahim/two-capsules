@@ -1,0 +1,1 @@
+Plus Exit on destroy, which walks the active path calling every block with Canopy Update State.Exit so nothing leaks. Our Client App State System.On Destroy does this, skip it and the last state never cleans up.

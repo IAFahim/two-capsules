@@ -1,0 +1,1 @@
+Trap, connection events live for one tick. If you poll them from a system that does not run every tick, you will miss disconnects intermittently. Latch them into durable state the moment you see them, which is precisely what the tracker node does.

@@ -1,0 +1,1 @@
+Ghost Send System collects, prioritises, delta-compresses against each connection's ACKed baseline, and sends.

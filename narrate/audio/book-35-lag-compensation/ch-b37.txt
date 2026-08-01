@@ -1,0 +1,1 @@
+Clamping is the honest ceiling. A player far enough behind gets the oldest world you kept, so their shots stop landing rather than rewinding arbitrarily far.

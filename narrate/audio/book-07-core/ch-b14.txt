@@ -1,0 +1,1 @@
+Unity Engine.Debug.Log is a managed call. Bursted code cannot make it. BLLogger is a singleton component holding a native ring buffer:

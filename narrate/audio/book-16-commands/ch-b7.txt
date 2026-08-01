@@ -1,0 +1,1 @@
+You write one struct; the generator produces the buffer type, the serializer, and the send/receive systems. The buffer is a ring of the last ~64 ticks, not a single value, because the server needs history, and because rollback needs to replay it.

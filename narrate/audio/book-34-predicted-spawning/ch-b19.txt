@@ -1,0 +1,1 @@
+That is why classification is a window and not an equality test. It is also why the single most effective thing you can do for match reliability is to spawn inside the prediction loop, where the tick is exact.

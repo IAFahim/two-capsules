@@ -1,0 +1,1 @@
+The obvious fix, "change Play Mode Type to Client in Play Mode Tools", does not work, because Play Mode Tools is a window in the main editor and a virtual player does not have one. The pref you would change is the shared one you must not change.

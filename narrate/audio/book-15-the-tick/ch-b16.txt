@@ -1,0 +1,1 @@
+Continuous integration (moving a transform) is safe in partial ticks. One-shot side effects are not.

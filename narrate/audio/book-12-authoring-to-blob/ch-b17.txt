@@ -1,0 +1,1 @@
+baker.Depends On is what makes editing the graph re-bake the subscene. Omit it and you edit a graph, see no change, and lose an hour.

@@ -1,0 +1,1 @@
+The mask is what makes a snapshot cheap. Serialize writes a field only when its bit is set; Deserialize copies from the baseline when it is not. An unchanged component costs its change mask bits and nothing more.

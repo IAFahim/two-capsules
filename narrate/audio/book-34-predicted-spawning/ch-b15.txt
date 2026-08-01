@@ -1,0 +1,1 @@
+Hardware analogy, Predicted Ghost Spawn List is a content-addressable pending queue. Entries are not looked up by index; they are searched by a key pair, and a hit removes the entry. It behaves like a small store buffer waiting for a matching write to retire.

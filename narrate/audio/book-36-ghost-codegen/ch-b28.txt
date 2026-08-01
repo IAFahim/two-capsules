@@ -1,0 +1,1 @@
+That is the real reason quantization saves bandwidth. The narrower field width is secondary; the primary win is that quantized values compare equal far more often.

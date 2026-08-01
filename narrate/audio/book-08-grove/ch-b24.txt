@@ -1,0 +1,1 @@
+Hardware analogy, blob = ROM, Grove State = RAM, Grove Context = the register file plus MMIO window. The VM is Harvard architecture.

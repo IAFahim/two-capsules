@@ -1,0 +1,1 @@
+Unity 6000.7.0a3 on Ubuntu 26.04. The editor exits with code 127, or launches fine and then every multiplayer play mode virtual player dies with:

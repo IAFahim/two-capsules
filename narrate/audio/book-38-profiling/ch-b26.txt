@@ -1,0 +1,1 @@
+Rollback cost is predicted entities × replayed ticks. Both terms are readable.

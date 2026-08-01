@@ -1,0 +1,1 @@
+For a player capsule, Owner Predicted is nearly always right: you need your own capsule to respond in zero frames; you do not need someone else's to be frame-exact, you need it smooth.

@@ -1,0 +1,1 @@
+Two entities per player, not one. The controller is the persistent identity (survives respawn); the controlled is the current pawn. Command Target on the connection points at whatever entity should receive this player's input.

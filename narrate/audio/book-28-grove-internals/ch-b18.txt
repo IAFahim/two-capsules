@@ -1,0 +1,1 @@
+Forget partial and you get a wall of "does not implement IContext Generator<T>" errors that point at the interface rather than at the missing keyword.

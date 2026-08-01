@@ -1,0 +1,1 @@
+Design rule, Owner Send Type = Send To Owner on anything only the owner needs (ammo, cooldowns, private state) is both a bandwidth saving and an anti-cheat measure: information you never send cannot be extracted.

@@ -1,0 +1,1 @@
+Each store is Collision World.Clone with the two deep-copy flags and the optional whitelist (Runtime/Physics/Physics World History.cs:354). This is the real cost of lag compensation: thirty-two live broadphase trees resident in memory, and one clone per tick.

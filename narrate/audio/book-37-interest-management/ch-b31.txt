@@ -1,0 +1,1 @@
+Ghost Relevancy (Runtime/Snapshot/Ghost Relevancy.cs:93) is a singleton with a mode, a set, and a query.

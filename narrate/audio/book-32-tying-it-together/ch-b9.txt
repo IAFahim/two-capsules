@@ -1,0 +1,1 @@
+A tick, not a float timer. Ticks are the shared clock; a float seconds value would drift between the two simulations and desync under replay.

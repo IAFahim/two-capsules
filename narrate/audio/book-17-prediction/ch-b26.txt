@@ -1,0 +1,1 @@
+Rollback cost = (ticks to replay) × (cost of your predicted systems). A 200 milliseconds spike at 60 hertz is 12 replayed ticks in one frame. If your predicted simulation costs 2 milliseconds, that frame costs 24 milliseconds and you drop it.

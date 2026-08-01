@@ -1,0 +1,1 @@
+Step 6 is the important one. A check that cannot fail is not a check. Break the thing on purpose once, confirm your test catches it, then fix it. That is the difference between "I believe it works" and "I know what would tell me it didn't".

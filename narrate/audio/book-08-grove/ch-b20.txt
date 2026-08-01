@@ -1,0 +1,1 @@
+partial matters: the generator adds Create Generated / Update Generated / Set Chunk Generated and the IContext Generator<T> implementation by scanning your Buffer Container<> / Component Container<> fields.

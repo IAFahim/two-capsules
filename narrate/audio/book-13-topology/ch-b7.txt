@@ -1,0 +1,1 @@
+There is no Connection class. A connection is an entity, and its component set is its state machine:

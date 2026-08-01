@@ -1,0 +1,1 @@
+Blob Ptr<T> is a relative offset, not an address. That is what makes the whole image memcpy-able, cache-friendly, and shareable read-only across every entity running the graph.

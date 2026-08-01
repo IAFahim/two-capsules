@@ -1,0 +1,1 @@
+Canopy State Id.To String() prints the type name, not the id, compare against candidates instead.

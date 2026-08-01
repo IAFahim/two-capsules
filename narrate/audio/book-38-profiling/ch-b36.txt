@@ -1,0 +1,1 @@
+The check is the Burst Inspector (Jobs then Burst then Open Inspector, a Unity editor feature, documentation-derived, not part of this package). If a job or system appears with no generated assembly, it is not compiled, and no netcode tuning will help.

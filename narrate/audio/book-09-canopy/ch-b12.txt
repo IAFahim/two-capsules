@@ -1,0 +1,1 @@
+Blocks receive a Canopy Update State, which is an enum-ish signal:

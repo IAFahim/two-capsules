@@ -1,0 +1,1 @@
+Assets/Editor/Client Graph Setup.cs, [Menu Item("Daggertooth/Rebuild Client Graph")]. Same approach as Nerve's own Sample Project Setup. Advantages over clicking in the graph window:

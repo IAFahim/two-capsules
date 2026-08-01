@@ -1,0 +1,1 @@
+Hardware analogy, you are looking at a flashed image with a header table. Root is the reset vector. Nodes[] is the code segment. Inputs/Outputs is the symbol table.

@@ -1,0 +1,1 @@
+Nerve's Client Connection Tracker consumes exactly this array and folds it into a durable Client Connection Snapshot in graph state, because the events vanish next tick but the conclusion ("we are disconnected, reason Timeout") must persist.

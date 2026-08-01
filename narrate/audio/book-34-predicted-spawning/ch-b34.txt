@@ -1,0 +1,1 @@
+Order it after Ghost Spawn Classification System so the owner-predicted decision has already run, and before the default matcher so yours wins.

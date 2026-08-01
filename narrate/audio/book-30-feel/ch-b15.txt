@@ -1,0 +1,1 @@
+Only changed fields are sent, delta-coded against what each client last ACKed. Fewer bits per ghost means more ghosts per packet means a higher effective update rate for everything.

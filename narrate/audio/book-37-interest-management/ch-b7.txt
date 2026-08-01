@@ -1,0 +1,1 @@
+Up to a third of that packet can go to despawn messages before ghost data gets any of it, Percent Reserved For Despawn Messages defaults to.33f (Ghost Send System.cs:405).

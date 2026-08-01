@@ -1,0 +1,1 @@
+The second half of the question is "how is the server's fireball connected to the client's fireball", and the honest answer is: it is not connected at all.

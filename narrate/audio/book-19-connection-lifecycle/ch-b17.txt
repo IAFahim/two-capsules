@@ -1,0 +1,1 @@
+Nerve draws one more distinction worth stealing: a disconnect is voluntary only if it is Connection Close and you had already entered the game. Quitting looks different from being kicked at the door, and the UI should say different things.

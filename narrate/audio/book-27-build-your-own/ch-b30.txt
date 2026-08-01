@@ -1,0 +1,1 @@
+You started at a clock edge. You now know every hop from there to two capsules on two screens, why each hop exists, and what it looks like when it breaks.

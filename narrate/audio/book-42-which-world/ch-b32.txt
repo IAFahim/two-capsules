@@ -1,0 +1,1 @@
+Simulation is where the truth is. Presentation is a consumer of truth. A headless server is not a partial simulation, it is a complete simulation with the display driver unloaded.

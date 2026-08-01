@@ -1,0 +1,1 @@
+Step 6 is the one people skip, and it is the one that makes the two clocks agree. A presentation clock that accumulates is a second source of truth. One that samples is a display.

@@ -1,0 +1,1 @@
+Ghost Spawn Classification System Group runs inside Ghost Simulation System Group, before the input group (Runtime/Snapshot/Ghost Spawn Classification System.cs:161). Two systems live in it by default.

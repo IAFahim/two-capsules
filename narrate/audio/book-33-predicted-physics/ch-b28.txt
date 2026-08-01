@@ -1,0 +1,1 @@
+Within one machine, replay is repeatable: the same bodies in the same broadphase order with the same inputs produce the same result. Across machines, treat agreement as a tuning target, not a guarantee.

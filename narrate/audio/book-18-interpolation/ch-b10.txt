@@ -1,0 +1,1 @@
+Hardware analogy, an elastic buffer between two clock domains. You accept latency to absorb jitter. Make it too small and you underrun (visible stutter); too large and you add pointless lag. Same knob, same trade, same tuning instinct.

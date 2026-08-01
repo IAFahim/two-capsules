@@ -1,0 +1,1 @@
+This is the enum at Unity.Entities/World System Filtering.cs:47.

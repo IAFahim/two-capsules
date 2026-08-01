@@ -1,0 +1,1 @@
+The buffer is not a Native Array of worlds. It is thirty-two named fields in a struct, read through a switch statement, because a Collision World contains a broadphase tree and cannot simply be memcopied into an arbitrary slot.

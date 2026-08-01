@@ -1,0 +1,1 @@
+Both players see a different world, and both are correct. Server-authoritative multiplayer is the engineering discipline of making that disagreement invisible.

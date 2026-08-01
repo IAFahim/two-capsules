@@ -1,0 +1,1 @@
+So: a state can run a block; only Initialize can drive a context node; only Startup Gate provides Initialize State; only inside it can Client Go In Game exist.

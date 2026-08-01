@@ -1,0 +1,1 @@
+A worked projectile makes it concrete. The Physics Graphical Smoothing row is quoted from source (Runtime/Physics/Physics Velocity Variant.cs:32); the rest is how you would author it.

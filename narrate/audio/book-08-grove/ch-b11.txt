@@ -1,0 +1,1 @@
+Nodes is a hash map, not an array, and that detail earns its keep: a runtime lookup by name is a scan, not an index. It is why Canopy resolves a named jump the way it does.

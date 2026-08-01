@@ -1,0 +1,1 @@
+Chapter 14 listed three ways a ghost can come into existence on a client. This chapter is the second one, because it is the only shape in which a projectile leaves the barrel in the same frame you pulled the trigger.

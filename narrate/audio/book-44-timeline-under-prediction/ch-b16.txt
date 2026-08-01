@@ -1,0 +1,1 @@
+Everything from Local Time downward is already pure. The only sequential element in the chain is that one addition. Replace its input and the rest of the package becomes rollback-safe untouched.

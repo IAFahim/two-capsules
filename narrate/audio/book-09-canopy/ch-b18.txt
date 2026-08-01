@@ -1,0 +1,1 @@
+This is deliberate. Edges in a visual graph get unreadable fast; a named jump is a goto and is honest about it. The validator still checks that every Canopy Go To target exists.

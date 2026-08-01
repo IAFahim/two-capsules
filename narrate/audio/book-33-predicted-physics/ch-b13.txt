@@ -1,0 +1,1 @@
+When no entities match and lag compensation is the only reason to run, the manager runs physics only on Network Time.Is First Time Fully Predicting Tick (Runtime/Physics/Predicted Physics System Group.cs:107).

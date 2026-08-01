@@ -1,0 +1,1 @@
+The one-line version: the server world is truth, the client world is a prediction plus a renderer, the thin client is a keyboard with a socket, and the baking world already finished.

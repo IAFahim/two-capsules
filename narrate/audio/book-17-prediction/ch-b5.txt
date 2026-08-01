@@ -1,0 +1,1 @@
+Round trip is 50 milliseconds. If the client waited for the server to confirm every step, pressing W would move your capsule 50 milliseconds later. Unplayable.

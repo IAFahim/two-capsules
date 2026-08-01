@@ -1,0 +1,1 @@
+Quantization of 1000 means the velocity on the wire is rounded to 0.001 units per second, and velocity is only sent to clients that predict the ghost. Position and rotation come from the transform variants, not from here.

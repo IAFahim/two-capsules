@@ -1,0 +1,1 @@
+IInput Component Data supports event-style fields that survive the tick they were pressed on:

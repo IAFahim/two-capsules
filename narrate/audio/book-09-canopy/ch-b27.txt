@@ -1,0 +1,1 @@
+a designer can see it the validator can prove it well-formed the tests can build one in six lines (Client Connection Tracker Execution Tests does) and you can ship a different one per world without recompiling

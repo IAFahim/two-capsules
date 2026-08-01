@@ -1,0 +1,1 @@
+A ghost is an entity the server owns and mirrors to clients. Our capsule is one. So is the controller.

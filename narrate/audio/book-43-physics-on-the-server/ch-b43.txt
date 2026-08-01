@@ -1,0 +1,1 @@
+Physics Step is the solver's own settings component, and Unity Physics uses these values when no such component exists in the scene (Unity.Physics/E C S/Base/Components/Physics Components.cs:328).

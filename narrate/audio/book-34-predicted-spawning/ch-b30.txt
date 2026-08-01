@@ -1,0 +1,1 @@
+The tick window trades directly between the two. Widen it and misses become mismatches; narrow it and mismatches become misses.

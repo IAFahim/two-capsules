@@ -1,0 +1,1 @@
+Four recipes. Each is a complete, minimal change with the exact files touched.

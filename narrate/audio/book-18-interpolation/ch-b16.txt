@@ -1,0 +1,1 @@
+Every ghost replays on every rollback. Cost scales with predicted entities × replayed ticks. Every predicted entity must be deterministic across machines. Physics, if predicted, must be deterministic, which is a large commitment.

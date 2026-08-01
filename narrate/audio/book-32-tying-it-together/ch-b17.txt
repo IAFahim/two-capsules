@@ -1,0 +1,1 @@
+For a dash: leave it a system. No states, no transitions, no designer-facing flow.

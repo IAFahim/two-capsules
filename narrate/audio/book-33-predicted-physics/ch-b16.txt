@@ -1,0 +1,1 @@
+So a rigid body's transform advances at most once per simulation tick, no matter how fast you render. Anything smoother than that has to come from graphical smoothing, not from re-simulating.

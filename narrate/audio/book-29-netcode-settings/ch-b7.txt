@@ -1,0 +1,1 @@
+Optimization Mode.Static is the cheapest win in the whole system. A static ghost that has not changed is not serialised, not delta-compared, and not sent. For level props and parked vehicles it removes them from the bandwidth budget entirely.

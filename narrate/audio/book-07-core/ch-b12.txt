@@ -1,0 +1,1 @@
+K is a code-generated set of named byte/int constants sourced from settings assets, so layer masks and enum-ish IDs stop being magic numbers scattered through code. You will see Assets/Settings/K/ in this project. It is small; it is not on our critical path; know it exists so you do not reinvent it.

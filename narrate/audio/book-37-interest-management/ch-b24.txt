@@ -1,0 +1,1 @@
+The batched form mutates Prio Chunk.priority in place. It may also set Prio Chunk.is Relevant, a whole-chunk relevancy fast path that skips the hash map entirely (Ghost Importance.cs:29).

@@ -1,0 +1,1 @@
+These are ordinary E C S data. Read them from your own system and put them on screen, which is usually better than alt-tabbing to a profiler window.

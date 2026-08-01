@@ -1,0 +1,1 @@
+in Game=1 proves the remote procedure call went out. state = gameplay proves the graph sent it, that state is reachable only through the gate, and the gate opens only when the node reports completed. No leftover code can produce that reading.

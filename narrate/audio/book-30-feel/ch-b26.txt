@@ -1,0 +1,1 @@
+how far ahead it predicts (so commands land just in time) how far behind it interpolates (so the buffer never underruns)

@@ -1,0 +1,1 @@
+Small rollbacks every few seconds are normal and healthy. Continuous large rollbacks mean your prediction is genuinely diverging, look at floating-point non-determinism, at uninitialised state, and at systems missing Simulate.

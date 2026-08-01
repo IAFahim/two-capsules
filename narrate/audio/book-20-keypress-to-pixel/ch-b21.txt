@@ -1,0 +1,1 @@
+Ghost Receive System compares the received state for tick T with what you predicted for T. Match then nothing happens. Mismatch then restore and replay ticks T+1.now, re-feeding stored input each tick. You never see it.

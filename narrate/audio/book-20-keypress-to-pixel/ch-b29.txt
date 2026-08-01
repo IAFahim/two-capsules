@@ -1,0 +1,1 @@
+Probe, the one-liner that separates the first three rows: If client move is non-zero and server move is zero, it is hop 12, 14. Every time.

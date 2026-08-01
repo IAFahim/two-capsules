@@ -1,0 +1,1 @@
+Nothing here is physics-specific, which is the point worth internalising. Physics bodies are restored by the same two paths as every other predicted ghost.

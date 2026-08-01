@@ -1,0 +1,1 @@
+Note the ordering that makes our client system work: Get Execution copies the context by value, so writing execution.Context.Connection afterwards is what the run actually sees.

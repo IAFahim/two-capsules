@@ -1,0 +1,1 @@
+The condition it evaluates is configurable, and the default is the narrowest of the three.

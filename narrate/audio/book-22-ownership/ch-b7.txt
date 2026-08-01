@@ -1,0 +1,1 @@
+Why bother? Because "the player" and "the thing the player is currently driving" are different lifetimes:

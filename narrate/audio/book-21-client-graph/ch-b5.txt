@@ -1,0 +1,1 @@
+Nerve already ships the node that does this. It just never runs, because running it requires a client graph and the sample authors none.

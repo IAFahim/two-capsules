@@ -1,0 +1,1 @@
+The seam is the classification pass. Everything upstream of it is two independent streams; everything downstream is one entity.

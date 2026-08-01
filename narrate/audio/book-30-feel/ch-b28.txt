@@ -1,0 +1,1 @@
+Hardware analogy, a PLL. You do not step the clock; you adjust its frequency and let phase converge. Same reason: discontinuities are what people notice.
