@@ -1,0 +1,7 @@
+{
+  "book-25-linux-libs/ch-b10": {
+    "error": "err [Errno 122] Disk quota exceeded: '/usr/lib/x86_64-linux-gnu/libespeak-ng.so.1.1.51' -> '/tmp/tmpc1u32_pv/libespeak-ng.so.1.1.51'",
+    "chars": 382,
+    "when": "2026-08-01T16:09:02Z"
+  }
+}

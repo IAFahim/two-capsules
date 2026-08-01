@@ -95,12 +95,23 @@ flowchart LR
     T --> G["CanopyGoTo('disconnected')"]
 ```
 
-`DisconnectReason` tells you which: `Timeout`, `ClosedByRemote`, `ConnectionClose`,
+`DisconnectReason` tells you which. The common ones: `Timeout`, `ClosedByRemote`, `ConnectionClose`,
 `MaxConnectionAttempts`, `ApprovalFailure`, `ProtocolError`.
+
+There are **eleven** values in `NetworkStreamDisconnectReason`, not the six named above — read the
+enum at `Runtime/Connection/NetworkStreamConnectionComponent.cs:199` rather than trusting any list,
+including this one.
 
 Nerve draws one more distinction worth stealing: a disconnect is **voluntary** only if it is
 `ConnectionClose` *and* you had already entered the game. Quitting looks different from
 being kicked at the door, and the UI should say different things.
+
+> **📐 Why that test cannot be fooled.** `NetworkStreamRequestDisconnect` has a `Reason` field, and
+> **it never reaches the client** — the transport's disconnect carries no payload, so a kicked client
+> always reads `ClosedByRemote` (`Runtime/NetworkStreamReceiveSystem.cs:846`). A kick therefore can
+> never arrive looking like `ConnectionClose`, which is exactly why Nerve's voluntary test is safe.
+> The guarantee is real; it just comes from the transport dropping the reason, not from the check
+> being clever. Measured against a live kick in chapter 45.
 
 > **💀 Trap** — connection events live for **one tick**. If you poll them from a system that
 > does not run every tick, you will miss disconnects intermittently. Latch them into durable

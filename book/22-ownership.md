@@ -17,7 +17,7 @@ flowchart TB
 | `GhostOwner` | server + all clients | who owns this, authoritatively |
 | `GhostOwnerIsLocal` | this client only | is it mine |
 | `AutoCommandTarget` | ghost prefab | may my input route here automatically |
-| `CommandTarget` | connection entity | manual override: exactly this entity |
+| `CommandTarget` | connection entity | manual override: exactly this entity — and in this stack it points at the **controller**, not the pawn (`ControllerOwnership.cs:27`). Anything walking from a connection to its pawn must hop through `PrimaryControlledEntity`. An earlier draft of this chapter drew it straight at the pawn and was wrong. |
 
 `GhostOwnerIsLocal` is the one you filter input on (chapter 16). `GhostOwner` is the one you
 filter *rules* on — our `PlayerMoveSystem` uses `WithAll<Simulate, GhostOwner>()` so it moves
@@ -34,7 +34,7 @@ flowchart LR
     PAWN["<b>controlled</b><br/>PlayerCapsule prefab<br/>the current body<br/>replaceable"]
     CONN --> CTRL
     CTRL -->|PrimaryControlledEntity| PAWN
-    CONN -.->|CommandTarget| PAWN
+    CONN -.->|CommandTarget| CTRL
 ```
 
 Why bother? Because "the player" and "the thing the player is currently driving" are
