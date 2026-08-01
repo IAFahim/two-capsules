@@ -97,7 +97,7 @@
   {
     "slug": "19-connection-lifecycle",
     "title": "19 \u00b7 Connection lifecycle",
-    "blocks": 10
+    "blocks": 11
   },
   {
     "slug": "20-keypress-to-pixel",
@@ -223,5 +223,10 @@
     "slug": "44-timeline-under-prediction",
     "title": "44 \u00b7 Timeline under prediction",
     "blocks": 53
+  },
+  {
+    "slug": "45-session-control",
+    "title": "45 \u00b7 Session control: approve, kick, clean up",
+    "blocks": 35
   }
 ]

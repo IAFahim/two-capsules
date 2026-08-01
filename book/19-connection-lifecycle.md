@@ -106,4 +106,7 @@ being kicked at the door, and the UI should say different things.
 > does not run every tick, you will miss disconnects intermittently. Latch them into durable
 > state the moment you see them — which is precisely what the tracker node does.
 
+Refusing a connection, kicking one, and destroying what a departed player leaves behind are
+[chapter 45](45-session-control.md).
+
 → [20 · Keypress to pixel](20-keypress-to-pixel.md)
