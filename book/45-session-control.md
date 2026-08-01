@@ -1,17 +1,18 @@
 # 45 · Session control: approve, kick, clean up
 
-Chapter 19 walked the eight steps from socket to capsule and named the two gaps this project
-hit on the way in. This chapter is the other three problems: how the server says **no**, how it
-throws someone **out**, and what it must destroy when anybody **leaves**. That last one is
-where the bug is, and nothing in the stack does it for you.
+Chapter 19 walked the eight steps from socket to capsule. This chapter is the other three
+problems: how the server says **no**, how it throws someone **out**, and what it must destroy
+when anybody **leaves**. That last one is where the bug is, and nothing in the stack does it for
+you.
 
-> **📄 Provenance** — runtime-verified. The approval, kick and cleanup systems described here
-> were written into `vex-ee-3` and exercised in the editor with two simultaneous connections: a
-> full `ClientWorld` plus a thin client world created and connected by hand. Every entity count
-> quoted was read out of a live `ServerWorld`. The **source citations** for Netcode for Entities
-> and Entities were read at the monorepo fork pinned in `Packages/manifest.json`; Netcode
-> reports 6.6.0, Entities 6.5. Chapters 19 through 23 are this book's other runtime-verified
-> chapters; this one belongs with them.
+> **📄 Provenance** — runtime-verified, two players. The approval, kick and cleanup systems
+> described here were written into `vex-ee-3` and exercised against **two real connections**: the
+> main editor as host, and an MPPM virtual player in its own process with role `Client`. Every
+> entity count quoted was read out of a live world — server counts from the host, client counts
+> from each client's own process. The **source citations** for Netcode for Entities and Entities
+> were read at the monorepo fork pinned in `Packages/manifest.json`; Netcode reports 6.6.0,
+> Entities 6.5. Chapters 19 through 23 are this book's other runtime-verified chapters; this one
+> belongs with them.
 
 ## What approval actually gates
 
@@ -30,25 +31,33 @@ raises an event, and sends `ServerRequestApprovalAfterHandshake`
 that connection entity (`:1126`–`:1137`). Your code adds it, or the connection times out with
 `ApprovalTimeout`.
 
-The gate is real, and it is not merely "no `NetworkId`". While a connection is in handshake or
-approval, `RpcSystem` executes **only** RPCs marked as approval types; a normal RPC arriving in
-that window is answered with a disconnect (`Runtime/Rpc/RpcSystem.cs:437`–`:447`). Non-RPC
-traffic is dropped outright (`NetworkStreamReceiveSystem.cs:856`–`:862`). Since
-`NetworkStreamInGame` is what arms snapshots, and the request that sets it is a normal RPC, a
-pending connection cannot go in game, and a client that cannot go in game receives nothing.
+The gate is not merely "no `NetworkId`". While a connection is in handshake or approval,
+`RpcSystem` executes **only** approval-type RPCs; a normal RPC in that window is answered with a
+disconnect (`Runtime/Rpc/RpcSystem.cs:437`–`:447`), and non-RPC traffic is dropped outright
+(`NetworkStreamReceiveSystem.cs:856`–`:862`). `NetworkStreamInGame` arms snapshots, the request
+that sets it is a normal RPC, so a pending connection cannot go in game — and a client that
+cannot go in game receives nothing.
 
-Measured, with `session.max-players` set to `1` and a second connection arriving:
+Measured, with `session.max-players` set to `1` and a second player arriving — the client counts
+read from the refused player's own editor process:
 
 ```
-ServerWorld:      ghosts=3  connections=2
-   Entity(33164:59)  state=Handshake  hasNetworkId=False  approved=False  inGame=False
-   Entity(33159:67)  state=Connected  hasNetworkId=True   approved=True   inGame=True
-ThinClientWorld1: ghosts=0  connections=1
-   Entity(50699:11)  state=Handshake  hasNetworkId=False  approved=False  inGame=False
+poll 1   ClientWorld: ghosts=0 connections=1
+           Entity(33099:11) state=Handshake hasNetworkId=False approved=False inGame=False
+         ServerWorld: conns=1 ghosts=3 controllers=1 pawns=1
+poll 2   ClientWorld: ghosts=0 connections=0
+         ServerWorld: conns=1 ghosts=3 controllers=1 pawns=1
 ```
 
-`ghosts=0` on the joining side, and one poll later its connection is gone entirely. The server's
-own ghost count never moved off 3. Nothing replicated to a client that was never approved.
+Server-side, one line:
+
+```
+[session] refusing NetworkConnection[id1,v2]: server is full (1/1)
+```
+
+`ghosts=0` on the joining side for its whole short life, and the server's own ghost count never
+moved off 3 — no controller, no capsule was ever spawned for it. Nothing replicated to a client
+that was never approved.
 
 ## The gate, in this project
 
@@ -70,19 +79,19 @@ if (approved >= maxPlayers)
 ecb.AddComponent<ConnectionApproved>(entity);
 ```
 
-The refusal rule is a cap, `session.max-players`, because a cap is the one deny condition you
-can trigger on purpose without inventing a fake credential. A real deployment reads
-`ApprovalRequest.AccessToken` off the approval RPC instead; that is exactly where Nerve's
-`ConnectionApprovalServerSystem` validates a Unity Authentication JWT. This project switches
-that system off, because it takes the real network branch whenever `World.IsServer()` is true
+The deny rule is a cap, because a cap is the one refusal you can trigger on purpose without
+inventing a fake credential. A real deployment reads `ApprovalRequest.AccessToken` off the
+approval RPC instead — which is what Nerve's `ConnectionApprovalServerSystem` does, validating a
+Unity Authentication JWT. This project switches that system off: it takes the live network branch
+whenever `World.IsServer()` is true
 (`BovineLabs.Nerve.State/Authentication/ConnectionApprovalServerSystem.cs:108`–`:117`), and a
 separate `ServerWorld` in one process *is* a server world.
 
-One sharp edge worth naming. Pass 1 must not add `ConnectionApproved` to a connection that is
-neither in `Approval` nor already carrying a `NetworkId`. Do that with approval switched off and
-Netcode logs a warning that you approved a connection on a server which never asked
-(`NetworkStreamReceiveSystem.cs:1149`–`:1153`). One condition fixes it, and it is the condition
-that makes the same system correct in both modes.
+One sharp edge. Pass 1 must not add `ConnectionApproved` to a connection that is neither in
+`Approval` nor already carrying a `NetworkId`; do that with approval off and Netcode warns that
+you approved a connection on a server which never asked
+(`NetworkStreamReceiveSystem.cs:1149`–`:1153`). That one condition is what makes the same system
+correct in both modes.
 
 ## Kick is one component
 
@@ -98,7 +107,7 @@ uses it to refuse a duplicate login
 The `Reason` field is **server-local**. The transport `Disconnect` call carries no payload, so
 the kicked client reads the transport's own reason byte
 (`NetworkStreamReceiveSystem.cs:846`–`:847`) and always sees `ClosedByRemote` — never the value
-you wrote. Measured on a kicked client that was in game:
+you wrote. Read out of the kicked player's own editor process, seconds after the kick:
 
 ```
 DisconnectReason=ClosedByRemote  HasEnteredGame=True
@@ -117,13 +126,12 @@ So chapter 19's rule survives contact: a disconnect is voluntary only if it is `
 (`BovineLabs.Nerve.State/States/Client/ClientConnectionTracker.cs:148`). A kick can never be
 mistaken for a quit, because a kick never arrives as `ConnectionClose`.
 
-One correction to chapter 19 while we are here. It lists six `DisconnectReason` values. There
-are **eleven** (`NetworkStreamConnectionComponent.cs:150`–`:183`): `ConnectionClose`, `Timeout`,
+A correction to chapter 19 while we are here: it lists six `DisconnectReason` values, and there
+are **eleven** (`NetworkStreamConnectionComponent.cs:150`–`:183`) — `ConnectionClose`, `Timeout`,
 `MaxConnectionAttempts`, `ClosedByRemote`, `BadProtocolVersion`, `InvalidRpc`,
-`AuthenticationFailure`, `ProtocolError`, `HandshakeTimeout`, `ApprovalFailure` and
-`ApprovalTimeout`. The last three are Netcode-specific and the first eight map onto the
-transport's own enum. Nerve splits them by whether reconnecting could plausibly work
-(`BovineLabs.Nerve.State/ClientDisconnectionClassifier.cs:25`–`:45`) — timeouts are retryable, a
+`AuthenticationFailure`, `ProtocolError`, `HandshakeTimeout`, `ApprovalFailure`,
+`ApprovalTimeout`. Nerve splits them by whether reconnecting could plausibly work
+(`BovineLabs.Nerve.State/ClientDisconnectionClassifier.cs:25`–`:45`): timeouts are retryable, a
 version mismatch or a failed approval is not.
 
 ## The departure, and the thing that leaks
@@ -147,24 +155,25 @@ sets `GhostOwner.NetworkId` to `-1`
 good one when you can match a returning player to their controller by account. It is not
 cleanup.
 
-Measured, with that retention as the only behaviour — one client joins, then leaves:
+Measured with two real players, kicking the second one, cleanup switched off so that retention is
+the only behaviour:
 
 ```
-before disconnect   ServerWorld  conns=2  ghosts=5  controllers=2  pawns=2
-after  disconnect   ServerWorld  conns=1  ghosts=5  controllers=2  pawns=2
-   ctrl Entity(49941:37) acct=local-2 active=False enabled=False
-        conn=Entity.Null  pawn=Entity(49942:37) pawnExists=True  owner=-1
+two players        ServerWorld  conns=2  ghosts=5  controllers=2  pawns=2
+after the kick     ServerWorld  conns=1  ghosts=5  controllers=2  pawns=2
+   ctrl Entity(33207:47) acct=local-2 active=False enabled=False
+        conn=Entity.Null  pawn=Entity(33208:49) pawnExists=True  owner=-1
+                   ClientWorld  conns=1  ghosts=5  controllers=2  pawns=2
 ```
 
-Still 5 ghosts twenty seconds later, and the remaining client still sees all five. The capsule
-of a player who left is standing in the room forever.
+One connection, five ghosts, two capsules. The player who left is still standing in the room, and
+**the player who stayed still sees them** — that last line is the host's own client world.
 
-With `SessionCleanupSystem` in place, the same experiment:
+Switch cleanup back on, same session, nothing else touched:
 
 ```
-before disconnect   ServerWorld  conns=2  ghosts=5  controllers=2  pawns=2
-after  disconnect   ServerWorld  conns=1  ghosts=3  controllers=1  pawns=1
-                    ClientWorld  conns=1  ghosts=3  controllers=1  pawns=1
+                   ServerWorld  conns=1  ghosts=3  controllers=1  pawns=1
+                   ClientWorld  conns=1  ghosts=3  controllers=1  pawns=1
 ```
 
 The remaining client dropped from five ghosts to three without being told anything. Snapshot
@@ -207,6 +216,19 @@ foreach (var (session, entity) in SystemAPI.Query<RefRO<SessionPawn>>()
 }
 ```
 
+You can watch the residue directly. With the cleanup system paused, the connection entity Netcode
+destroyed is still there, and it is down to three component types — `Entity`, the internal cleanup
+tag, and `SessionPawn`:
+
+```
+SessionPawn residue entities (connection destroyed, bookkeeping alive) = 1
+   residue Entity(33896:67) exists=True archetype types=3
+           controller=Entity(33207:47) pawn=Entity(33208:49) pawnStillAlive=True
+```
+
+Un-pause the system and that count goes to zero in the same frame the pawn does. The residue
+waits as long as you need it to; it is not a race.
+
 This generalises far past sessions. Netcode itself uses it for ghost despawn: `GhostCleanup` is
 an `ICleanupComponentData` (`Runtime/Snapshot/GhostSendSystem.cs:22`), the despawn query is "has
 `GhostCleanup`, has no `GhostInstance`" (`:569`–`:575`), and the despawn message is sent from the
@@ -223,24 +245,23 @@ the pawn (`BovineLabs.Nerve.State/Session/ControllerOwnership.cs:27`); the pawn 
 hop through `PrimaryControlledEntity`. Chapter 22's diagram draws that arrow at the pawn, and it
 is wrong.
 
-**A residue entity still exists.** `EntityManager.Exists` returns true for it. That is what keeps
-the reap and the orphan sweep from doing each other's work: the sweep skips any controller whose
-connection still resolves, and a connection in residue still resolves.
+**A residue entity still exists.** `EntityManager.Exists` returns true for it — which is what
+keeps the reap and the orphan sweep off each other's work, since the sweep skips any controller
+whose connection still resolves.
 
 **Mid-tick departures.** The record only happens once the controller exists, and Nerve
-instantiates through a deferred command buffer. A socket that dies inside that window leaves a
-controller nobody ever recorded. The sweep catches it — a controller whose connection resolves to
-nothing has no owner and never will. Forced deliberately, it reports:
+instantiates through a deferred command buffer. A socket dying inside that window leaves a
+controller nobody recorded. The sweep catches it. Forced deliberately:
 
 ```
 [session] swept orphan controller Entity(33193:53) with no live connection
 ServerWorld  controllers=0  pawns=0  ghosts=1
 ```
 
-This project destroys on departure rather than retaining, and that is a real change to Nerve's
-model. It is the honest one here: `AccountIdentity` is `local-{networkId}` and Netcode recycles
-`NetworkId`s (`NetworkStreamReceiveSystem.cs:1047`–`:1048`), so a "reclaimed" controller could
-just as easily belong to somebody else. Retention needs a real account before it is a feature.
+Destroying on departure is a real change to Nerve's model, and the honest one here:
+`AccountIdentity` is `local-{networkId}` and Netcode recycles `NetworkId`s
+(`NetworkStreamReceiveSystem.cs:1047`–`:1048`), so a "reclaimed" controller could just as easily
+belong to somebody else. Retention needs a real account before it is a feature.
 
 ## Settings
 
@@ -252,7 +273,27 @@ just as easily belong to somebody else. Retention needs a real account before it
 | `debug.loglevel` | `BovineLabs.Core/Debug/BLLogger.cs:23` | `3` (Warning) | Approve, kick and reap log at Info; raise it to `4` to watch them. |
 | `HandshakeApprovalTimeoutMS` | `ClientServerTickRate` | package default | How long a connection may sit unapproved before `ApprovalTimeout`. |
 
-## One MPPM trap that belongs next to this
+## The two-player reading, and one MPPM trap
+
+Two players connected, counted in three separate processes:
+
+```
+host   ServerWorld  conns=2  ghosts=5  owned=4  predicted=5  ownerIsLocal=4
+host   ClientWorld  conns=1  ghosts=5  owned=4  predicted=1  ownerIsLocal=2
+          predicted Entity(33934:53) ghostId=2 owner=1
+P2     ClientWorld  conns=1  ghosts=5  owned=4  predicted=1  ownerIsLocal=2
+          predicted Entity(33774:3)  ghostId=4 owner=2
+```
+
+Four owned ghosts is chapter 22's two-per-player, plus the RoomForge seed makes five.
+`conns=1` on a client is not a discrepancy: a client sees only its own connection, the server
+sees all of them.
+
+The line to keep is `predicted`. The server predicts **five** because it is authoritative and
+simulates everything. Each client predicts exactly **one** — and it is a *different* ghost in each
+process, `ghostId=2` for player one and `ghostId=4` for player two. That is chapter 41's two clock
+domains as an integer. Note also that `ownerIsLocal=2` while `predicted=1`: both of your entities
+are yours, but only the capsule is `OwnerPredicted`. Ownership and prediction are different axes.
 
 Chapter 23 covers Multiplayer Roles. The failure it does not name: a virtual player whose role
 is **Client and Server** builds its own `ServerWorld`, because the bootstrap creates one whenever
@@ -260,18 +301,16 @@ the requested play type is anything but `Client`
 (`BovineLabs.Nerve/Utility/BovineLabsBootstrap.NetCode.cs:60`–`:65`). You then have two servers
 and two isolated sessions that each look fine in isolation. Only the host carries the server
 role; every other instance is `Client`. Chapter 23's probe — one `ServerWorld` across all
-instances — is the check.
+instances — is the check, and the reading above is what a healthy two-player session looks like.
 
 ## When to use what
 
-- **Approval off.** Single-player, a LAN tool, a demo. Netcode lets everyone in and you spend no
-  frames on it. You still cannot refuse anyone, so do not ship a public server this way.
+- **Approval off.** Single-player, a LAN tool, a demo. Netcode lets everyone in for free. You
+  cannot refuse anyone, so do not ship a public server this way.
 - **Approval on, cheap gate.** A cap, a build-hash check, a lobby ticket you already hold. Costs
-  one tick of latency and buys the guarantee that an unapproved client receives no game state at
-  all.
-- **Approval on, real credential.** Validate a token from your backend on the `IApprovalRpcCommand`
-  and answer with `ApprovalFailure`. Budget for it being asynchronous, and watch the approval
-  timeout.
+  one tick and buys the guarantee that an unapproved client receives no game state at all.
+- **Approval on, real credential.** Validate a backend token on the `IApprovalRpcCommand` and
+  answer with `ApprovalFailure`. Budget for it being asynchronous, and watch the approval timeout.
 - **Kick.** `NetworkStreamRequestDisconnect`, always server-side. Never try to encode *why* in the
   `Reason` field expecting the client to read it — send an RPC first if the player deserves a
   message.
